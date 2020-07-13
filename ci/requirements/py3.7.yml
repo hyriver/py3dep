@@ -1,0 +1,13 @@
+name: py3dep
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - pip
+  - owslib
+  - requests
+  - xarray
+  - scipy
+  - rasterio
+  - shapely
+  - pyproj

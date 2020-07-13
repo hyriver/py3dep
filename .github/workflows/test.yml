@@ -1,0 +1,38 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: pytest (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8"]
+        os: ["ubuntu-latest", "macos-latest"]
+
+    steps:
+      - uses: actions/checkout@v2.3.1
+      - name: Setup Miniconda
+        uses: goanpeca/setup-miniconda@v1.6.0
+        with:
+          activate-environment: py3dep
+          python-version: ${{ matrix.python-version }}
+          environment-file: ci/requirements/py${{ matrix.python-version }}.yml
+          auto-update-conda: true
+          auto-activate-base: false
+
+      - name: Install py3dep
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+          conda install -y -c conda-forge pytest pytest-runner pytest-cov pytest-xdist codecov
+          pip install --no-deps -e .
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: pytest --cov=py3dep --cov-report term-missing --cov-report xml --verbose --color=yes
+
+      - name: Run codecov
+        uses: codecov/codecov-action@v1.0.10
