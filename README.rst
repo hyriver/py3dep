@@ -86,15 +86,16 @@ Quickstart
 ----------
 
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
-Polygon or a bounding box (a tuple of length four) as input an input geometry.
-We can use `Hydrodata <https://hydrodata.readthedocs.io/en/latest/>`__ to get
-a watershed's geometry, then use this geometry to get DEM and slope data
-in meters/meters from Py3DEP. The ``get_map`` function has a ``resolution`` argument
-that sets the target resolution in meters. Note that the highest available resolution
-throughout the CONUS is about 10 m, though higher resolutions are available for limited
-parts of the US. The geometry can be in any valid spatial reference (``geo_crs``).
-The ``crs`` argument, however, is limited to ``CRS:84``, ``EPSG:4326``, and ``EPSG:3857``
-since 3DEP only supports these spatial references.
+Polygon or a bounding box (a tuple of length four) as an input geometry.
+We can use Hydrodata to get a watershed's geometry, then use it to get DEM and slope data
+in meters/meters from Py3DEP.
+
+The ``get_map`` function has a ``resolution`` argument that sets the target resolution
+in meters. Note that the highest available resolution throughout the CONUS is about 10 m,
+though higher resolutions are available in limited parts of the US. Note that the input
+geometry can be in any valid spatial reference (``geo_crs``). The ``crs`` argument, however,
+is limited to ``CRS:84``, ``EPSG:4326``, and ``EPSG:3857`` since 3DEP only supports these
+spatial references.
 
 .. code-block:: python
 
@@ -110,15 +111,15 @@ since 3DEP only supports these spatial references.
     :target: https://raw.githubusercontent.com/cheginit/hydrodata/develop/docs/_static/example_plots_py3dep.png
     :align: center
 
-We can get the elevation of a single point within the US:
+We can get the elevation for a single point within the US:
 
 .. code-block:: python
 
     elev = py3dep.elevation_byloc((-7766049.665, 5691929.739), "epsg:3857")
 
 Additionally, we can get the elevations of set of x- and y- coordinates of a grid. For example,
-let's get the minimum temperature data within the watershed using Hydrodata then add the elevation
-as a new variable:
+let's get the minimum temperature data within the watershed from Daymet using Hydrodata then
+add the elevation as a new variable to the dataset:
 
 .. code-block:: python
 
