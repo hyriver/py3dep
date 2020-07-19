@@ -62,10 +62,11 @@ The following layers are available:
 - Contour Smoothed 25
 
 Moreover, Py3DEP offers thress additonal function:
+
 - ``elevation_bygrid``: For getting elevations of all the grid points in a 2D array of
-x- and y-coordinates.
+  x- and y-coordinates.
 - ``elevation_byloc``: For getting elevation of a single point based on the National
-Map's `Elevation Point Query Service <https://nationalmap.gov/epqs/>`__ service.
+  Map's `Elevation Point Query Service <https://nationalmap.gov/epqs/>`__ service.
 - ``deg2mpm``: For converting slop from degree to meter per meter.
 
 Moreover, requests for additional databases or functionalities can be submitted via
