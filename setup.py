@@ -17,7 +17,7 @@ with open(Path(__file__).with_name("README.rst")) as f:
     long_description = f.read()
 
 setup(
-    version="0.1.2",
+    version="0.1.3",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     install_requires=parse_requirements("requirements.txt"),
