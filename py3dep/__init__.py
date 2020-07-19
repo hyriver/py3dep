@@ -1,6 +1,6 @@
 """Top-level package for Py3DEP."""
 
-from .exceptions import InvalidInputType, InvalidInputValue
+from .exceptions import InvalidInputType
 from .py3dep import elevation_bygrid, elevation_byloc, get_map
 
 __author__ = """Taher Chegini"""

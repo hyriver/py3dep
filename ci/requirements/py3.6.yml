@@ -4,11 +4,9 @@ channels:
 dependencies:
   - python=3.6
   - pip
-  - owslib
-  - requests
+  - pygeoogc
   - xarray
   - scipy
   - rasterio
   - shapely
-  - pyproj
   - dataclasses

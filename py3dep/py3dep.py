@@ -2,13 +2,15 @@
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
+import pygeoogc as ogc
+import rasterio as rio
+import rasterio.warp as rio_warp
 import xarray as xr
+from pygeoogc import MatchCRS, RetrySession, ServiceURL
 from shapely.geometry import Polygon
 
 from . import utils
 from .exceptions import InvalidInputType
-from .utils import MatchCRS
 
 
 def get_map(
@@ -40,7 +42,7 @@ def get_map(
 
     Parameters
     ----------
-    layer : str or list
+    layers : str or list
         A valid 3DEP layer or a list of them
     geometry : shapely.geometry.Polygon
         A shapely Polygon in WGS 84 (epsg:4326).
@@ -72,32 +74,46 @@ def get_map(
         _geometry = MatchCRS.geometry(_geometry, geo_crs, crs)
         bounds = _geometry.bounds
     else:
-        utils.check_bbox(geometry)
         _geometry = MatchCRS.bounds(geometry, geo_crs, crs)
         bounds = _geometry
 
-    r_dict = utils.wms_bybox(layers, bounds, resolution, box_crs=crs, crs=crs,)
+    _layers = layers if isinstance(layers, list) else [layers]
+    if "DEM" in _layers:
+        _layers[_layers.index("DEM")] = "None"
 
-    return utils.wms_toxarray(r_dict, _geometry, data_dir)
+    _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
+
+    r_dict = ogc.wms_bybox(
+        ServiceURL().wms.nm_3dep, _layers, bounds, resolution, "image/tiff", box_crs=crs, crs=crs,
+    )
+
+    return utils.wms_toxarray(r_dict, _geometry, crs, data_dir)
 
 
 def elevation_bygrid(
-    gridxy: List[List[float]], crs: str = "epsg:4326", resolution: float = 10
-) -> np.ndarray:
+    gridxy: Tuple[List[float], List[float]],
+    crs: str,
+    resolution: float,
+    resampling: rio_warp.Resampling = rio_warp.Resampling.bilinear,
+) -> xr.DataArray:
     """Get elevation from DEM data for a list of coordinates.
 
     This function is intended for getting elevations for a gridded dataset.
 
     Parameters
     ----------
-    gridxy : list of two lists of floats
+    gridxy : tuple of two lists of floats
         A list containing x- and y-coordinates of a mesh, [[x-coords], [y-coords]].
-    crs : str, optional
-        The spatial reference system of the input coords, defaults to epsg:4326.
+    crs : str
+        The spatial reference system of the input grid, defaults to epsg:4326.
     resolution : float
         The accuracy of the output, defaults to 10 m which is the highest
         available resolution that covers CONUS. Note that higher resolution
         increases computation time so chose this value with caution.
+    resampling : rasterio.warp.Resampling
+        The reasmpling method to use if the input crs is not in the supported
+        3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
+        The available methods can be found `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
 
     Returns
     -------
@@ -114,10 +130,59 @@ def elevation_bygrid(
         rad = ratio_min * abs(bbox[0])
         bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
 
-    dem = get_map("DEM", bbox, resolution, geo_crs=crs, crs=crs)
+    req_crs = crs if crs.lower() in ["epsg:4326", "epsg:3857"] else "epsg:4326"
 
-    elev = dem.interp(x=gx, y=gy)
-    elev.name = "elevation"
+    r_dict = ogc.wms_bybox(
+        ServiceURL().wms.nm_3dep,
+        "3DEPElevation:None",
+        bbox,
+        resolution,
+        "image/tiff",
+        box_crs=crs,
+        crs=req_crs,
+    )
+
+    def reproject(content):
+        with rio.MemoryFile() as memfile:
+            memfile.write(content)
+            with memfile.open() as src:
+                transform, width, height = rio_warp.calculate_default_transform(
+                    src.crs, crs, src.width, src.height, *src.bounds
+                )
+                kwargs = src.meta.copy()
+                kwargs.update(
+                    {"crs": crs, "transform": transform, "width": width, "height": height}
+                )
+
+                with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
+                    if crs != src.crs:
+                        for i in range(1, src.count + 1):
+                            rio_warp.reproject(
+                                source=rio.band(src, i),
+                                destination=rio.band(vrt, i),
+                                src_transform=src.transform,
+                                src_crs=src.crs,
+                                dst_transform=transform,
+                                crs=crs,
+                                resampling=resampling,
+                            )
+
+                    da = xr.open_rasterio(vrt)
+                    try:
+                        da = da.squeeze("band", drop=True)
+                    except ValueError:
+                        pass
+
+                    da.name = "elevation"
+                    da.attrs["transform"] = transform
+                    da.attrs["res"] = (transform[0], transform[4])
+                    da.attrs["bounds"] = tuple(vrt.bounds)
+                    da.attrs["nodatavals"] = vrt.nodatavals
+                    da.attrs["crs"] = vrt.crs
+        return da
+
+    _elev = xr.merge([reproject(c) for c in r_dict.values()])
+    elev = _elev.elevation.interp(x=gx, y=gy)
     elev.attrs["units"] = "meters"
     return elev
 
@@ -130,20 +195,21 @@ def elevation_byloc(coord: Tuple[float, float], crs: str = "epsg:4326"):
     coord : tuple
         Coordinates of the location as a tuple
     crs : str, optional
-        The spatial reference of the coord arg, defaults to EPSG:4326
+        The spatial reference of the input coord, defaults to epsg:4326 (lon, lat)
+
     Returns
     -------
     float
         Elevation in meter
     """
-    if not isinstance(coord, tuple) and len(tuple) != 2:
-        raise InvalidInputType("coord", "tuple of length 2")
+    if not isinstance(coord, tuple) or len(coord) != 2:
+        raise InvalidInputType("coord", "tuple of length 2", "(x, y)")
 
-    lon, lat = MatchCRS.point(coord, crs, "epsg:4326")
+    lon, lat = MatchCRS.coords(([coord[0]], [coord[1]]), crs, "epsg:4326")
 
     url = "https://nationalmap.gov/epqs/pqs.php"
-    payload = {"output": "json", "x": lon, "y": lat, "units": "Meters"}
-    r = utils.RetrySession().get(url, payload)
+    payload = {"output": "json", "x": lon[0], "y": lat[0], "units": "Meters"}
+    r = RetrySession().get(url, payload)
     root = r.json()["USGS_Elevation_Point_Query_Service"]
     elevation = float(root["Elevation_Query"]["Elevation"])
     if abs(elevation - (-1000000)) < 1e-3:
