@@ -106,8 +106,8 @@ since 3DEP only supports these spatial references.
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.utils.deg2mpm(slope)
 
-.. image:: https://raw.githubusercontent.com/cheginit/py3dep/master/docs/_static/example_plots.png
-    :target: https://raw.githubusercontent.com/cheginit/py3dep/master/docs/_static/example_plots.png
+.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/develop/docs/_static/example_plots_py3dep.png
+    :target: https://raw.githubusercontent.com/cheginit/hydrodata/develop/docs/_static/example_plots_py3dep.png
     :align: center
 
 We can get the elevation of a single point within the US:
