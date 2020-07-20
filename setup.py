@@ -7,6 +7,8 @@ from pathlib import Path
 
 from setuptools import setup
 
+import versioneer
+
 
 def parse_requirements(req):
     """Read requirements file and return it as a list."""
@@ -17,7 +19,8 @@ with open(Path(__file__).with_name("README.rst")) as f:
     long_description = f.read()
 
 setup(
-    version="0.1.3",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     long_description=long_description,
     long_description_content_type="text/x-rst",
     install_requires=parse_requirements("requirements.txt"),
