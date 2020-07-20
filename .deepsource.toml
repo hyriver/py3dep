@@ -8,6 +8,8 @@ test_patterns = [
 exclude_patterns = [
     "docs/**",
     "ci/**"
+    "versioneer.py"
+    "_version.py"
 ]
 
 [[analyzers]]
