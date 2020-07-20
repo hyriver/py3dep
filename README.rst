@@ -82,6 +82,13 @@ You can install py3dep using ``pip``:
 
     $ pip install py3dep
 
+Alternatively, Py3DEP can be installed from the ``conda-forge`` repository
+using `Conda <https://docs.conda.io/en/latest/>`__:
+
+.. code-block:: console
+
+    $ conda install -c conda-forge py3dep
+
 Quickstart
 ----------
 
@@ -138,7 +145,8 @@ add the elevation as a new variable to the dataset:
 Contributing
 ------------
 
-If you are interested in contributing to the project please get in touch.
-You can find information about contributing to py3dep at our
-`Contributing page <https://py3dep.readthedocs.io/en/latest/contributing.html>`__.
-
+Contirbutions are very welcomed. Please read
+`CODE_OF_CONDUCT.rst <https://github.com/cheginit/py3dep/blob/master/CODE_OF_CONDUCT.rst>`__
+and
+`CONTRIBUTING.rst <https://github.com/cheginit/py3dep/blob/master/CONTRIBUTING.rst>`__
+file for instructions.

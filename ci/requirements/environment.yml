@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python>=3.8
+  - setuptools
   - pip
   - pygeoogc
   - xarray
@@ -14,9 +15,11 @@ dependencies:
   - netCDF4
   - bottleneck
 
-  - bump2version
+  - setuptools_scm
   - pytest-cov
   - pytest-xdist
   - pre-commit
   - codecov
   - coverage
+  - pip:
+    - numbagg

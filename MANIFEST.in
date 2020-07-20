@@ -1,2 +1,11 @@
-include versioneer.py
-include py3dep/_version.py
+include LICENSE
+include README.rst
+
+graft docs
+
+prune docs/_build
+prune docs/data
+prune tests/data
+
+global-exclude .DS_Store
+global-exclude *.py[cod]
