@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 """The setup script."""
-
-
+from setuptools import setup  # isort:skip
 import distutils.text_file
 from pathlib import Path
-
-from setuptools import setup
 
 
 def parse_requirements(req):
