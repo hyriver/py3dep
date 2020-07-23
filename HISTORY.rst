@@ -7,7 +7,7 @@ History
 
 - Refactor ``get_map`` to use ``pygeoutils`` package.
 - Change the versioning method to ``setuptools_scm``.
-- Polish README and add installtion from ``conda-forge``.
+- Polish README and add installation from ``conda-forge``.
 
 0.1.0 (2020-07-19)
 ------------------
