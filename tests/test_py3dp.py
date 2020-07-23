@@ -5,6 +5,9 @@ from shapely.geometry import Polygon
 
 import py3dep
 
+DEF_CRS = "epsg:4326"
+ALT_CRS = "epsg:3857"
+
 
 @pytest.fixture
 def geometry():
@@ -14,27 +17,26 @@ def geometry():
 
 
 def test_dem(geometry):
-    dem = py3dep.get_map("DEM", geometry.bounds, 1e3, geo_crs="epsg:4326", crs="epsg:3857")
-    dem_10 = py3dep.get_map(
-        "DEM", geometry, 10, geo_crs="epsg:4326", crs="epsg:3857", data_dir="data"
-    )
-    dem_1e3 = py3dep.get_map("DEM", geometry, 1e3, geo_crs="epsg:4326", crs="epsg:3857")
+    lyr = "DEM"
+    py3dep.get_map(lyr, geometry.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
+    dem_10 = py3dep.get_map(lyr, geometry, 10, geo_crs=DEF_CRS, crs=ALT_CRS)
+    dem_1e3 = py3dep.get_map(lyr, geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
     assert abs(abs(dem_10.mean().item() - dem_1e3.mean().item()) - 0.062) < 1e-3
 
 
 def test_loc():
-    elev = py3dep.elevation_byloc((-7766049.664788851, 5691929.739021257), "EPSG:3857")
+    elev = py3dep.elevation_byloc((-7766049.664788851, 5691929.739021257), ALT_CRS)
     assert abs(elev - 356.59) < 1e-3
 
 
 def test_deg2mpm(geometry):
     slope = py3dep.get_map("Slope Degrees", geometry, 1e3)
-    slope = py3dep.utils.deg2mpm(slope)
+    slope = py3dep.deg2mpm(slope)
     assert abs(slope.mean().item() - 0.05) < 1e-3
 
 
 def test_grid(geometry):
-    geo_crs = "epsg:4326"
+    geo_crs = DEF_CRS
     crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs"
     geom = MatchCRS.geometry(geometry, geo_crs, crs)
     xmin, ymin, xmax, ymax = geom.bounds
