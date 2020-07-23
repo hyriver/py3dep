@@ -1,15 +1,14 @@
 """Get data from 3DEP database."""
-from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
-import pygeoogc as ogc
+import numpy as np
+import pygeoutils as geoutils
 import rasterio as rio
 import rasterio.warp as rio_warp
 import xarray as xr
-from pygeoogc import MatchCRS, RetrySession, ServiceURL
+from pygeoogc import WMS, MatchCRS, RetrySession, ServiceURL
 from shapely.geometry import Polygon
 
-from . import utils
 from .exceptions import InvalidInputType
 
 
@@ -20,7 +19,6 @@ def get_map(
     geo_crs: str = "epsg:4326",
     crs: str = "epsg:4326",
     fill_holes: bool = False,
-    data_dir: Optional[Union[str, Path]] = None,
 ) -> xr.DataArray:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
@@ -55,9 +53,6 @@ def get_map(
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
         epsg:4326.
-    data_dir : str or Path, optional
-        The directory to save the downloaded images, defaults to None which will only return
-        the data as ``xarray.Dataset`` and doesn't save them as ``tiff`` images.
     fill_holes : bool, optional
         Whether to fill the holes in the geometry's interior, defaults to False.
 
@@ -71,11 +66,9 @@ def get_map(
 
     if isinstance(geometry, Polygon):
         _geometry = Polygon(geometry.exterior) if fill_holes else geometry
-        _geometry = MatchCRS.geometry(_geometry, geo_crs, crs)
         bounds = _geometry.bounds
     else:
-        _geometry = MatchCRS.bounds(geometry, geo_crs, crs)
-        bounds = _geometry
+        bounds = _geometry = geometry
 
     _layers = layers if isinstance(layers, list) else [layers]
     if "DEM" in _layers:
@@ -83,11 +76,10 @@ def get_map(
 
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
-    r_dict = ogc.wms_bybox(
-        ServiceURL().wms.nm_3dep, _layers, bounds, resolution, "image/tiff", box_crs=crs, crs=crs,
-    )
+    wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
+    r_dict = wms.getmap_bybox(bounds, resolution, box_crs=geo_crs,)
 
-    return utils.wms_toxarray(r_dict, _geometry, crs, data_dir)
+    return geoutils.gtiff2xarray(r_dict, _geometry, geo_crs)
 
 
 def elevation_bygrid(
@@ -132,15 +124,11 @@ def elevation_bygrid(
 
     req_crs = crs if crs.lower() in ["epsg:4326", "epsg:3857"] else "epsg:4326"
 
-    r_dict = ogc.wms_bybox(
-        ServiceURL().wms.nm_3dep,
-        "3DEPElevation:None",
-        bbox,
-        resolution,
-        "image/tiff",
-        box_crs=crs,
-        crs=req_crs,
+    wms = WMS(
+        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=req_crs,
     )
+
+    r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs,)
 
     def reproject(content):
         with rio.MemoryFile() as memfile:
@@ -212,9 +200,20 @@ def elevation_byloc(coord: Tuple[float, float], crs: str = "epsg:4326"):
     r = RetrySession().get(url, payload)
     root = r.json()["USGS_Elevation_Point_Query_Service"]
     elevation = float(root["Elevation_Query"]["Elevation"])
+
     if abs(elevation - (-1000000)) < 1e-3:
         raise ValueError(
             f"The elevation of the requested coordinate ({coord[0]}, {coord[1]}) cannot be found."
         )
 
     return elevation
+
+
+def deg2mpm(da: xr.DataArray) -> xr.DataArray:
+    """Convert ``xarray.Data[Array,set]`` from degree to meter/meter."""
+    attrs = da.attrs
+    da = np.tan(np.deg2rad(da))
+    da.attrs = attrs
+    da.name = "slope"
+    da.attrs["units"] = "meters/meters"
+    return da

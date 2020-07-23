@@ -2,7 +2,7 @@
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .exceptions import InvalidInputType
-from .py3dep import elevation_bygrid, elevation_byloc, get_map
+from .py3dep import deg2mpm, elevation_bygrid, elevation_byloc, get_map
 
 try:
     __version__ = get_distribution(__name__).version
