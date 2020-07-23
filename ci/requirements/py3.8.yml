@@ -5,6 +5,7 @@ dependencies:
   - python=3.8
   - setuptools
   - pygeoogc
+  - pygeoutils
   - xarray
   - scipy
   - rasterio

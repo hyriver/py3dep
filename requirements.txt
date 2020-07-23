@@ -2,9 +2,10 @@
 # See that file for comments about the need/usage of each dependency.
 
 dataclasses
-pip
 pygeoogc
+pygeoutils
 rasterio
 scipy
+setuptools
 shapely
 xarray

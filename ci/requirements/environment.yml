@@ -1,4 +1,4 @@
-name: py3dep
+name: py3dep-dev
 channels:
   - conda-forge
 dependencies:
@@ -6,6 +6,7 @@ dependencies:
   - setuptools
   - pip
   - pygeoogc
+  - pygeoutils
   - xarray
   - scipy
   - rasterio
