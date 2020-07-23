@@ -11,13 +11,15 @@ from shapely.geometry import Polygon
 
 from .exceptions import InvalidInputType
 
+DEF_CRS = "epsg:4326"
+
 
 def get_map(
     layers: Union[str, List[str]],
     geometry: Union[Polygon, Tuple[float, float, float, float]],
     resolution: float,
-    geo_crs: str = "epsg:4326",
-    crs: str = "epsg:4326",
+    geo_crs: str = DEF_CRS,
+    crs: str = DEF_CRS,
     fill_holes: bool = False,
 ) -> xr.DataArray:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
@@ -122,7 +124,7 @@ def elevation_bygrid(
         rad = ratio_min * abs(bbox[0])
         bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
 
-    req_crs = crs if crs.lower() in ["epsg:4326", "epsg:3857"] else "epsg:4326"
+    req_crs = crs if crs.lower() in [DEF_CRS, "epsg:3857"] else DEF_CRS
 
     wms = WMS(
         ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=req_crs,
@@ -175,7 +177,7 @@ def elevation_bygrid(
     return elev
 
 
-def elevation_byloc(coord: Tuple[float, float], crs: str = "epsg:4326"):
+def elevation_byloc(coord: Tuple[float, float], crs: str = DEF_CRS):
     """Get elevation from USGS 3DEP service for a coordinate.
 
     Parameters
@@ -193,7 +195,7 @@ def elevation_byloc(coord: Tuple[float, float], crs: str = "epsg:4326"):
     if not isinstance(coord, tuple) or len(coord) != 2:
         raise InvalidInputType("coord", "tuple of length 2", "(x, y)")
 
-    lon, lat = MatchCRS.coords(([coord[0]], [coord[1]]), crs, "epsg:4326")
+    lon, lat = MatchCRS.coords(([coord[0]], [coord[1]]), crs, DEF_CRS)
 
     url = "https://nationalmap.gov/epqs/pqs.php"
     payload = {"output": "json", "x": lon[0], "y": lat[0], "units": "Meters"}
