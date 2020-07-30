@@ -153,8 +153,6 @@ add the elevation as a new variable to the dataset:
 Contributing
 ------------
 
-Contirbutions are very welcomed. Please read
-`CODE_OF_CONDUCT.rst <https://github.com/cheginit/py3dep/blob/master/CODE_OF_CONDUCT.rst>`__
-and
-`CONTRIBUTING.rst <https://github.com/cheginit/py3dep/blob/master/CONTRIBUTING.rst>`__
-files for instructions.
+Contributions are very welcomed. Please read
+`CONTRIBUTING.rst <https://github.com/cheginit/pygeoogc/blob/master/CONTRIBUTING.rst>`__
+file for instructions.
