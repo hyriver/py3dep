@@ -79,7 +79,7 @@ def get_map(
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
-    r_dict = wms.getmap_bybox(bounds, resolution, box_crs=geo_crs,)
+    r_dict = wms.getmap_bybox(bounds, resolution, box_crs=geo_crs)
 
     return geoutils.gtiff2xarray(r_dict, _geometry, geo_crs)
 
