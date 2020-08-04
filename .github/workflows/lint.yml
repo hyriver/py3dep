@@ -13,5 +13,5 @@ jobs:
         with:
           python-version: 3.8
 
-      - uses: pre-commit/action@master
+      - uses: pre-commit/action@v2
 
