@@ -71,7 +71,7 @@ Py3DEP provides access to the `3DEP <https://www.usgs.gov/core-science-systems/n
 database which is a part the `National Map services <https://viewer.nationalmap.gov/services/>`__.
 The 3DEP service has multi-resolution sources and depending on the user provided resolution,
 the data is resampled on the server-side based on all the available data sources. Py3DEP returns
-the requestes as `xarray <https://xarray.pydata.org/en/stable>`__ dataset. The 3DEP includes
+the requests as `xarray <https://xarray.pydata.org/en/stable>`__ dataset. The 3DEP includes
 the following layers:
 
 - DEM
@@ -87,7 +87,7 @@ the following layers:
 - Contour 25
 - Contour Smoothed 25
 
-Moreover, Py3DEP offers some additonal utilities:
+Moreover, Py3DEP offers some additional utilities:
 
 - ``elevation_bygrid``: For getting elevations of all the grid points in a 2D grid.
 - ``elevation_byloc``: For getting elevation of a single point which is based on the National
@@ -119,8 +119,8 @@ using `Conda <https://docs.conda.io/en/latest/>`__:
 
     $ conda install -c conda-forge py3dep
 
-Quickstart
-----------
+Quick start
+-----------
 
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
 Polygon or a bounding box (a tuple of length four) as an input geometry.
