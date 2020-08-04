@@ -24,7 +24,7 @@ repos:
     rev: 0.8.1rc3
     hooks:
     - id: doc8
-      name: Autoformat with doc8
+      name: Autoformat docs with doc8
       args: [--max-line-length, "100"]
 
   - repo: https://gitlab.com/pycqa/flake8
@@ -46,7 +46,7 @@ repos:
     rev: v2.7.2
     hooks:
       - id: pyupgrade
-        name: Upgrade synax to python 3.6+ with pyupgrade
+        name: Upgrade syntax to python 3.6+ with pyupgrade
         args: [--py36-plus]
 
   - repo: https://github.com/PyCQA/bandit
