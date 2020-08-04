@@ -157,7 +157,3 @@ def show_versions(file=sys.stdout):
     print("", file=file)
     for k, stat in deps_blob:
         print(f"{k}: {stat}", file=file)
-
-
-if __name__ == "__main__":
-    show_versions()

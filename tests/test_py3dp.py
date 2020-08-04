@@ -1,3 +1,5 @@
+import io
+
 import numpy as np
 import pytest
 from pygeoogc import MatchCRS
@@ -45,3 +47,9 @@ def test_grid(geometry):
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid((gx, gy), crs, res * 1e3)
     assert abs(elev.mean().item() - 295.686) < 1e-3
+
+
+def test_show_versions():
+    f = io.StringIO()
+    py3dep.show_versions(file=f)
+    assert "INSTALLED VERSIONS" in f.getvalue()
