@@ -17,7 +17,7 @@ def get_sys_info():
 
     # get full commit hash
     commit = None
-    if os.path.isdir(".git") and os.path.isdir("xarray"):
+    if os.path.isdir(".git") and os.path.isdir("py3dep"):
         try:
             pipe = subprocess.Popen(
                 'git log --format="%H" -n 1'.split(" "),
