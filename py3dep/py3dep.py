@@ -66,11 +66,8 @@ def get_map(
     if not isinstance(geometry, (Polygon, tuple)):
         raise InvalidInputType("geometry", "Polygon or tuple of length 4")
 
-    if isinstance(geometry, Polygon):
-        _geometry = Polygon(geometry.exterior) if fill_holes else geometry
-        bounds = _geometry.bounds
-    else:
-        bounds = _geometry = geometry
+    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
+    _geometry = Polygon(_geometry.exterior) if fill_holes else _geometry
 
     _layers = layers if isinstance(layers, list) else [layers]
     if "DEM" in _layers:
@@ -79,9 +76,9 @@ def get_map(
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
-    r_dict = wms.getmap_bybox(bounds, resolution, box_crs=geo_crs)
+    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
-    return geoutils.gtiff2xarray(r_dict, _geometry, geo_crs)
+    return geoutils.gtiff2xarray(r_dict, _geometry, crs)
 
 
 def elevation_bygrid(
