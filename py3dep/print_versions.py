@@ -91,7 +91,7 @@ def show_versions(file=sys.stdout):
 
     try:
         sys_info.extend(netcdf_and_hdf5_versions())
-    except Exception as e:
+    except OSError as e:
         print(f"Error collecting netcdf / hdf5 version: {e}")
 
     deps = [
@@ -139,13 +139,13 @@ def show_versions(file=sys.stdout):
                 mod = sys.modules[modname]
             else:
                 mod = importlib.import_module(modname)
-        except Exception:
+        except ModuleNotFoundError:
             deps_blob.append((modname, None))
         else:
             try:
                 ver = ver_f(mod)
                 deps_blob.append((modname, ver))
-            except Exception:
+            except NotImplementedError:
                 deps_blob.append((modname, "installed"))
 
     print("\nINSTALLED VERSIONS", file=file)
