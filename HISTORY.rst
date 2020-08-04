@@ -2,6 +2,13 @@
 History
 =======
 
+0.1.5 (2020-08-03)
+------------------
+
+- Fixed the geometry CRS issue
+- Improved the documentation
+
+
 0.1.4 (2020-07-23)
 ------------------
 
