@@ -4,6 +4,7 @@ from py3dep import InvalidInputType
 
 
 def invalid_type():
+    print(InvalidInputType("coords", "tuple", "(lon, lat)"))
     raise InvalidInputType("coords", "tuple", "(lon, lat)")
 
 
