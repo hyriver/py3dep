@@ -67,7 +67,8 @@ Features
 --------
 
 Py3DEP provides access to the `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__
-database which is a part the `National Map services <https://viewer.nationalmap.gov/services/>`__.
+database which is a part of the
+`National Map services <https://viewer.nationalmap.gov/services/>`__.
 The 3DEP service has multi-resolution sources and depending on the user provided resolution,
 the data is resampled on the server-side based on all the available data sources. Py3DEP returns
 the requests as `xarray <https://xarray.pydata.org/en/stable>`__ dataset. The 3DEP includes
