@@ -12,50 +12,50 @@ import sys
 
 
 def get_sys_info():
-    """Return system information as a dict."""
+    """Return system information as a dict.
+
+    From https://github.com/numpy/numpy/blob/master/setup.py#L64-L89
+    """
     blob = []
 
-    # get full commit hash
+    def _minimal_ext_cmd(cmd):
+        # construct minimal environment
+        env = {}
+        for k in ["SYSTEMROOT", "PATH", "HOME"]:
+            v = os.environ.get(k)
+            if v is not None:
+                env[k] = v
+        # LANGUAGE is used on win32
+        env["LANGUAGE"] = "C"
+        env["LANG"] = "C"
+        env["LC_ALL"] = "C"
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)
+        return out
+
     commit = None
-    if os.path.isdir(".git") and os.path.isdir("py3dep"):
-        try:
-            pipe = subprocess.Popen(
-                'git log --format="%H" -n 1'.split(" "),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            so, _ = pipe.communicate()
-        except Exception:
-            pass
-        else:
-            if pipe.returncode == 0:
-                commit = so
-                try:
-                    commit = so.decode("utf-8")
-                except ValueError:
-                    pass
-                commit = commit.strip().strip('"')
+    try:
+        out = _minimal_ext_cmd(["git", "rev-parse", "HEAD"])
+        commit = out.strip().decode("ascii")
+    except (subprocess.SubprocessError, OSError):
+        pass
 
     blob.append(("commit", commit))
 
-    try:
-        (sysname, _nodename, release, _version, machine, processor) = platform.uname()
-        blob.extend(
-            [
-                ("python", sys.version),
-                ("python-bits", struct.calcsize("P") * 8),
-                ("OS", f"{sysname}"),
-                ("OS-release", f"{release}"),
-                ("machine", f"{machine}"),
-                ("processor", f"{processor}"),
-                ("byteorder", f"{sys.byteorder}"),
-                ("LC_ALL", f'{os.environ.get("LC_ALL", "None")}'),
-                ("LANG", f'{os.environ.get("LANG", "None")}'),
-                ("LOCALE", ".".join(locale.getlocale())),
-            ]
-        )
-    except Exception:
-        pass
+    (sysname, _nodename, release, _version, machine, processor) = platform.uname()
+    blob.extend(
+        [
+            ("python", sys.version),
+            ("python-bits", struct.calcsize("P") * 8),
+            ("OS", f"{sysname}"),
+            ("OS-release", f"{release}"),
+            ("machine", f"{machine}"),
+            ("processor", f"{processor}"),
+            ("byteorder", f"{sys.byteorder}"),
+            ("LC_ALL", f'{os.environ.get("LC_ALL", "None")}'),
+            ("LANG", f'{os.environ.get("LANG", "None")}'),
+            ("LOCALE", ".".join(locale.getlocale())),
+        ]
+    )
 
     return blob
 
