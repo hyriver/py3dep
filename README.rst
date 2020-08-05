@@ -66,7 +66,8 @@ Py3DEP: Topographic data through 3DEP
 Features
 --------
 
-Py3DEP provides access to the `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__
+Py3DEP is a part of Hydrodata software stack and provides access to the
+`3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__
 database which is a part of the
 `National Map services <https://viewer.nationalmap.gov/services/>`__.
 The 3DEP service has multi-resolution sources and depending on the user provided resolution,
