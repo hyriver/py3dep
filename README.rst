@@ -125,7 +125,7 @@ Quick start
 
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
 Polygon or a bounding box (a tuple of length four) as an input geometry.
-We can use Hydrodata to get a watershed's geometry, then use it to get DEM and slope data
+We can use PyNHD to get a watershed's geometry, then use it to get the DEM and slope
 in meters/meters from Py3DEP using ``get_map`` function.
 
 The ``get_map`` has a ``resolution`` argument that sets the target resolution
@@ -138,7 +138,7 @@ these spatial references.
 .. code-block:: python
 
     import py3dep
-    from hydrodata import NLDI
+    from pynhd import NLDI
 
     geom = NLDI().getfeature_byid("nwissite", "USGS-01031500", basin=True).geometry[0]
     dem = py3dep.get_map("DEM", geom, resolution=30, geo_crs="epsg:4326", crs="epsg:3857")
@@ -156,16 +156,16 @@ We can get the elevation for a single point within the US:
     elev = py3dep.elevation_byloc((-7766049.665, 5691929.739), "epsg:3857")
 
 Additionally, we can get the elevations of set of x- and y- coordinates of a grid. For example,
-let's get the minimum temperature data within the watershed from Daymet using Hydrodata then
+let's get the minimum temperature data within the watershed from Daymet using PyDaymet then
 add the elevation as a new variable to the dataset:
 
 .. code-block:: python
 
-    import hydrodata.datasets as hds
+    import pydaymet as daymet
     import xarray as xr
     import numpy as np
 
-    clm = hds.daymet_bygeom(geom, dates=("2005-01-01", "2005-01-31"), variables="tmin")
+    clm = daymet.get_bygeom(geom, ("2005-01-01", "2005-01-31"), variables="tmin")
     gridxy = (clm.x.values, clm.y.values)
     elev = py3dep.elevation_bygrid(gridxy, clm.crs, clm.res[0] * 1000)
     clm = xr.merge([clm, elev], combine_attrs="override")
