@@ -1,6 +1,7 @@
 """Utility functions for printing version information.
 
-The script is taken from `xarray <https://github.com/pydata/xarray/blob/master/xarray/util/print_versions.py>`__
+The original script is from
+`xarray <https://github.com/pydata/xarray/blob/master/xarray/util/print_versions.py>`__
 """
 import importlib
 import locale
