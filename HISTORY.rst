@@ -6,7 +6,7 @@ History
 ------------------
 
 - Add a new function, ``show_versions``, for getting versions of the installed dependecies
-  which is useful for debugging.
+  which is useful for debugging and reporting.
 - Fix typos in the docs and improved the README.
 - Improve testing and coverage.
 
