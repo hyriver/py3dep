@@ -78,11 +78,10 @@ Ready to contribute? Here's how to set up py3dep for local development.
     $ conda activate py3dep-dev
     $ python -m pip install . --no-deps
 
-4. Check out the ``develop`` branch and create a branch for local development:
+4. Create a branch for local development:
 
 .. code-block:: console
 
-    $ git checkout develop
     $ git checkout -b bugfix-or-feature/name-of-your-bugfix-or-feature
     $ git push
 
@@ -103,7 +102,7 @@ Ready to contribute? Here's how to set up py3dep for local development.
 .. code-block:: console
 
     $ git fetch upstream
-    $ git merge upstream/develop
+    $ git merge upstream/name-of-your-branch
 
 7. Then lint and test the code:
 
