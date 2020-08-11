@@ -18,6 +18,7 @@ def geometry():
     )
 
 
+@pytest.mark.flaky(max_runs=3)
 def test_dem(geometry):
     lyr = "DEM"
     py3dep.get_map(lyr, geometry.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
@@ -31,6 +32,7 @@ def test_loc():
     assert abs(elev - 356.59) < 1e-3
 
 
+@pytest.mark.flaky(max_runs=3)
 def test_deg2mpm(geometry):
     slope = py3dep.get_map("Slope Degrees", geometry, 1e3)
     slope = py3dep.deg2mpm(slope)
