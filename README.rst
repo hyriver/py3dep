@@ -42,7 +42,7 @@ Py3DEP: Topographic data through 3DEP
     :alt: Github Actions
 
 .. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/cheginit/hydrodata/master
+    :target: https://mybinder.org/v2/gh/cheginit/hydrodata/master?filepath=docs%2Fexamples
     :alt: Binder
 
 |
