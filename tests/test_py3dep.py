@@ -24,7 +24,7 @@ def test_dem(geometry):
     py3dep.get_map(lyr, geometry.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
     dem_10 = py3dep.get_map(lyr, geometry, 10, geo_crs=DEF_CRS, crs=ALT_CRS)
     dem_1e3 = py3dep.get_map(lyr, geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
-    assert abs(abs(dem_10.mean().item() - dem_1e3.mean().item()) - 0.062) < 1e-3
+    assert abs(dem_10.mean().item() - dem_1e3.mean().item()) < 6e-3
 
 
 def test_loc():
