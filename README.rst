@@ -1,4 +1,4 @@
-.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/develop/docs/_static/py3dep_logo.png
+.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/py3dep_logo.png
     :target: https://github.com/cheginit/py3dep
     :align: center
 
@@ -42,7 +42,7 @@ Py3DEP: Topographic data through 3DEP
     :alt: Github Actions
 
 .. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/cheginit/hydrodata/develop
+    :target: https://mybinder.org/v2/gh/cheginit/hydrodata/master
     :alt: Binder
 
 |
@@ -145,8 +145,8 @@ these spatial references.
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
 
-.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/develop/docs/_static/example_plots_py3dep.png
-    :target: https://raw.githubusercontent.com/cheginit/hydrodata/develop/docs/_static/example_plots_py3dep.png
+.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/example_plots_py3dep.png
+    :target: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/example_plots_py3dep.png
     :align: center
 
 We can get the elevation for a single point within the US:
