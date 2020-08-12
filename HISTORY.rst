@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.6 (2020-08-04)
+0.1.6 (2020-08-11)
 ------------------
 
 - Add a new function, ``show_versions``, for getting versions of the installed dependecies
