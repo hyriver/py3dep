@@ -19,12 +19,15 @@ def geometry():
 
 
 @pytest.mark.flaky(max_runs=3)
-def test_dem(geometry):
-    lyr = "DEM"
-    py3dep.get_map(lyr, geometry.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
-    dem_10 = py3dep.get_map(lyr, geometry, 10, geo_crs=DEF_CRS, crs=ALT_CRS)
-    dem_1e3 = py3dep.get_map(lyr, geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
-    assert abs(dem_10.mean().item() - dem_1e3.mean().item()) < 6e-3
+def test_getmap(geometry):
+    lyr = ["DEM", "Slope Degrees"]
+    ds = py3dep.get_map(lyr, geometry.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
+    dem_10 = py3dep.get_map(lyr[0], geometry, 10, geo_crs=DEF_CRS, crs=ALT_CRS)
+    dem_1e3 = py3dep.get_map(lyr[0], geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
+    assert (
+        sorted(ds.keys()) == ["elevation", "slope_degrees"]
+        and abs(dem_10.mean().item() - dem_1e3.mean().item()) < 7e-2
+    )
 
 
 def test_loc():
