@@ -39,8 +39,8 @@ and "help wanted" is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-py3dep could always use more documentation, whether as part of the
-official py3dep docs, in docstrings, or even on the web in blog posts,
+Py3DEP could always use more documentation, whether as part of the
+official Py3DEP docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
@@ -58,10 +58,10 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up py3dep for local development.
+Ready to contribute? Here's how to set up Py3DEP for local development.
 
-1. Fork the py3dep repo through the GitHub website.
-2. Clone your fork locally and add the main py3dep as the upstream remote:
+1. Fork the Py3DEP repo through the GitHub website.
+2. Clone your fork locally and add the main Py3DEP as the upstream remote:
 
 .. code-block:: console
 
@@ -120,7 +120,7 @@ Ready to contribute? Here's how to set up py3dep for local development.
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
-    $ git push origin name-of-your-bugfix-or-feature
+    $ git push origin name-of-your-branch
 
 10. Submit a pull request through the GitHub website.
 
