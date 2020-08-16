@@ -44,8 +44,8 @@ def get_map(
     ----------
     layers : str or list
         A valid 3DEP layer or a list of them
-    geometry : shapely.geometry.Polygon
-        A shapely Polygon in WGS 84 (epsg:4326).
+    geometry : Polygon or tuple
+        A shapely Polygon or a bounding box (west, south, east, north)
     resolution : float
         The data resolution in meters. The width and height of the output are computed in pixel
         based on the geometry bounds and the given resolution.
@@ -78,7 +78,18 @@ def get_map(
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
-    return geoutils.gtiff2xarray(r_dict, _geometry, crs)
+    ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+
+    valid_layers = wms.get_validlayers()
+    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
+    rename.update({"3DEPElevation:None": "elevation"})
+
+    if isinstance(ds, xr.DataArray):
+        ds.name = rename[ds.name]
+    else:
+        ds = ds.rename({n: rename[n] for n in ds.keys()})
+
+    return ds
 
 
 def elevation_bygrid(
