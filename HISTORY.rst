@@ -2,6 +2,13 @@
 History
 =======
 
+0.1.7 (2020-08-18)
+------------------
+
+- Added a rename operation to ``get_map`` to automatically rename the variables to a
+  more sensible one.
+- Replaced ``simplejson`` with ``orjson`` to speed-up JSON operations.
+
 0.1.6 (2020-08-11)
 ------------------
 
