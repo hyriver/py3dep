@@ -51,7 +51,7 @@ def test_grid(geometry):
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid((gx, gy), crs, res * 1e3)
-    assert abs(elev.mean().item() - 295.686) < 1e-3
+    assert abs(elev.mean().item() - 295.683) < 1e-3
 
 
 def test_show_versions():
