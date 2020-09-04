@@ -135,10 +135,17 @@ def elevation_bygrid(
     req_crs = crs if crs.lower() in [DEF_CRS, "epsg:3857"] else DEF_CRS
 
     wms = WMS(
-        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=req_crs,
+        ServiceURL().wms.nm_3dep,
+        layers="3DEPElevation:None",
+        outformat="image/tiff",
+        crs=req_crs,
     )
 
-    r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs,)
+    r_dict = wms.getmap_bybox(
+        bbox,
+        resolution,
+        box_crs=crs,
+    )
 
     def reproject(content):
         with rio.MemoryFile() as memfile:
