@@ -61,10 +61,6 @@ Py3DEP: Topographic data through 3DEP
     :target: https://codecov.io/gh/cheginit/py3dep
     :alt: CodeCov
 
-.. image:: https://github.com/cheginit/py3dep/workflows/build/badge.svg
-    :target: https://github.com/cheginit/py3dep/workflows/build
-    :alt: Github Actions
-
 .. image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/cheginit/hydrodata/master?filepath=docs%2Fexamples
     :alt: Binder
