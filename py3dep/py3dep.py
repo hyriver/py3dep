@@ -7,7 +7,7 @@ import rasterio as rio
 import rasterio.warp as rio_warp
 import xarray as xr
 from pygeoogc import WMS, MatchCRS, RetrySession, ServiceURL
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 from .exceptions import InvalidInputType
 
@@ -20,7 +20,6 @@ def get_map(
     resolution: float,
     geo_crs: str = DEF_CRS,
     crs: str = DEF_CRS,
-    fill_holes: bool = False,
 ) -> xr.DataArray:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
@@ -44,7 +43,7 @@ def get_map(
     ----------
     layers : str or list
         A valid 3DEP layer or a list of them
-    geometry : Polygon or tuple
+    geometry : Polygon, MultiPolygon, or tuple
         A shapely Polygon or a bounding box (west, south, east, north)
     resolution : float
         The data resolution in meters. The width and height of the output are computed in pixel
@@ -55,19 +54,16 @@ def get_map(
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
         epsg:4326.
-    fill_holes : bool, optional
-        Whether to fill the holes in the geometry's interior, defaults to False.
 
     Returns
     -------
     xarray.DataArray
         The requeted data within the geometry
     """
-    if not isinstance(geometry, (Polygon, tuple)):
+    if not isinstance(geometry, (Polygon, MultiPolygon, tuple)):
         raise InvalidInputType("geometry", "Polygon or tuple of length 4")
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
-    _geometry = Polygon(_geometry.exterior) if fill_holes else _geometry
 
     _layers = layers if isinstance(layers, list) else [layers]
     if "DEM" in _layers:
@@ -183,7 +179,7 @@ def elevation_bygrid(
                     da.attrs["res"] = (transform[0], transform[4])
                     da.attrs["bounds"] = tuple(vrt.bounds)
                     da.attrs["nodatavals"] = vrt.nodatavals
-                    da.attrs["crs"] = vrt.crs
+                    da.attrs["crs"] = vrt.crs.to_string()
         return da
 
     _elev = xr.merge([reproject(c) for c in r_dict.values()])
