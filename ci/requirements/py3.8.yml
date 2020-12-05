@@ -5,11 +5,22 @@ dependencies:
   - python=3.8
   - pip
   - setuptools
+  - owslib
+  - pyproj
+  - defusedxml
+  - requests
+  - aiohttp
+  - chardet
+  - aiodns
+  - brotlipy
+  - nest-asyncio
   - xarray
-  - scipy
+  - netCDF4
+  - geopandas
   - rasterio
   - shapely
-  - dataclasses
+  - orjson
   - pip:
     - git+https://github.com/cheginit/pygeoogc.git
     - git+https://github.com/cheginit/pygeoutils.git
+

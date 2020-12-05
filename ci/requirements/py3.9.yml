@@ -1,8 +1,9 @@
-name: py3dep-dev
+name: py3dep
 channels:
   - conda-forge
 dependencies:
-  - python>=3.8
+  - python=3.9
+  - pip
   - setuptools
   - owslib
   - pyproj
@@ -19,14 +20,7 @@ dependencies:
   - rasterio
   - shapely
   - orjson
-
-  - setuptools_scm
-  - pytest-cov
-  - pytest-xdist
-  - pre-commit
-  - codecov
-  - coverage
-  - pip
   - pip:
     - git+https://github.com/cheginit/pygeoogc.git
     - git+https://github.com/cheginit/pygeoutils.git
+

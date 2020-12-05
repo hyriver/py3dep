@@ -7,6 +7,8 @@ History
 
 - Add support for multipolygon.
 - Remove the ``fill_hole`` argument.
+- Add a new function to get elevations for a list of coordinates called ``elevation_bycoords``.
+- Refactor ``elevation_bygrid`` function for increasing readability and performance.
 
 0.1.7 (2020-08-18)
 ------------------

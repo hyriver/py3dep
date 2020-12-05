@@ -1,5 +1,5 @@
 """Get data from 3DEP database."""
-from typing import List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pygeoutils as geoutils
@@ -60,22 +60,14 @@ def get_map(
     xarray.DataArray
         The requeted data within the geometry
     """
-    if not isinstance(geometry, (Polygon, MultiPolygon, tuple)):
-        raise InvalidInputType("geometry", "Polygon or tuple of length 4")
+    r_dict = _get_map(layers, geometry, resolution, geo_crs, crs)
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
-
-    _layers = layers if isinstance(layers, list) else [layers]
-    if "DEM" in _layers:
-        _layers[_layers.index("DEM")] = "None"
-
-    _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
-
-    wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
-    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
-
     ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
 
+    wms = WMS(
+        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=crs
+    )
     valid_layers = wms.get_validlayers()
     rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
     rename.update({"3DEPElevation:None": "elevation"})
@@ -88,8 +80,149 @@ def get_map(
     return ds
 
 
+def _get_map(
+    layers: Union[str, List[str]],
+    geometry: Union[Polygon, Tuple[float, float, float, float]],
+    resolution: float,
+    geo_crs: str = DEF_CRS,
+    crs: str = DEF_CRS,
+) -> Dict[str, bytes]:
+    """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
+
+    The 3DEP service has multi-resolution sources so depending on the user
+    provided resolution the data is resampled on server-side based
+    on all the available data sources. The following layers are available:
+    - "DEM"
+    - "Hillshade Gray"
+    - "Aspect Degrees"
+    - "Aspect Map"
+    - "GreyHillshade_elevationFill"
+    - "Hillshade Multidirectional"
+    - "Slope Map"
+    - "Slope Degrees"
+    - "Hillshade Elevation Tinted"
+    - "Height Ellipsoidal"
+    - "Contour 25"
+    - "Contour Smoothed 25"
+
+    Parameters
+    ----------
+    layers : str or list
+        A valid 3DEP layer or a list of them
+    geometry : Polygon, MultiPolygon, or tuple
+        A shapely Polygon or a bounding box (west, south, east, north)
+    resolution : float
+        The data resolution in meters. The width and height of the output are computed in pixel
+        based on the geometry bounds and the given resolution.
+    geo_crs : str, optional
+        The spatial reference system of the input geometry, defaults to
+        epsg:4326.
+    crs : str, optional
+        The spatial reference system to be used for requesting the data, defaults to
+        epsg:4326.
+
+    Returns
+    -------
+    dict
+        A dict where the keys are the layer name and values are the returned response
+        from the WMS service as bytes. You can use ``utils.create_dataset`` function
+        to convert the responses to ``xarray.Dataset``.
+    """
+    if not isinstance(geometry, (Polygon, MultiPolygon, tuple)):
+        raise InvalidInputType("geometry", "Polygon or tuple of length 4")
+
+    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
+
+    _layers = layers if isinstance(layers, list) else [layers]
+    if "DEM" in _layers:
+        _layers[_layers.index("DEM")] = "None"
+
+    _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
+
+    wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
+    return wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
+
+
 def elevation_bygrid(
-    gridxy: Tuple[List[float], List[float]],
+    xcoords: List[float],
+    ycoords: List[float],
+    crs: str,
+    resolution: float,
+    dim_names: Optional[Tuple[str, str]] = None,
+    resampling: rio_warp.Resampling = rio_warp.Resampling.bilinear,
+) -> xr.DataArray:
+    """Get elevation from DEM data for a grid.
+
+    This function is intended for getting elevations for a gridded dataset.
+
+    Parameters
+    ----------
+    xcoords : tuple of two lists of floats
+        A list containing x-coordinates of a mesh.
+    ycoords : tuple of two lists of floats
+        A list containing y-coordinates of a mesh.
+    crs : str
+        The spatial reference system of the input grid, defaults to epsg:4326.
+    resolution : float
+        The accuracy of the output, defaults to 10 m which is the highest
+        available resolution that covers CONUS. Note that higher resolution
+        increases computation time so chose this value with caution.
+    dim_names : tuple
+        A tuple of length two containing the coordinate names, defaults to ["x", "y"]
+    resampling : rasterio.warp.Resampling
+        The reasmpling method to use if the input crs is not in the supported
+        3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
+        The available methods can be found `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
+
+    Returns
+    -------
+    xarray.DataArray
+        An data array with name elevation and the given dim names.
+    """
+    if dim_names is None:
+        dim_names = ("x", "y")
+
+    bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
+    r_dict = _elevation_bybox(bbox, crs, resolution)
+
+    with rio.MemoryFile() as memfile:
+        memfile.write(r_dict["3DEPElevation:None_dd_0_0"])
+        with memfile.open() as src:
+            transform, width, height = rio_warp.calculate_default_transform(
+                src.crs, crs, src.width, src.height, *src.bounds
+            )
+            kwargs = src.meta.copy()
+            kwargs.update({"crs": crs, "transform": transform, "width": width, "height": height})
+
+            with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
+                if crs != src.crs:
+                    for i in range(1, src.count + 1):
+                        rio_warp.reproject(
+                            source=rio.band(src, i),
+                            destination=rio.band(vrt, i),
+                            src_transform=src.transform,
+                            src_crs=src.crs,
+                            dst_transform=transform,
+                            crs=crs,
+                            resampling=resampling,
+                        )
+                elev_arr = np.zeros((len(xcoords), len(ycoords)))
+                for idx, _ in np.ndenumerate(elev_arr):
+                    elev_arr[idx] = [
+                        e.item() for e in vrt.sample([(xcoords[idx[0]], ycoords[idx[1]])])
+                    ][0]
+
+    return xr.DataArray(
+        elev_arr,
+        dims=dim_names,
+        coords=[xcoords, ycoords],
+        name="elevation",
+        attrs={"units": "meters"},
+    )
+
+
+def elevation_bycoords(
+    coords: List[Tuple[float, float]],
     crs: str,
     resolution: float,
     resampling: rio_warp.Resampling = rio_warp.Resampling.bilinear,
@@ -100,8 +233,8 @@ def elevation_bygrid(
 
     Parameters
     ----------
-    gridxy : tuple of two lists of floats
-        A list containing x- and y-coordinates of a mesh, [[x-coords], [y-coords]].
+    coords : list of tuples
+        A list containing x- and y-coordinates of a mesh, [(x, y), ...].
     crs : str
         The spatial reference system of the input grid, defaults to epsg:4326.
     resolution : float
@@ -115,11 +248,68 @@ def elevation_bygrid(
 
     Returns
     -------
-    xarray.DataArray
-        A data array with dims ``x`` and ``y``
+    numpy.ndarray
+        An array of elevations where its index matches the input gridxy list
     """
-    gx, gy = gridxy
+    if not isinstance(coords, list) or len(coords[0]) != 2:
+        raise InvalidInputType("coords", "list of tuples of length two")
+
+    gx, gy = zip(*coords)
     bbox = (min(gx), min(gy), max(gx), max(gy))
+    r_dict = _elevation_bybox(bbox, crs, resolution)
+
+    with rio.MemoryFile() as memfile:
+        memfile.write(r_dict["3DEPElevation:None_dd_0_0"])
+        with memfile.open() as src:
+            transform, width, height = rio_warp.calculate_default_transform(
+                src.crs, crs, src.width, src.height, *src.bounds
+            )
+            kwargs = src.meta.copy()
+            kwargs.update({"crs": crs, "transform": transform, "width": width, "height": height})
+
+            with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
+                if crs != src.crs:
+                    for i in range(1, src.count + 1):
+                        rio_warp.reproject(
+                            source=rio.band(src, i),
+                            destination=rio.band(vrt, i),
+                            src_transform=src.transform,
+                            src_crs=src.crs,
+                            dst_transform=transform,
+                            crs=crs,
+                            resampling=resampling,
+                        )
+
+                return np.array([e.item() for e in vrt.sample(coords)])
+
+
+def _elevation_bybox(
+    bbox: Tuple[float, float, float, float],
+    crs: str,
+    resolution: float,
+) -> xr.DataArray:
+    """Get elevation from DEM data for a list of coordinates.
+
+    This function is intended for getting elevations for a gridded dataset.
+
+    Parameters
+    ----------
+    bbox : tuple of two lists of floats
+        A list containing x- and y-coordinates of a mesh, [[x-coords], [y-coords]].
+    crs : str
+        The spatial reference system of the input grid, defaults to epsg:4326.
+    resolution : float
+        The accuracy of the output, defaults to 10 m which is the highest
+        available resolution that covers CONUS. Note that higher resolution
+        increases computation time so chose this value with caution.
+
+    Returns
+    -------
+    numpy.ndarray
+        An array of elevations where its index matches the input gridxy list
+    """
+    if not isinstance(bbox, tuple) or len(bbox) != 4:
+        raise InvalidInputType("bbox", "tuple of length 4")
 
     ratio_min = 0.01
     ratio_x = abs((bbox[2] - bbox[0]) / bbox[0])
@@ -129,63 +319,7 @@ def elevation_bygrid(
         bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
 
     req_crs = crs if crs.lower() in [DEF_CRS, "epsg:3857"] else DEF_CRS
-
-    wms = WMS(
-        ServiceURL().wms.nm_3dep,
-        layers="3DEPElevation:None",
-        outformat="image/tiff",
-        crs=req_crs,
-    )
-
-    r_dict = wms.getmap_bybox(
-        bbox,
-        resolution,
-        box_crs=crs,
-    )
-
-    def reproject(content):
-        with rio.MemoryFile() as memfile:
-            memfile.write(content)
-            with memfile.open() as src:
-                transform, width, height = rio_warp.calculate_default_transform(
-                    src.crs, crs, src.width, src.height, *src.bounds
-                )
-                kwargs = src.meta.copy()
-                kwargs.update(
-                    {"crs": crs, "transform": transform, "width": width, "height": height}
-                )
-
-                with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
-                    if crs != src.crs:
-                        for i in range(1, src.count + 1):
-                            rio_warp.reproject(
-                                source=rio.band(src, i),
-                                destination=rio.band(vrt, i),
-                                src_transform=src.transform,
-                                src_crs=src.crs,
-                                dst_transform=transform,
-                                crs=crs,
-                                resampling=resampling,
-                            )
-
-                    da = xr.open_rasterio(vrt)
-                    try:
-                        da = da.squeeze("band", drop=True)
-                    except ValueError:
-                        pass
-
-                    da.name = "elevation"
-                    da.attrs["transform"] = transform
-                    da.attrs["res"] = (transform[0], transform[4])
-                    da.attrs["bounds"] = tuple(vrt.bounds)
-                    da.attrs["nodatavals"] = vrt.nodatavals
-                    da.attrs["crs"] = vrt.crs.to_string()
-        return da
-
-    _elev = xr.merge([reproject(c) for c in r_dict.values()])
-    elev = _elev.elevation.interp(x=gx, y=gy)
-    elev.attrs["units"] = "meters"
-    return elev
+    return _get_map("DEM", bbox, resolution, crs, req_crs)
 
 
 def elevation_byloc(coord: Tuple[float, float], crs: str = DEF_CRS):
