@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Setup miniconda
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@master
         with:
           activate-environment: py3dep
           python-version: ${{ matrix.python-version }}
