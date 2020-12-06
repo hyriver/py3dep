@@ -20,72 +20,6 @@ def get_map(
     resolution: float,
     geo_crs: str = DEF_CRS,
     crs: str = DEF_CRS,
-) -> xr.DataArray:
-    """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
-
-    The 3DEP service has multi-resolution sources so depending on the user
-    provided resolution the data is resampled on server-side based
-    on all the available data sources. The following layers are available:
-    - "DEM"
-    - "Hillshade Gray"
-    - "Aspect Degrees"
-    - "Aspect Map"
-    - "GreyHillshade_elevationFill"
-    - "Hillshade Multidirectional"
-    - "Slope Map"
-    - "Slope Degrees"
-    - "Hillshade Elevation Tinted"
-    - "Height Ellipsoidal"
-    - "Contour 25"
-    - "Contour Smoothed 25"
-
-    Parameters
-    ----------
-    layers : str or list
-        A valid 3DEP layer or a list of them
-    geometry : Polygon, MultiPolygon, or tuple
-        A shapely Polygon or a bounding box (west, south, east, north)
-    resolution : float
-        The data resolution in meters. The width and height of the output are computed in pixel
-        based on the geometry bounds and the given resolution.
-    geo_crs : str, optional
-        The spatial reference system of the input geometry, defaults to
-        epsg:4326.
-    crs : str, optional
-        The spatial reference system to be used for requesting the data, defaults to
-        epsg:4326.
-
-    Returns
-    -------
-    xarray.DataArray
-        The requeted data within the geometry
-    """
-    r_dict = _get_map(layers, geometry, resolution, geo_crs, crs)
-
-    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
-    ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
-
-    wms = WMS(
-        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=crs
-    )
-    valid_layers = wms.get_validlayers()
-    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
-    rename.update({"3DEPElevation:None": "elevation"})
-
-    if isinstance(ds, xr.DataArray):
-        ds.name = rename[ds.name]
-    else:
-        ds = ds.rename({n: rename[n] for n in ds.keys()})
-
-    return ds
-
-
-def _get_map(
-    layers: Union[str, List[str]],
-    geometry: Union[Polygon, Tuple[float, float, float, float]],
-    resolution: float,
-    geo_crs: str = DEF_CRS,
-    crs: str = DEF_CRS,
 ) -> Dict[str, bytes]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
@@ -140,7 +74,20 @@ def _get_map(
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
-    return wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
+    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
+
+    ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+
+    valid_layers = wms.get_validlayers()
+    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
+    rename.update({"3DEPElevation:None": "elevation"})
+
+    if isinstance(ds, xr.DataArray):
+        ds.name = rename[ds.name]
+    else:
+        ds = ds.rename({n: rename[n] for n in ds.keys()})
+
+    return ds
 
 
 def elevation_bygrid(
@@ -319,7 +266,10 @@ def _elevation_bybox(
         bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
 
     req_crs = crs if crs.lower() in [DEF_CRS, "epsg:3857"] else DEF_CRS
-    return _get_map("DEM", bbox, resolution, crs, req_crs)
+    wms = WMS(
+        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=req_crs
+    )
+    return wms.getmap_bybox(bbox, resolution, box_crs=crs)
 
 
 def elevation_byloc(coord: Tuple[float, float], crs: str = DEF_CRS):
