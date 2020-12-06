@@ -1,4 +1,5 @@
 """Get data from 3DEP database."""
+from itertools import product
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -131,36 +132,11 @@ def elevation_bygrid(
 
     bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
     r_dict = _elevation_bybox(bbox, crs, resolution)
-
-    with rio.MemoryFile() as memfile:
-        memfile.write(r_dict["3DEPElevation:None_dd_0_0"])
-        with memfile.open() as src:
-            transform, width, height = rio_warp.calculate_default_transform(
-                src.crs, crs, src.width, src.height, *src.bounds
-            )
-            kwargs = src.meta.copy()
-            kwargs.update({"crs": crs, "transform": transform, "width": width, "height": height})
-
-            with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
-                if crs != src.crs:
-                    for i in range(1, src.count + 1):
-                        rio_warp.reproject(
-                            source=rio.band(src, i),
-                            destination=rio.band(vrt, i),
-                            src_transform=src.transform,
-                            src_crs=src.crs,
-                            dst_transform=transform,
-                            crs=crs,
-                            resampling=resampling,
-                        )
-                elev_arr = np.zeros((len(xcoords), len(ycoords)))
-                for idx, _ in np.ndenumerate(elev_arr):
-                    elev_arr[idx] = [
-                        e.item() for e in vrt.sample([(xcoords[idx[0]], ycoords[idx[1]])])
-                    ][0]
+    coords = [(x, y) for x, y in product(xcoords, ycoords)]
+    elev_arr = _sample_tiff(r_dict["3DEPElevation:None_dd_0_0"], coords, crs, resampling)
 
     return xr.DataArray(
-        elev_arr,
+        elev_arr.reshape((len(xcoords), len(ycoords))),
         dims=dim_names,
         coords=[xcoords, ycoords],
         name="elevation",
@@ -173,7 +149,7 @@ def elevation_bycoords(
     crs: str,
     resolution: float,
     resampling: rio_warp.Resampling = rio_warp.Resampling.bilinear,
-) -> xr.DataArray:
+) -> np.ndarray:
     """Get elevation from DEM data for a list of coordinates.
 
     This function is intended for getting elevations for a gridded dataset.
@@ -204,9 +180,34 @@ def elevation_bycoords(
     gx, gy = zip(*coords)
     bbox = (min(gx), min(gy), max(gx), max(gy))
     r_dict = _elevation_bybox(bbox, crs, resolution)
+    return _sample_tiff(r_dict["3DEPElevation:None_dd_0_0"], coords, crs, resampling)
 
+
+def _sample_tiff(
+    content: bytes, coords: List[Tuple[float, float]], crs: str, resampling: rio_warp.Resampling
+) -> np.ndarray:
+    """Sample a tiff response for a list of coordinates.
+
+    Parameters
+    ----------
+    content : bytes
+    coords : list of tuples
+        A list containing x- and y-coordinates of a mesh, [(x, y), ...].
+    crs : str
+        The spatial reference system of the input grid, defaults to epsg:4326.
+    resolution : float
+    resampling : rasterio.warp.Resampling
+        The reasmpling method to use if the input crs is not in the supported
+        3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
+        The available methods can be found `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
+
+    Returns
+    -------
+    numpy.ndarray
+        An array of elevations where its index matches the input coords list
+    """
     with rio.MemoryFile() as memfile:
-        memfile.write(r_dict["3DEPElevation:None_dd_0_0"])
+        memfile.write(content)
         with memfile.open() as src:
             transform, width, height = rio_warp.calculate_default_transform(
                 src.crs, crs, src.width, src.height, *src.bounds
@@ -226,7 +227,6 @@ def elevation_bycoords(
                             crs=crs,
                             resampling=resampling,
                         )
-
                 return np.array([e.item() for e in vrt.sample(coords)])
 
 
