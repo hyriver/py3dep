@@ -1,0 +1,48 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+name: Release and publish
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Please check [HISTORY.rst](HISTORY.rst) file for a detailed list
+            of changes.
+          draft: false
+          prerelease: true
+
+      - name: Set up Python
+        uses: actions/setup-python@master
+        with:
+            python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install setuptools wheel
+
+      - name: Build dist and wheel
+        run: |
+            python setup.py sdist bdist_wheel
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+            user: __token__
+            password: ${{ secrets.PYPI_PASSWORD }}
