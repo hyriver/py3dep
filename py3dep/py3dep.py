@@ -132,7 +132,7 @@ def elevation_bygrid(
 
     bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
     r_dict = _elevation_bybox(bbox, crs, resolution)
-    coords = [(x, y) for x, y in product(xcoords, ycoords)]
+    coords = list(product(xcoords, ycoords))
     elev_arr = _sample_tiff(r_dict["3DEPElevation:None_dd_0_0"], coords, crs, resampling)
 
     return xr.DataArray(
