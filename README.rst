@@ -160,7 +160,7 @@ these spatial references.
     import py3dep
     from pynhd import NLDI
 
-    geom = NLDI().getfeature_byid("nwissite", "USGS-01031500", basin=True).geometry[0]
+    geom = NLDI().get_basins("01031500").geometry[0]
     dem = py3dep.get_map("DEM", geom, resolution=30, geo_crs="epsg:4326", crs="epsg:3857")
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
@@ -186,11 +186,21 @@ add the elevation as a new variable to the dataset:
     import numpy as np
 
     clm = daymet.get_bygeom(geom, ("2005-01-01", "2005-01-31"), variables="tmin")
-    gridxy = (clm.x.values, clm.y.values)
-    elev = py3dep.elevation_bygrid(gridxy, clm.crs, clm.res[0] * 1000)
+    elev = py3dep.elevation_bygrid(clm.x.values, clm.y.values, clm.crs, clm.res[0] * 1000)
     clm = xr.merge([clm, elev], combine_attrs="override")
     clm["elevation"] = clm.elevation.where(~np.isnan(clm.isel(time=0).tmin), drop=True)
 
+Now, let's get street network data using [osmnx](https://github.com/gboeing/osmnx) package
+and add elevation data for its nodes using ``elevation_bycoords`` function.
+
+.. code-block:: python
+
+    import osmnx as ox
+
+    G = ox.graph_from_place("Piedmont, California, USA", network_type="drive")
+    x, y = nx.get_node_attributes(G, "x").values(), nx.get_node_attributes(G, "y").values()
+    elevation = py3dep.elevation_bycoords(list(zip(x, y)), crs="epsg:4326", resolution=90)
+    nx.set_node_attributes(G, dict(zip(G.nodes(), elevation)), "elevation")
 
 Contributing
 ------------
