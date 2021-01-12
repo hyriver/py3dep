@@ -1,5 +1,6 @@
 """Get data from 3DEP database."""
 from itertools import product
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -21,6 +22,7 @@ def get_map(
     resolution: float,
     geo_crs: str = DEF_CRS,
     crs: str = DEF_CRS,
+    output_dir: Optional[Union[str, Path]] = None,
 ) -> Dict[str, bytes]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
@@ -55,6 +57,8 @@ def get_map(
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
         epsg:4326.
+    output_dir : str or Path, optional
+        The output directory to also save the map as GTiff file(s), defaults to None.
 
     Returns
     -------
@@ -76,6 +80,9 @@ def get_map(
 
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
+
+    if output_dir:
+        geoutils.gtiff2file(r_dict, _geometry, crs, output_dir)
 
     ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
 

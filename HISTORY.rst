@@ -2,6 +2,11 @@
 History
 =======
 
+0.2.1 (unreleased)
+------------------
+
+- Add support for saving maps as ``geotiff`` file(s).
+
 0.2.0 (2020-12-06)
 ------------------
 

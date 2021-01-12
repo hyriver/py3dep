@@ -1,7 +1,9 @@
 import io
+import shutil
 
 import numpy as np
 import pytest
+import rasterio
 from pygeoogc import MatchCRS
 from shapely.geometry import Polygon
 
@@ -28,6 +30,16 @@ def test_getmap(geometry):
         sorted(ds.keys()) == ["elevation", "slope_degrees"]
         and abs(dem_10.mean().item() - dem_1e3.mean().item()) < 7e-2
     )
+
+
+@pytest.mark.flaky(max_runs=3)
+def test_getmap_2file(geometry):
+    dem = py3dep.get_map("DEM", geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS, output_dir="raster")
+    with rasterio.open("raster/3DEPElevation:None_dd_0_0.gtiff") as f:
+        mean = f.read().mean()
+
+    shutil.rmtree("raster")
+    assert abs(dem.mean().item() - mean) < 7e-2
 
 
 def test_loc():
