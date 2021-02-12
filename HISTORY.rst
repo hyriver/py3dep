@@ -6,6 +6,10 @@ History
 ------------------
 
 - Add support for saving maps as ``geotiff`` file(s).
+- Replace ``Elevation Point Query Service`` service with ``AirMap`` for getting
+  elevations for a list of coordinates in bulk since ``AirMap`` is much faster.
+  The resolution of ``AirMap`` is 30 m.
+- Use ``cytoolz`` for some of the operations for improving performance.
 
 0.2.0 (2020-12-06)
 ------------------
@@ -25,7 +29,7 @@ History
 0.1.6 (2020-08-11)
 ------------------
 
-- Add a new function, ``show_versions``, for getting versions of the installed dependecies
+- Add a new function, ``show_versions``, for getting versions of the installed dependencies
   which is useful for debugging and reporting.
 - Fix typos in the docs and improved the README.
 - Improve testing and coverage.

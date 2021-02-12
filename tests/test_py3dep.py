@@ -42,9 +42,9 @@ def test_getmap_2file(geometry):
     assert abs(dem.mean().item() - mean) < 7e-2
 
 
-def test_loc():
-    elev = py3dep.elevation_byloc((-7766049.664788851, 5691929.739021257), ALT_CRS)
-    assert abs(elev - 356.59) < 1e-3
+def test_coords():
+    elev = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 3, ALT_CRS)
+    assert elev == [363] * 3
 
 
 @pytest.mark.flaky(max_runs=3)
@@ -56,26 +56,14 @@ def test_deg2mpm(geometry):
 
 def test_grid(geometry):
     geo_crs = DEF_CRS
-    crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs"
+    crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
     geom = MatchCRS.geometry(geometry, geo_crs, crs)
     xmin, ymin, xmax, ymax = geom.bounds
-    res = 1
+    res = 1e3
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
-    elev = py3dep.elevation_bygrid(gx, gy, crs, res * 1e3)
+    elev = py3dep.elevation_bygrid(gx, gy, crs, res)
     assert abs(elev.mean().item() - 295.763) < 1e-3
-
-
-def test_coords(geometry):
-    geo_crs = DEF_CRS
-    crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=km +no_defs"
-    geom = MatchCRS.geometry(geometry, geo_crs, crs)
-    xmin, ymin, xmax, ymax = geom.bounds
-    res = 1
-    gx = np.arange(xmin, xmax, res)
-    gy = np.arange(ymin, ymax, res)
-    elev = py3dep.elevation_bycoords(list(zip(gx, gy)), crs, res * 1e3)
-    assert abs(elev.mean() - 282.006) < 1e-3
 
 
 def test_show_versions():

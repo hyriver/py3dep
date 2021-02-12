@@ -3,6 +3,7 @@ from itertools import product
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
+import cytoolz as tlz
 import numpy as np
 import pygeoutils as geoutils
 import rasterio as rio
@@ -139,7 +140,7 @@ def elevation_bygrid(
 
     bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
     r_dict = _elevation_bybox(bbox, crs, resolution)
-    coords = list(product(xcoords, ycoords))
+    coords = product(xcoords, ycoords)
     elev_arr = _sample_tiff(r_dict["3DEPElevation:None_dd_0_0"], coords, crs, resampling)
 
     return xr.DataArray(
@@ -149,45 +150,6 @@ def elevation_bygrid(
         name="elevation",
         attrs={"units": "meters"},
     )
-
-
-def elevation_bycoords(
-    coords: List[Tuple[float, float]],
-    crs: str,
-    resolution: float,
-    resampling: rio_warp.Resampling = rio_warp.Resampling.bilinear,
-) -> np.ndarray:
-    """Get elevation from DEM data for a list of coordinates.
-
-    This function is intended for getting elevations for a gridded dataset.
-
-    Parameters
-    ----------
-    coords : list of tuples
-        A list containing x- and y-coordinates of a mesh, [(x, y), ...].
-    crs : str
-        The spatial reference system of the input grid, defaults to epsg:4326.
-    resolution : float
-        The accuracy of the output, defaults to 10 m which is the highest
-        available resolution that covers CONUS. Note that higher resolution
-        increases computation time so chose this value with caution.
-    resampling : rasterio.warp.Resampling
-        The reasmpling method to use if the input crs is not in the supported
-        3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
-        The available methods can be found `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
-
-    Returns
-    -------
-    numpy.ndarray
-        An array of elevations where its index matches the input gridxy list
-    """
-    if not isinstance(coords, list) or len(coords[0]) != 2:
-        raise InvalidInputType("coords", "list of tuples of length two")
-
-    gx, gy = zip(*coords)
-    bbox = (min(gx), min(gy), max(gx), max(gy))
-    r_dict = _elevation_bybox(bbox, crs, resolution)
-    return _sample_tiff(r_dict["3DEPElevation:None_dd_0_0"], coords, crs, resampling)
 
 
 def _sample_tiff(
@@ -279,38 +241,35 @@ def _elevation_bybox(
     return wms.getmap_bybox(bbox, resolution, box_crs=crs)
 
 
-def elevation_byloc(coord: Tuple[float, float], crs: str = DEF_CRS):
-    """Get elevation from USGS 3DEP service for a coordinate.
+def elevation_bycoords(coords: List[Tuple[float, float]], crs: str = DEF_CRS) -> List[int]:
+    """Get elevation from Airmap for a list of coordinates.
 
     Parameters
     ----------
-    coord : tuple
+    coords : list of tuples
         Coordinates of the location as a tuple
     crs : str, optional
         The spatial reference of the input coord, defaults to epsg:4326 (lon, lat)
 
     Returns
     -------
-    float
+    list of int
         Elevation in meter
     """
-    if not isinstance(coord, tuple) or len(coord) != 2:
-        raise InvalidInputType("coord", "tuple of length 2", "(x, y)")
+    if not isinstance(coords, list) and all(len(c) == 2 for c in coords):
+        raise InvalidInputType("coord", "list of tuples of length 2", "[(x, y), ...]")
 
-    lon, lat = MatchCRS.coords(([coord[0]], [coord[1]]), crs, DEF_CRS)
+    coords_reproj = zip(*MatchCRS.coords(tuple(zip(*coords)), crs, DEF_CRS))
+    coords_reproj = tlz.partition_all(100, coords_reproj)
 
-    url = "https://nationalmap.gov/epqs/pqs.php"
-    payload = {"output": "json", "x": lon[0], "y": lat[0], "units": "Meters"}
-    r = RetrySession().get(url, payload)
-    root = r.json()["USGS_Elevation_Point_Query_Service"]
-    elevation = float(root["Elevation_Query"]["Elevation"])
+    headers = {"Content-Type": "application/json", "charset": "utf-8"}
+    elevations = []
+    for chunk in coords_reproj:
+        payload = {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)}
+        resp = RetrySession().get(ServiceURL().restful.airmap, payload=payload, headers=headers)
+        elevations.append(resp.json()["data"])
 
-    if abs(elevation - (-1000000)) < 1e-3:
-        raise ValueError(
-            f"The elevation of the requested coordinate ({coord[0]}, {coord[1]}) cannot be found."
-        )
-
-    return elevation
+    return list(tlz.concat(elevations))
 
 
 def deg2mpm(da: xr.DataArray) -> xr.DataArray:
