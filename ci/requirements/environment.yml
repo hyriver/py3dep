@@ -19,6 +19,7 @@ dependencies:
   - rasterio
   - shapely
   - orjson
+  - simplejson
 
   - setuptools_scm
   - pytest-cov
