@@ -2,9 +2,10 @@
 History
 =======
 
-0.2.1 (unreleased)
+0.9.0 (2021-02-14)
 ------------------
 
+- Bump version to the same version as Hydrodata.
 - Add support for saving maps as ``geotiff`` file(s).
 - Replace ``Elevation Point Query Service`` service with ``AirMap`` for getting
   elevations for a list of coordinates in bulk since ``AirMap`` is much faster.
