@@ -1,7 +1,7 @@
 """Get data from 3DEP database."""
 from itertools import product
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import cytoolz as tlz
 import numpy as np
@@ -153,7 +153,10 @@ def elevation_bygrid(
 
 
 def _sample_tiff(
-    content: bytes, coords: List[Tuple[float, float]], crs: str, resampling: rio_warp.Resampling
+    content: bytes,
+    coords: Union[List[Tuple[float, float]], Iterator[Tuple[float, float]]],
+    crs: str,
+    resampling: rio_warp.Resampling,
 ) -> np.ndarray:
     """Sample a tiff response for a list of coordinates.
 
@@ -256,7 +259,10 @@ def elevation_bycoords(coords: List[Tuple[float, float]], crs: str = DEF_CRS) ->
     list of int
         Elevation in meter
     """
-    if not isinstance(coords, list) and all(len(c) == 2 for c in coords):
+    if not isinstance(coords, (list, Iterator)):
+        raise InvalidInputType("coord", "list (or iterator) of tuples of length 2", "[(x, y), ...]")
+
+    if isinstance(coords, list) and any(len(c) != 2 for c in coords):
         raise InvalidInputType("coord", "list of tuples of length 2", "[(x, y), ...]")
 
     coords_reproj = zip(*MatchCRS.coords(tuple(zip(*coords)), crs, DEF_CRS))
