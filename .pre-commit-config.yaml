@@ -45,7 +45,6 @@ repos:
     hooks:
       - id: flake8
         name: Linting with flake8
-        exclude: docs/conf.py
         additional_dependencies: [flake8-comprehensions, flake8-builtins, flake8-blind-except, flake8-bugbear, flake8-use-fstring, flake8-docstrings, flake8-simplify]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -54,7 +53,7 @@ repos:
       - id: mypy
         name: Static type checking with mypy
         exclude: tests
-        files: pynhd
+        files: py3dep
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.10.0
@@ -68,5 +67,5 @@ repos:
     hooks:
       - id: bandit
         name: Check for security issues with bandit
-        args: [-lll, --recursive, pynhd]
+        args: [-lll, --recursive, py3dep]
         files: .py$
