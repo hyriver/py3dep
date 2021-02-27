@@ -4,27 +4,27 @@
 
 |
 
-.. |hydrodata| image:: https://github.com/cheginit/hydrodata/workflows/pytest/badge.svg
+.. |hydrodata| image:: https://github.com/cheginit/hydrodata/actions/workflows/test.yml/badge.svg
     :target: https://github.com/cheginit/hydrodata/actions?query=workflow%3Apytest
     :alt: Github Actions
 
-.. |pygeoogc| image:: https://github.com/cheginit/pygeoogc/workflows/pytest/badge.svg
+.. |pygeoogc| image:: https://github.com/cheginit/pygeoogc/actions/workflows/test.yml/badge.svg
     :target: https://github.com/cheginit/pygeoogc/actions?query=workflow%3Apytest
     :alt: Github Actions
 
-.. |pygeoutils| image:: https://github.com/cheginit/pygeoutils/workflows/pytest/badge.svg
+.. |pygeoutils| image:: https://github.com/cheginit/pygeoutils/actions/workflows/test.yml/badge.svg
     :target: https://github.com/cheginit/pygeoutils/actions?query=workflow%3Apytest
     :alt: Github Actions
 
-.. |pynhd| image:: https://github.com/cheginit/pynhd/workflows/pytest/badge.svg
+.. |pynhd| image:: https://github.com/cheginit/pynhd/actions/workflows/test.yml/badge.svg
     :target: https://github.com/cheginit/pynhd/actions?query=workflow%3Apytest
     :alt: Github Actions
 
-.. |py3dep| image:: https://github.com/cheginit/py3dep/workflows/pytest/badge.svg
+.. |py3dep| image:: https://github.com/cheginit/py3dep/actions/workflows/test.yml/badge.svg
     :target: https://github.com/cheginit/py3dep/actions?query=workflow%3Apytest
     :alt: Github Actions
 
-.. |pydaymet| image:: https://github.com/cheginit/pydaymet/workflows/pytest/badge.svg
+.. |pydaymet| image:: https://github.com/cheginit/pydaymet/actions/workflows/test.yml/badge.svg
     :target: https://github.com/cheginit/pydaymet/actions?query=workflow%3Apytest
     :alt: Github Actions
 
@@ -167,18 +167,19 @@ these spatial references.
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
 
-.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/example_plots_py3dep.png
-    :target: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/example_plots_py3dep.png
+.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/dem_slope.png
+    :target: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/dem_slope.png
     :align: center
 
-We can get the elevation for a single point within the US:
+The ``get_map`` function also has another argument for saving the dataset into a raster file. We
+should provide the path to a folder:
 
 .. code-block:: python
 
-    elev = py3dep.elevation_byloc((-7766049.665, 5691929.739), "epsg:3857")
+    dem = py3dep.get_map("DEM", geom, 1e3, output_dir="raster")
 
-Additionally, we can get the elevations of set of x- and y- coordinates of a grid. For example,
-let's get the minimum temperature data within the watershed from Daymet using PyDaymet then
+Moreover, we can get the elevations of set of x- and y- coordinates on a grid. For example,
+let's get the minimum temperature data within this watershed from Daymet using PyDaymet then
 add the elevation as a new variable to the dataset:
 
 .. code-block:: python
@@ -187,12 +188,14 @@ add the elevation as a new variable to the dataset:
     import xarray as xr
     import numpy as np
 
-    clm = daymet.get_bygeom(geom, ("2005-01-01", "2005-01-31"), variables="tmin")
+    clm = daymet.get_bygeom(geometry, ("2005-01-01", "2005-01-31"), variables="tmin")
     elev = py3dep.elevation_bygrid(clm.x.values, clm.y.values, clm.crs, clm.res[0] * 1000)
-    clm = xr.merge([clm, elev], combine_attrs="override")
+    attrs = clm.attrs
+    clm = xr.merge([clm, elev])
     clm["elevation"] = clm.elevation.where(~np.isnan(clm.isel(time=0).tmin), drop=True)
+    clm.attrs.update(attrs)
 
-Now, let's get street network data using [osmnx](https://github.com/gboeing/osmnx) package
+Now, let's get street network data using `osmnx <https://github.com/gboeing/osmnx>`_ package
 and add elevation data for its nodes using ``elevation_bycoords`` function.
 
 .. code-block:: python
@@ -201,8 +204,13 @@ and add elevation data for its nodes using ``elevation_bycoords`` function.
 
     G = ox.graph_from_place("Piedmont, California, USA", network_type="drive")
     x, y = nx.get_node_attributes(G, "x").values(), nx.get_node_attributes(G, "y").values()
-    elevation = py3dep.elevation_bycoords(list(zip(x, y)), crs="epsg:4326", resolution=90)
+    elevation = py3dep.elevation_bycoords(zip(x, y), crs="epsg:4326")
     nx.set_node_attributes(G, dict(zip(G.nodes(), elevation)), "elevation")
+
+
+.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/street_elev.png
+    :target: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/street_elev.png
+    :align: center
 
 Contributing
 ------------
