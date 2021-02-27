@@ -1,6 +1,6 @@
-name: lint
-
 on: [push, pull_request]
+
+name: Linting
 
 jobs:
   run-linters:
@@ -8,10 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.6.0
-        with:
-          access_token: ${{ github.token }}
       - uses: actions/checkout@master
       - uses: actions/setup-python@master
         with:
