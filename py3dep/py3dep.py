@@ -96,7 +96,7 @@ def get_map(
     else:
         ds = ds.rename({n: rename[n] for n in ds.keys()})
 
-    return ds
+    return ds.sortby("y", ascending=False)
 
 
 def elevation_bygrid(
