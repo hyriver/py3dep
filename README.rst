@@ -109,8 +109,7 @@ the following layers:
 Moreover, Py3DEP offers some additional utilities:
 
 - ``elevation_bygrid``: For getting elevations of all the grid points in a 2D grid.
-- ``elevation_byloc``: For getting elevation of a single point which is based on the National
-  Map's `Elevation Point Query Service <https://nationalmap.gov/epqs/>`__.
+- ``elevation_bycoords``: For getting elevation of a list of ``x`` and ``y`` coordinates.
 - ``deg2mpm``: For converting slope dataset from degree to meter per meter.
 
 You can try using Py3DEP without installing it on you system by clicking on the binder badge
