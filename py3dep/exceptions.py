@@ -1,4 +1,4 @@
-"""Customized Hydrodata exceptions."""
+"""Customized pygeohydro exceptions."""
 from typing import Optional
 
 
