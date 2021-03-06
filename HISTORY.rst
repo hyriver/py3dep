@@ -6,6 +6,9 @@ History
 -------------------
 
 - The first release after renaming hydrodata to pygeohydro.
+- Make ``mypy`` checks more strict and fix all the errors and prevent possible
+  bugs.
+- Speed up CI testing by using ``mamba`` and caching.
 
 0.9.0 (2021-02-14)
 ------------------
