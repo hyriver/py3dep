@@ -2,10 +2,15 @@
 History
 =======
 
+0.10.0 (2021-03-06)
+-------------------
+
+- The first release after renaming hydrodata to pygeohydro.
+
 0.9.0 (2021-02-14)
 ------------------
 
-- Bump version to the same version as Hydrodata.
+- Bump version to the same version as pygeohydro.
 - Add support for saving maps as ``geotiff`` file(s).
 - Replace ``Elevation Point Query Service`` service with ``AirMap`` for getting
   elevations for a list of coordinates in bulk since ``AirMap`` is much faster.
