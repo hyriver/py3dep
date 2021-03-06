@@ -1,11 +1,11 @@
-.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/py3dep_logo.png
-    :target: https://github.com/cheginit/py3dep
-    :align: center
+.. .. image:: https://raw.githubusercontent.com/cheginit/pygeohydro/master/docs/_static/py3dep_logo.png
+..     :target: https://github.com/cheginit/py3dep
+..     :align: center
 
-|
+.. |
 
-.. |hydrodata| image:: https://github.com/cheginit/hydrodata/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/hydrodata/actions?query=workflow%3Apytest
+.. |pygeohydro| image:: https://github.com/cheginit/pygeohydro/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/cheginit/pygeohydro/actions?query=workflow%3Apytest
     :alt: Github Actions
 
 .. |pygeoogc| image:: https://github.com/cheginit/pygeoogc/actions/workflows/test.yml/badge.svg
@@ -31,7 +31,7 @@
 =========== ==================================================================== ============
 Package     Description                                                          Status
 =========== ==================================================================== ============
-Hydrodata_  Access NWIS, NID, HCDN 2009, NLCD, and SSEBop databases              |hydrodata|
+PyGeoHydro_ Access NWIS, NID, HCDN 2009, NLCD, and SSEBop databases              |pygeohydro|
 PyGeoOGC_   Send queries to any ArcGIS RESTful-, WMS-, and WFS-based services    |pygeoogc|
 PyGeoUtils_ Convert responses from PyGeoOGC's supported web services to datasets |pygeoutils|
 PyNHD_      Navigate and subset NHDPlus (MR and HR) using web services           |pynhd|
@@ -39,7 +39,7 @@ Py3DEP_     Access topographic data through National Map's 3DEP web service     
 PyDaymet_   Access Daymet for daily climate data both single pixel and gridded   |pydaymet|
 =========== ==================================================================== ============
 
-.. _Hydrodata: https://github.com/cheginit/hydrodata
+.. _PyGeoHydro: https://github.com/cheginit/pygeohydro
 .. _PyGeoOGC: https://github.com/cheginit/pygeoogc
 .. _PyGeoUtils: https://github.com/cheginit/pygeoutils
 .. _PyNHD: https://github.com/cheginit/pynhd
@@ -62,7 +62,7 @@ Py3DEP: Topographic data through 3DEP
     :alt: CodeCov
 
 .. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/cheginit/hydrodata/master?filepath=docs%2Fexamples
+    :target: https://mybinder.org/v2/gh/cheginit/pygeohydro/master?filepath=docs%2Fexamples
     :alt: Binder
 
 |
@@ -84,7 +84,8 @@ Py3DEP: Topographic data through 3DEP
 Features
 --------
 
-Py3DEP is a part of Hydrodata software stack and provides access to the
+Py3DEP is part of a software stack for retrieving and processing hydrology and climatology
+datasets. This package provides access to the
 `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__
 database which is a part of the
 `National Map services <https://viewer.nationalmap.gov/services/>`__.
@@ -113,11 +114,11 @@ Moreover, Py3DEP offers some additional utilities:
 - ``deg2mpm``: For converting slope dataset from degree to meter per meter.
 
 You can try using Py3DEP without installing it on you system by clicking on the binder badge
-below the Py3DEP banner. A Jupyter notebook instance with the Hydrodata software stack
+below the Py3DEP banner. A Jupyter notebook instance with the stack
 pre-installed will be launched in your web browser and you can start coding!
 
-Please note that since Hydrodata is in early development stages, while the provided
-functionaities should be stable, changes in APIs are possible in new releases. But we
+Please note that since this project is in early development stages, while the provided
+functionalities should be stable, changes in APIs are possible in new releases. But we
 appreciate it if you give this project a try and provide feedback. Contributions are most welcome.
 
 Moreover, requests for additional functionalities can be submitted via
@@ -166,8 +167,8 @@ these spatial references.
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
 
-.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/dem_slope.png
-    :target: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/dem_slope.png
+.. image:: https://raw.githubusercontent.com/cheginit/geohydrohub-examples/main/notebooks/_static/dem_slope.png
+    :target: https://github.com/cheginit/geohydrohub-examples/blob/main/notebooks/3dep.ipynb
     :align: center
 
 The ``get_map`` function also has another argument for saving the dataset into a raster file. We
@@ -206,9 +207,8 @@ and add elevation data for its nodes using ``elevation_bycoords`` function.
     elevation = py3dep.elevation_bycoords(zip(x, y), crs="epsg:4326")
     nx.set_node_attributes(G, dict(zip(G.nodes(), elevation)), "elevation")
 
-
-.. image:: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/street_elev.png
-    :target: https://raw.githubusercontent.com/cheginit/hydrodata/master/docs/_static/street_elev.png
+.. image:: https://raw.githubusercontent.com/cheginit/geohydrohub-examples/main/notebooks/_static/street_elev.png
+    :target: https://github.com/cheginit/geohydrohub-examples/blob/main/notebooks/3dep.ipynb
     :align: center
 
 Contributing
