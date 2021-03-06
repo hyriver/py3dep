@@ -5,6 +5,7 @@ aiodns
 aiohttp
 brotlipy
 chardet
+cytoolz
 defusedxml
 geopandas
 nest-asyncio
