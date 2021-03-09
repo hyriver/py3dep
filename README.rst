@@ -1,5 +1,5 @@
 .. image:: https://raw.githubusercontent.com/cheginit/HydRiver-examples/main/notebooks/_static/py3dep_logo.png
-    :target: https://github.com/cheginit/py3dep
+    :target: https://github.com/cheginit/HydRiver
 
 |
 
