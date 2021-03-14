@@ -1,5 +1,5 @@
-.. image:: https://raw.githubusercontent.com/cheginit/HydRiver-examples/main/notebooks/_static/py3dep_logo.png
-    :target: https://github.com/cheginit/HydRiver
+.. image:: https://raw.githubusercontent.com/cheginit/HyRiver-examples/main/notebooks/_static/py3dep_logo.png
+    :target: https://github.com/cheginit/HyRiver
 
 |
 
@@ -83,7 +83,7 @@ Py3DEP: Topographic data through 3DEP
 Features
 --------
 
-Py3DEP is a part of `HydRiver <https://github.com/cheginit/HydRiver>`__ software stack that
+Py3DEP is a part of `HyRiver <https://github.com/cheginit/HyRiver>`__ software stack that
 is designed to aid in watershed analysis through web services. This package provides
 access to the `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__
 database which is a part of the
@@ -166,8 +166,8 @@ these spatial references.
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
 
-.. image:: https://raw.githubusercontent.com/cheginit/HydRiver-examples/main/notebooks/_static/dem_slope.png
-    :target: https://github.com/cheginit/HydRiver-examples/blob/main/notebooks/3dep.ipynb
+.. image:: https://raw.githubusercontent.com/cheginit/HyRiver-examples/main/notebooks/_static/dem_slope.png
+    :target: https://github.com/cheginit/HyRiver-examples/blob/main/notebooks/3dep.ipynb
     :align: center
 
 The ``get_map`` function also has another argument for saving the dataset into a raster file. We
@@ -206,8 +206,8 @@ and add elevation data for its nodes using ``elevation_bycoords`` function.
     elevation = py3dep.elevation_bycoords(zip(x, y), crs="epsg:4326")
     nx.set_node_attributes(G, dict(zip(G.nodes(), elevation)), "elevation")
 
-.. image:: https://raw.githubusercontent.com/cheginit/HydRiver-examples/main/notebooks/_static/street_elev.png
-    :target: https://github.com/cheginit/HydRiver-examples/blob/main/notebooks/3dep.ipynb
+.. image:: https://raw.githubusercontent.com/cheginit/HyRiver-examples/main/notebooks/_static/street_elev.png
+    :target: https://github.com/cheginit/HyRiver-examples/blob/main/notebooks/3dep.ipynb
     :align: center
 
 Contributing
