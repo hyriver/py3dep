@@ -51,19 +51,14 @@ clean-test: ## remove test and coverage artifacts
 lint: ## run pre-commit on all files
 	pre-commit run --all-files
 
-test: ## run tests using pytest in parallel in the current Python env
+test: clean-test ## run tests using pytest in parallel in the current Python env
 	pytest --no-cov -n 4 -v
 
-coverage: ## check code coverage
+coverage: clean-test ## check code coverage
 	coverage run --source pygeoogc -m pytest -v
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
-
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
 
 install: clean ## install the package to the active Python's site-packages
 	python -m pip install . --no-deps

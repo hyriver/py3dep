@@ -41,7 +41,7 @@ repos:
       args: [--max-line-length, "100"]
 
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 3.9.0
     hooks:
       - id: flake8
         name: Linting with flake8
