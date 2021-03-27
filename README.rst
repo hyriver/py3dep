@@ -4,27 +4,27 @@
 |
 
 .. |pygeohydro| image:: https://github.com/cheginit/pygeohydro/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/pygeohydro/actions?query=workflow%3Apytest
+    :target: https://github.com/cheginit/pygeohydro/actions/workflows/test.yml
     :alt: Github Actions
 
 .. |pygeoogc| image:: https://github.com/cheginit/pygeoogc/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/pygeoogc/actions?query=workflow%3Apytest
+    :target: https://github.com/cheginit/pygeoogc/actions/workflows/test.yml
     :alt: Github Actions
 
 .. |pygeoutils| image:: https://github.com/cheginit/pygeoutils/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/pygeoutils/actions?query=workflow%3Apytest
+    :target: https://github.com/cheginit/pygeoutils/actions/workflows/test.yml
     :alt: Github Actions
 
 .. |pynhd| image:: https://github.com/cheginit/pynhd/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/pynhd/actions?query=workflow%3Apytest
+    :target: https://github.com/cheginit/pynhd/actions/workflows/test.yml
     :alt: Github Actions
 
 .. |py3dep| image:: https://github.com/cheginit/py3dep/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/py3dep/actions?query=workflow%3Apytest
+    :target: https://github.com/cheginit/py3dep/actions/workflows/test.yml
     :alt: Github Actions
 
 .. |pydaymet| image:: https://github.com/cheginit/pydaymet/actions/workflows/test.yml/badge.svg
-    :target: https://github.com/cheginit/pydaymet/actions?query=workflow%3Apytest
+    :target: https://github.com/cheginit/pydaymet/actions/workflows/test.yml
     :alt: Github Actions
 
 =========== ==================================================================== ============
@@ -60,9 +60,9 @@ Py3DEP: Topographic data through 3DEP
     :target: https://codecov.io/gh/cheginit/py3dep
     :alt: CodeCov
 
-.. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/cheginit/HyRiver-examples/main?urlpath=lab/tree/notebooks
-    :alt: Binder
+.. image:: https://img.shields.io/pypi/pyversions/py3dep.svg
+    :target: https://pypi.python.org/pypi/py3dep
+    :alt: Python Versions
 
 |
 
@@ -77,6 +77,10 @@ Py3DEP: Topographic data through 3DEP
 .. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
     :target: https://github.com/pre-commit/pre-commit
     :alt: pre-commit
+
+.. image:: https://mybinder.org/badge_logo.svg
+    :target: https://mybinder.org/v2/gh/cheginit/HyRiver-examples/main?urlpath=lab/tree/notebooks
+    :alt: Binder
 
 |
 
