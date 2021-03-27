@@ -64,6 +64,10 @@ Py3DEP: Topographic data through 3DEP
     :target: https://pypi.python.org/pypi/py3dep
     :alt: Python Versions
 
+.. image:: https://pepy.tech/badge/py3dep
+    :target: https://pepy.tech/project/py3dep
+    :alt: Downloads
+
 |
 
 .. image:: https://www.codefactor.io/repository/github/cheginit/py3dep/badge
