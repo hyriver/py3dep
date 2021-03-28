@@ -59,7 +59,7 @@ jobs:
           python -c "import py3dep; py3dep.show_versions()"
       - name: Run pytest
         run: |-
-          python -m pytest -n 4 --cov=py3dep --cov-report xml
+          python -m pytest -n=auto --cov=py3dep --cov-report xml
       - name: Run codecov and upload the report
         uses: codecov/codecov-action@v1
         with:
