@@ -4,26 +4,31 @@ channels:
   - nodefaults
 dependencies:
   - python>=3.8
+  - setuptools
 
-  # pygeoogc deps
+  # async_retriever
   - aiodns
   - aiohttp
+  - aiohttp-client-cache
+  - aiosqlite
   - brotlipy
   - chardet
   - cytoolz
-  - defusedxml
   - nest-asyncio
   - orjson
+
+  # pygeoogc deps
+  - defusedxml
   - owslib
   - pyproj
   - requests
-  - setuptools
+  - requests-cache
   - shapely
   - simplejson
 
   # pygeoutils deps
   - geopandas
-  - netCDF4
+  - netcdf4
   - rasterio
   - xarray
 
@@ -38,7 +43,6 @@ dependencies:
   - openpyxl
 
   # pydaymet deps
-  # - lxml
   - dask-core
   - scipy
 
@@ -47,13 +51,21 @@ dependencies:
   - rtree
   - pygeos
 
+  # plotting deps
+  - contextily
+  - mapclassify
+  - cartopy
+  - colorcet
+
   # dev deps
-  - setuptools_scm
+  - setuptools-scm
   - pytest-xdist
+  - flaky
   - pre-commit
 
   - pip
   - pip:
+    - git+https://github.com/cheginit/async_retriever.git
     - git+https://github.com/cheginit/pygeoogc.git
     - git+https://github.com/cheginit/pygeoutils.git
     - git+https://github.com/cheginit/pynhd.git
