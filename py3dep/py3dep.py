@@ -5,6 +5,7 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import cytoolz as tlz
 import numpy as np
+import pygeoogc as ogc
 import pygeoutils as geoutils
 import rasterio as rio
 import rasterio.warp as rio_warp
@@ -270,16 +271,19 @@ def elevation_bycoords(coords: List[Tuple[float, float]], crs: str = DEF_CRS) ->
 
     headers = {"Content-Type": "application/json", "charset": "utf-8"}
     elevations = []
+    cache_name = ogc.utils.create_cachefile()
+    session = RetrySession(cache_name=cache_name)
+    url = ServiceURL().restful.airmap
     for chunk in coords_reproj:
         payload = {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)}
-        resp = RetrySession().get(ServiceURL().restful.airmap, payload=payload, headers=headers)
+        resp = session.get(url, payload=payload, headers=headers)
         elevations.append(resp.json()["data"])
 
     return list(tlz.concat(elevations))
 
 
 def deg2mpm(da: xr.DataArray) -> xr.DataArray:
-    """Convert ``xarray.Data[Array,set]`` from degree to meter/meter."""
+    """Convert slope from degree to meter/meter."""
     attrs = da.attrs
     da = np.tan(np.deg2rad(da))
     da.attrs = attrs
