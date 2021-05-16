@@ -7,16 +7,21 @@ dependencies:
   - cytoolz
   - defusedxml
   - owslib
+  - pyyaml
   - pyproj
   - requests
   - requests-cache
   - setuptools
   - shapely
   - simplejson
+  - urllib3
 
   # pygeoutils deps
+  - affine
   - geopandas
+  - numpy
   - netcdf4
+  - orjson
   - rasterio
   - xarray
 
