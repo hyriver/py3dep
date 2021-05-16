@@ -34,12 +34,12 @@
 =========== ==================================================================== ============
 Package     Description                                                          Status
 =========== ==================================================================== ============
-PyGeoHydro_ Access NWIS, NID, HCDN 2009, NLCD, and SSEBop databases              |pygeohydro|
-PyGeoOGC_   Send queries to any ArcGIS RESTful-, WMS-, and WFS-based services    |pygeoogc|
-PyGeoUtils_ Convert responses from PyGeoOGC's supported web services to datasets |pygeoutils|
 PyNHD_      Navigate and subset NHDPlus (MR and HR) using web services           |pynhd|
 Py3DEP_     Access topographic data through National Map's 3DEP web service      |py3dep|
+PyGeoHydro_ Access NWIS, NID, HCDN 2009, NLCD, and SSEBop databases              |pygeohydro|
 PyDaymet_   Access Daymet for daily climate data both single pixel and gridded   |pydaymet|
+PyGeoOGC_   Send queries to any ArcGIS RESTful-, WMS-, and WFS-based services    |pygeoogc|
+PyGeoUtils_ Convert responses from PyGeoOGC's supported web services to datasets |pygeoutils|
 =========== ==================================================================== ============
 
 .. _PyGeoHydro: https://github.com/cheginit/pygeohydro
@@ -140,11 +140,15 @@ Installation
 ------------
 
 You can install Py3DEP using ``pip`` after installing ``libgdal`` on your system
-(for example, in Ubuntu run ``sudo apt install libgdal-dev``):
+(for example, in Ubuntu run ``sudo apt install libgdal-dev``). Moreover, Py3DEP has an optional
+dependecy for using persistent caching, ``requests-cache``. We highly recommend to install
+this package as it can significantly speedup send/recieve queries. You don't have to change
+anything in your code, since Py3DEP under-the-hood looks for ``requests-cache`` and if available,
+it will automatically use persistent caching:
 
 .. code-block:: console
 
-    $ pip install py3dep
+    $ pip install py3dep[cache]
 
 Alternatively, Py3DEP can be installed from the ``conda-forge`` repository
 using `Conda <https://docs.conda.io/en/latest/>`__:
