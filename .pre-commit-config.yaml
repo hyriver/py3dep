@@ -61,6 +61,7 @@ repos:
     hooks:
     - id: darglint
       name: Lint docstrings with Darglint
+      exclude: py3dep/cli.py
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.16.0
@@ -82,12 +83,12 @@ repos:
     - id: mypy
       name: Static type checking with mypy
       exclude: tests
-      files: pynhd
+      files: py3dep
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.0
     hooks:
     - id: bandit
       name: Check for security issues with bandit
-      args: [-lll, --recursive, pynhd]
+      args: [-lll, --recursive, py3dep]
       files: .py$
