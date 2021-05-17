@@ -143,8 +143,8 @@ Installation
 
 You can install Py3DEP using ``pip`` after installing ``libgdal`` on your system
 (for example, in Ubuntu run ``sudo apt install libgdal-dev``). Moreover, Py3DEP has an optional
-dependecy for using persistent caching, ``requests-cache``. We highly recommend to install
-this package as it can significantly speedup send/recieve queries. You don't have to change
+dependency for using persistent caching, ``requests-cache``. We highly recommend to install
+this package as it can significantly speedup send/receive queries. You don't have to change
 anything in your code, since Py3DEP under-the-hood looks for ``requests-cache`` and if available,
 it will automatically use persistent caching:
 
@@ -181,7 +181,7 @@ provides access to two functionality:
 .. code-block:: bash
 
     py3dep [OPTIONS] TARGET TARGET_TYPE CRS
-    
+
 where TARGET is path to the input file, TARGET_TYPE is the type of input
 (``geometry`` or ``coords``), and CRS is CRS of the input file. When TARGET_TYPE
 is ``geometry`` the ``--layer`` (``-l``) option should also be passed. Layer can be
