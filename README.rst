@@ -189,7 +189,6 @@ any of the supported 3DEP layer, e.g., ``"DEM"``, ``"Slope Map"``. By default, t
 files are saved to ``topo_3dep`` directory in the current directory. You can use
 ``--save_dir`` (``-s``) to change this directory.
 
-
 For example:
 
 .. code-block:: bash
@@ -197,7 +196,7 @@ For example:
     py3dep geometry.gpkg geometry epsg:4326 --layer "Slope Degrees"
     py3dep coords.csv coords epsg:4326
 
-
+Now, let's see how we can use Py3DEP as a library.
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
 Polygon or a bounding box (a tuple of length four) as an input geometry.
 We can use PyNHD to get a watershed's geometry, then use it to get the DEM and slope
