@@ -1,6 +1,6 @@
 repos:
   - repo: git://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.0
+    rev: v4.0.1
     hooks:
     - id: trailing-whitespace
     - id: requirements-txt-fixer
@@ -62,6 +62,12 @@ repos:
     - id: darglint
       name: Lint docstrings with Darglint
       exclude: py3dep/cli.py
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.0.0
+    hooks:
+    - id: codespell
+      name: Checks for common misspellings in text files.
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.16.0
