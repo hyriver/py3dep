@@ -162,6 +162,27 @@ using `Conda <https://docs.conda.io/en/latest/>`__:
 Quick start
 -----------
 
+You can use Py3DEP using command-line or as a Python library. The commanda-line
+provides access to two functionality:
+
+- Getting topographic data: You must create a ``geopandas.GeoDataFrame`` that contains
+  the geometries of the target locations. This dataframe must have at least three columns:
+  ``id``, ``res``, and ``geometry``. The ``id`` column is used as filenames for saving
+  the obtained topographic data to a NetCDF (``.nc``) file. The ``res`` column must be
+  the target resolution in meter. Then, you must save the dataframe to a file with extensions
+  such as ``.shp`` or ``.gpkg`` (whatever that ``geopandas.read_file`` can read).
+- Getting elevation: You must create a ``pandas.DataFrame`` that contains coordinates of the
+  target locations. This dataframe must have at least two columns: ``x`` and ``y``. The elevations
+  are obtained using ``airmap`` service in meters. The results is saved as a ``csv`` file with the
+  same filename as the input file with an ``_elevation`` appended, e.g., ``coords_elevation.csv``.
+
+For example:
+
+```bash
+py3dep geometry.gpkg geometry epsg:4326 --layer "Slope Degrees"
+py3dep coords.csv coords epsg:4326
+```
+
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
 Polygon or a bounding box (a tuple of length four) as an input geometry.
 We can use PyNHD to get a watershed's geometry, then use it to get the DEM and slope
