@@ -176,6 +176,20 @@ provides access to two functionality:
   are obtained using ``airmap`` service in meters. The results is saved as a ``csv`` file with the
   same filename as the input file with an ``_elevation`` appended, e.g., ``coords_elevation.csv``.
 
+``py3dep`` has three required arguments and two optional:
+
+.. code-block:: bash
+
+    py3dep [OPTIONS] TARGET TARGET_TYPE CRS
+    
+where TARGET is path to the input file, TARGET_TYPE is the type of input
+(``geometry`` or ``coords``), and CRS is CRS of the input file. When TARGET_TYPE
+is ``geometry`` the ``--layer`` (``-l``) option should also be passed. Layer can be
+any of the supported 3DEP layer, e.g., ``"DEM"``, ``"Slope Map"``. By default, the output
+files are saved to ``topo_3dep`` directory in the current directory. You can use
+``--save_dir`` (``-s``) to change this directory.
+
+
 For example:
 
 .. code-block:: bash
