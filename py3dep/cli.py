@@ -1,23 +1,22 @@
-from typing import Dict, Iterator, List, Optional, Tuple, Union
-from pathlib import Path
+"""Command-line interface for Py3DEP."""
 import os
-from shapely.geometry import MultiPolygon, Polygon
+from pathlib import Path
+from typing import List, Optional, Tuple, Union
+
+import click
 import geopandas as gpd
 import pandas as pd
-import xarray as xr
+from shapely.geometry import MultiPolygon, Polygon
 
-from .exceptions import MissingColumns
 from . import py3dep
-
-from enum import Enum
-import click
+from .exceptions import MissingColumns
 
 
 def get_target_df(
     tdf: Union[pd.DataFrame, gpd.GeoDataFrame], req_cols: List[str]
 ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
     """Check if all required columns exists in the dataframe.
-    
+
     It also re-orders the columns based on req_cols order.
     """
     missing = [c for c in req_cols if c not in tdf]
@@ -83,9 +82,9 @@ def main(
     target_type: str,
     crs: str,
     layer: Optional[str] = None,
-    save_dir: Optional[str] = "topo_3dep",
+    save_dir: Union[str, Path] = "topo_3dep",
 ):
-    """Retrieve topographic data within geometries or elevations for a list of coordinates.
+    r"""Retrieve topographic data within geometries or elevations for a list of coordinates.
 
     TARGET: Path to a geospatial file (any file that geopandas.read_file can open) or a csv file.
 
@@ -104,7 +103,7 @@ def main(
 
     \tpy3dep ny_coords.csv coords epsg:4326
     \n\tpy3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
-    """
+    """  # noqa: D412
     save_dir = Path(save_dir)
     target = Path(target)
     if not save_dir.exists():
