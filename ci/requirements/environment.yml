@@ -33,6 +33,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-xdist
+  - pytest-console-scripts
   - flaky
 
   - pip
