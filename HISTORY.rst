@@ -2,6 +2,22 @@
 History
 =======
 
+0.11.0 (unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+- Added command-line interface (:issue_3dep:`10`).
+- All feature query functions automatically check if ``requests-cache`` is installed
+  and if so, they use persistent caching. This can significantly improve the performance.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+- Save the output as a ``netcdf`` instead of ``raster`` since conversion
+  from ``nc`` to ``tiff`` can be easily done with ``rioxarray``.
+
 0.10.1 (2021-03-27)
 -------------------
 
