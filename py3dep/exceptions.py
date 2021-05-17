@@ -1,5 +1,5 @@
 """Customized pygeohydro exceptions."""
-from typing import Optional
+from typing import List, Optional
 
 
 class InvalidInputType(Exception):
@@ -19,6 +19,23 @@ class InvalidInputType(Exception):
         self.message = f"The {arg} argument should be of type {valid_type}"
         if example is not None:
             self.message += f":\n{example}"
+        super().__init__(self.message)
+
+    def __str__(self) -> str:
+        return self.message
+
+
+class MissingColumns(Exception):
+    """Exception raised when a required column is missing from a dataframe.
+
+    Parameters
+    ----------
+    missing : list
+        List of missing columns.
+    """
+
+    def __init__(self, missing: List[str]) -> None:
+        self.message = "The following columns are missing:\n" + f"{', '.join(missing)}"
         super().__init__(self.message)
 
     def __str__(self) -> str:

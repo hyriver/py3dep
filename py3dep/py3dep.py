@@ -1,4 +1,5 @@
 """Get data from 3DEP database."""
+import os
 from itertools import product
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple, Union
@@ -20,11 +21,11 @@ DEF_CRS = "epsg:4326"
 
 def get_map(
     layers: Union[str, List[str]],
-    geometry: Union[Polygon, Tuple[float, float, float, float]],
+    geometry: Union[Polygon, MultiPolygon, Tuple[float, float, float, float]],
     resolution: float,
     geo_crs: str = DEF_CRS,
     crs: str = DEF_CRS,
-    output_dir: Optional[Union[str, Path]] = None,
+    nc_path: Optional[Union[str, Path]] = None,
 ) -> Dict[str, bytes]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
@@ -59,8 +60,8 @@ def get_map(
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
         epsg:4326.
-    output_dir : str or Path, optional
-        The output directory to also save the map as GTiff file(s), defaults to None.
+    nc_path : str or Path, optional
+        Path to target filename for saving the dataset as netcdf file(s), defaults to None.
 
     Returns
     -------
@@ -83,9 +84,6 @@ def get_map(
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
-    if output_dir:
-        geoutils.gtiff2file(r_dict, _geometry, crs, output_dir)
-
     ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
 
     valid_layers = wms.get_validlayers()
@@ -96,6 +94,12 @@ def get_map(
         ds.name = rename[ds.name]
     else:
         ds = ds.rename({n: rename[n] for n in ds.keys()})
+
+    if nc_path is not None:
+        if not Path(nc_path).parent.exists():
+            os.makedirs(Path(nc_path).parent, exist_ok=True)
+
+        ds.to_netcdf(nc_path)
 
     return ds
 
