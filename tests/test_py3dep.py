@@ -1,9 +1,13 @@
 import io
 import shutil
+from pathlib import Path
 
+import geopandas as gpd
 import numpy as np
+import pandas as pd
 import pytest
 import rasterio
+import xarray as xr
 from pygeoogc import MatchCRS
 from shapely.geometry import Polygon
 
@@ -34,11 +38,11 @@ def test_getmap(geometry):
 
 @pytest.mark.flaky(max_runs=3)
 def test_getmap_2file(geometry):
-    dem = py3dep.get_map("DEM", geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS, output_dir="raster")
-    with rasterio.open("raster/3DEPElevation:None_dd_0_0.gtiff") as f:
-        mean = f.read().mean()
+    dem = py3dep.get_map("DEM", geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS, nc_path="dem.nc")
+    with xr.open_dataset("dem.nc") as f:
+        mean = f.mean()
 
-    shutil.rmtree("raster")
+    Path("dem.nc").unlink()
     assert abs(dem.mean().item() - mean) < 7e-2
 
 
@@ -64,6 +68,30 @@ def test_grid(geometry):
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(gx, gy, crs, res)
     assert abs(elev.mean().item() - 295.763) < 1e-3
+
+
+def test_cli_map(script_runner, geometry):
+    gdf = gpd.GeoDataFrame({"id": "geo_test", "res": 1e3}, geometry=[geometry], index=[0])
+    gdf.to_file("nat_geo.gpkg")
+    ret = script_runner.run(
+        "py3dep", "nat_geo.gpkg", "geometry", DEF_CRS, "--layer", "Slope Degrees"
+    )
+    shutil.rmtree("nat_geo.gpkg")
+    shutil.rmtree("topo_3dep")
+    assert ret.success
+    assert "Retrieved topography data for 1 item(s)." in ret.stdout
+    assert ret.stderr == ""
+
+
+def test_cli_coords(script_runner):
+    df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
+    df.to_csv("coords.csv")
+    ret = script_runner.run("py3dep", "coords.csv", "coords", ALT_CRS)
+    Path("coords.csv").unlink()
+    shutil.rmtree("topo_3dep")
+    assert ret.success
+    assert "Retrieved elevation data for 3 item(s)." in ret.stdout
+    assert ret.stderr == ""
 
 
 def test_show_versions():
