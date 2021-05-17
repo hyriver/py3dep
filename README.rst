@@ -178,10 +178,11 @@ provides access to two functionality:
 
 For example:
 
-```bash
-py3dep geometry.gpkg geometry epsg:4326 --layer "Slope Degrees"
-py3dep coords.csv coords epsg:4326
-```
+.. code-block:: bash
+
+    py3dep geometry.gpkg geometry epsg:4326 --layer "Slope Degrees"
+    py3dep coords.csv coords epsg:4326
+
 
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
 Polygon or a bounding box (a tuple of length four) as an input geometry.
