@@ -238,7 +238,7 @@ these spatial references.
     :target: https://github.com/cheginit/HyRiver-examples/blob/main/notebooks/3dep.ipynb
     :align: center
 
-We can use [``rioxarray``](https://github.com/corteva/rioxarray) package to save the obtained
+We can use `rioxarray <https://github.com/corteva/rioxarray>`__ package to save the obtained
 dataset as a raster file:
 
 .. code-block:: python
