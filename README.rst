@@ -1,3 +1,5 @@
+.. highlight:: shell
+
 .. image:: https://raw.githubusercontent.com/cheginit/HyRiver-examples/main/notebooks/_static/py3dep_logo.png
     :target: https://github.com/cheginit/HyRiver
 
@@ -176,16 +178,14 @@ provides access to two functionality:
   are obtained using ``airmap`` service in meters. The data are saved as a ``csv`` file with the
   same filename as the input file with an ``_elevation`` appended, e.g., ``coords_elevation.csv``.
 
-.. code-block:: bash
+.. code-block:: console
 
     $ py3dep --help
     Usage: py3dep [OPTIONS] TARGET [geometry|coords] CRS
 
-      Retrieve topographic data within geometries or elevations for a list of
-      coordinates.
+      Retrieve topographic data within geometries or elevations for a list of coordinates.
 
-      TARGET: Path to a geospatial file (any file that geopandas.read_file can
-      open) or a csv file.
+      TARGET: Path to a geospatial file (any file that geopandas.read_file can open) or a csv file.
 
       The geospatial file should have three columns:
 
@@ -195,8 +195,7 @@ provides access to two functionality:
 
       The csv file should have two column: x and y.
 
-      TARGET_TYPE: Type of input file: "coords" for csv, and "geometry" for
-      geospatial.
+      TARGET_TYPE: Type of input file: "coords" for csv, and "geometry" for geospatial.
 
       CRS: CRS of the input data.
 
@@ -206,11 +205,9 @@ provides access to two functionality:
 
     Options:
       -l, --layer [DEM|Hillshade Gray|Aspect Degrees|Aspect Map|GreyHillshade_elevationFill|Hillshade Multidirectional|Slope Map|Slope Degrees|Hillshade Elevation Tinted|Height Ellipsoidal|Contour 25|Contour Smoothed 25]
-                                      Layer name when requesting for topographic
-                                      data.
-      -s, --save_dir PATH             Path to a directory to save the requested
-                                      files. Extension for the outputs is .nc for
-                                      geometry and .csv for coords.
+                                      Layer name when requesting for topographic data.
+      -s, --save_dir PATH             Path to a directory to save the requested files. Extension
+                                      for the outputs is .nc for geometry and .csv for coords.
 
 
 Now, let's see how we can use Py3DEP as a library.

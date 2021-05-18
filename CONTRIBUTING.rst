@@ -109,7 +109,6 @@ Ready to contribute? Here's how to set up Py3DEP for local development.
 .. code-block:: console
 
     $ make lint
-    $ make coverage
 
 8. If you are making breaking changes make sure to reflect them in
    the documentation, ``README.rst``, and tests if necessary.

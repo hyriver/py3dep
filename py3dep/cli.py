@@ -100,7 +100,7 @@ def main(
 
     The csv file should have two column: x and y.
 
-    TARGET_TYPE: Type of input file: "coords" for csv, and "geometry" for geospatial.
+    TARGET_TYPE: Type of input file: "coords" for csv and "geometry" for geospatial.
 
     CRS: CRS of the input data.
 
