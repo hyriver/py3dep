@@ -25,6 +25,9 @@ dependencies:
   - rasterio
   - xarray
 
+  # py3dep
+  - click
+
   # deps to speed up xarray and geopandas
   - pygeos
   - bottleneck

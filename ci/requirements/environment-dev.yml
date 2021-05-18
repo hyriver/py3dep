@@ -12,7 +12,7 @@ dependencies:
   - aiohttp-client-cache
   - aiosqlite
   - brotlipy
-  - chardet
+  - cchardet
   - cytoolz
   - nest-asyncio
   - orjson
@@ -49,6 +49,9 @@ dependencies:
   - matplotlib-base
   - openpyxl
 
+  # py3dep
+  - click
+
   # pydaymet deps
   - dask-core
   - scipy
@@ -68,6 +71,7 @@ dependencies:
   - setuptools-scm
   - pytest-xdist
   - pytest-sugar
+  - pytest-console-scripts
   - flaky
   - pre-commit
 
