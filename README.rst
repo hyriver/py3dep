@@ -200,7 +200,7 @@ provides access to two functionality:
 
       CRS: CRS of the input data.
 
-      Example:
+      Examples:
           $ py3dep ny_coords.csv coords epsg:4326
           $ py3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
 
