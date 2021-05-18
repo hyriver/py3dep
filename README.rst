@@ -238,12 +238,14 @@ these spatial references.
     :target: https://github.com/cheginit/HyRiver-examples/blob/main/notebooks/3dep.ipynb
     :align: center
 
-The ``get_map`` function also has another argument for saving the dataset into a raster file. We
-should provide the path to a folder:
+We can use [``rioxarray``](https://github.com/corteva/rioxarray) package to save the obtained
+dataset as a raster file:
 
 .. code-block:: python
 
-    dem = py3dep.get_map("DEM", geom, 1e3, output_dir="raster")
+    import rioxarray
+
+    dem.rio.to_raster("dem_01031500.tif")
 
 Moreover, we can get the elevations of set of x- and y- coordinates on a grid. For example,
 let's get the minimum temperature data within this watershed from Daymet using PyDaymet then
