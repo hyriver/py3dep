@@ -33,7 +33,7 @@ def from_geometry(
     nc_path: Union[str, Path],
 ) -> None:
     """Get topographic data from 3DEP for a geometry."""
-    py3dep.get_map(layer, geometry, res, geo_crs=crs, crs=crs, nc_path=nc_path)
+    py3dep.get_map(layer, geometry, res, geo_crs=crs, crs=crs).to_netcdf(nc_path)
 
 
 def from_coords(coords: List[Tuple[float, float]], crs: str, csv_path: Union[str, Path]) -> None:
@@ -105,10 +105,10 @@ def main(
     \n\tpy3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
     """  # noqa: D412
     save_dir = Path(save_dir)
-    target = Path(target)
     if not save_dir.exists():
         os.makedirs(save_dir, exist_ok=True)
 
+    target = Path(target)
     if target_type == "geometry":
         if layer is None:
             raise ValueError("layer option is required when target_type is geometry.")

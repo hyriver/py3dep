@@ -1,8 +1,6 @@
 """Get data from 3DEP database."""
-import os
 from itertools import product
-from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 import cytoolz as tlz
 import numpy as np
@@ -25,8 +23,7 @@ def get_map(
     resolution: float,
     geo_crs: str = DEF_CRS,
     crs: str = DEF_CRS,
-    nc_path: Optional[Union[str, Path]] = None,
-) -> Dict[str, bytes]:
+) -> Union[xr.DataArray, xr.Dataset]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
     The 3DEP service has multi-resolution sources so depending on the user
@@ -60,8 +57,6 @@ def get_map(
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
         epsg:4326.
-    nc_path : str or Path, optional
-        Path to target filename for saving the dataset as netcdf file(s), defaults to None.
 
     Returns
     -------
@@ -94,12 +89,6 @@ def get_map(
         ds.name = rename[ds.name]
     else:
         ds = ds.rename({n: rename[n] for n in ds.keys()})
-
-    if nc_path is not None:
-        if not Path(nc_path).parent.exists():
-            os.makedirs(Path(nc_path).parent, exist_ok=True)
-
-        ds.to_netcdf(nc_path)
 
     return ds
 

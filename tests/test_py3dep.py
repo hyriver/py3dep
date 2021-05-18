@@ -36,16 +36,6 @@ def test_getmap(geometry):
     )
 
 
-@pytest.mark.flaky(max_runs=3)
-def test_getmap_2file(geometry):
-    dem = py3dep.get_map("DEM", geometry, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS, nc_path="dem.nc")
-    with xr.open_dataset("dem.nc") as f:
-        mean = f.mean()
-
-    Path("dem.nc").unlink()
-    assert abs(dem.mean().item() - mean) < 7e-2
-
-
 def test_coords():
     elev = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 3, ALT_CRS)
     assert elev == [363] * 3
@@ -74,10 +64,10 @@ def test_cli_map(script_runner, geometry):
     gdf = gpd.GeoDataFrame({"id": "geo_test", "res": 1e3}, geometry=[geometry], index=[0])
     gdf.to_file("nat_geo.gpkg")
     ret = script_runner.run(
-        "py3dep", "nat_geo.gpkg", "geometry", DEF_CRS, "--layer", "Slope Degrees"
+        "py3dep", "nat_geo.gpkg", "geometry", DEF_CRS, "-l", "Slope Degrees", "-s", "geo_map"
     )
     shutil.rmtree("nat_geo.gpkg")
-    shutil.rmtree("topo_3dep")
+    shutil.rmtree("geo_map")
     assert ret.success
     assert "Retrieved topography data for 1 item(s)." in ret.stdout
     assert ret.stderr == ""
@@ -86,9 +76,9 @@ def test_cli_map(script_runner, geometry):
 def test_cli_coords(script_runner):
     df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
     df.to_csv("coords.csv")
-    ret = script_runner.run("py3dep", "coords.csv", "coords", ALT_CRS)
+    ret = script_runner.run("py3dep", "coords.csv", "coords", ALT_CRS, "-s", "geo_coords")
     Path("coords.csv").unlink()
-    shutil.rmtree("topo_3dep")
+    shutil.rmtree("geo_coords")
     assert ret.success
     assert "Retrieved elevation data for 3 item(s)." in ret.stdout
     assert ret.stderr == ""
