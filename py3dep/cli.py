@@ -58,8 +58,10 @@ LAYERS = [
     "Contour Smoothed 25",
 ]
 
+CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
-@click.command()
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument("target", type=click.Path(exists=True))
 @click.argument("target_type", type=click.Choice(["geometry", "coords"], case_sensitive=False))
 @click.argument("crs", type=str)
@@ -89,9 +91,12 @@ def main(
     TARGET: Path to a geospatial file (any file that geopandas.read_file can open) or a csv file.
 
     The geospatial file should have three columns:
-    \n\t- id: Feature identifiers that py3dep uses as the output netcdf filenames.
-    \n\t- res: Target resolution in meters.
-    \n\t- geometry: A Polygon or MultiPloygon.
+
+        - id: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
+
+        - res: Target resolution in meters.
+
+        - geometry: A Polygon or MultiPloygon.
 
     The csv file should have two column: x and y.
 
@@ -99,10 +104,11 @@ def main(
 
     CRS: CRS of the input data.
 
-    Example:
+    Examples:
 
-    \tpy3dep ny_coords.csv coords epsg:4326
-    \n\tpy3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
+        $ py3dep ny_coords.csv coords epsg:4326
+
+        $ py3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
     """  # noqa: D412
     save_dir = Path(save_dir)
     if not save_dir.exists():

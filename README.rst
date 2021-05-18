@@ -173,30 +173,48 @@ provides access to two functionality:
   such as ``.shp`` or ``.gpkg`` (whatever that ``geopandas.read_file`` can read).
 - Getting elevation: You must create a ``pandas.DataFrame`` that contains coordinates of the
   target locations. This dataframe must have at least two columns: ``x`` and ``y``. The elevations
-  are obtained using ``airmap`` service in meters. The results is saved as a ``csv`` file with the
+  are obtained using ``airmap`` service in meters. The data are saved as a ``csv`` file with the
   same filename as the input file with an ``_elevation`` appended, e.g., ``coords_elevation.csv``.
 
-``py3dep`` has three required arguments and two optional:
-
 .. code-block:: bash
 
-    py3dep [OPTIONS] TARGET TARGET_TYPE CRS
+    $ py3dep --help
+    Usage: py3dep [OPTIONS] TARGET [geometry|coords] CRS
 
-where TARGET is path to the input file, TARGET_TYPE is the type of input
-(``geometry`` or ``coords``), and CRS is CRS of the input file. When TARGET_TYPE
-is ``geometry`` the ``--layer`` (``-l``) option should also be passed. Layer can be
-any of the supported 3DEP layer, e.g., ``"DEM"``, ``"Slope Map"``. By default, the output
-files are saved to ``topo_3dep`` directory in the current directory. You can use
-``--save_dir`` (``-s``) to change this directory.
+      Retrieve topographic data within geometries or elevations for a list of
+      coordinates.
 
-For example:
+      TARGET: Path to a geospatial file (any file that geopandas.read_file can
+      open) or a csv file.
 
-.. code-block:: bash
+      The geospatial file should have three columns:
 
-    py3dep geometry.gpkg geometry epsg:4326 --layer "Slope Degrees"
-    py3dep coords.csv coords epsg:4326
+          - id: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
+          - res: Target resolution in meters.
+          - geometry: A Polygon or MultiPloygon.
+
+      The csv file should have two column: x and y.
+
+      TARGET_TYPE: Type of input file: "coords" for csv, and "geometry" for
+      geospatial.
+
+      CRS: CRS of the input data.
+
+      Example:
+          $ py3dep ny_coords.csv coords epsg:4326
+          $ py3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
+
+    Options:
+      -l, --layer [DEM|Hillshade Gray|Aspect Degrees|Aspect Map|GreyHillshade_elevationFill|Hillshade Multidirectional|Slope Map|Slope Degrees|Hillshade Elevation Tinted|Height Ellipsoidal|Contour 25|Contour Smoothed 25]
+                                      Layer name when requesting for topographic
+                                      data.
+      -s, --save_dir PATH             Path to a directory to save the requested
+                                      files. Extension for the outputs is .nc for
+                                      geometry and .csv for coords.
+
 
 Now, let's see how we can use Py3DEP as a library.
+
 Py3DEP accepts `Shapely <https://shapely.readthedocs.io/en/latest/manual.html>`__'s
 Polygon or a bounding box (a tuple of length four) as an input geometry.
 We can use PyNHD to get a watershed's geometry, then use it to get the DEM and slope
