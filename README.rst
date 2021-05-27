@@ -106,8 +106,9 @@ database which is a part of the
 `National Map services <https://viewer.nationalmap.gov/services/>`__.
 The 3DEP service has multi-resolution sources and depending on the user provided resolution,
 the data is resampled on the server-side based on all the available data sources. Py3DEP returns
-the requests as `xarray <https://xarray.pydata.org/en/stable>`__ dataset. The 3DEP includes
-the following layers:
+the requests as `xarray <https://xarray.pydata.org/en/stable>`__ dataset. Moreover,
+under-the-hood, this package uses ``requests-cache`` for persistent caching that can improve
+the performance significantly. The 3DEP web service includes the following layers:
 
 - DEM
 - Hillshade Gray
@@ -152,7 +153,7 @@ it will automatically use persistent caching:
 
 .. code-block:: console
 
-    $ pip install py3dep[cache]
+    $ pip install py3dep
 
 Alternatively, Py3DEP can be installed from the ``conda-forge`` repository
 using `Conda <https://docs.conda.io/en/latest/>`__:
