@@ -122,7 +122,8 @@ def elevation_bygrid(
     resampling : rasterio.warp.Resampling
         The reasmpling method to use if the input crs is not in the supported
         3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
-        The available methods can be found `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
+        The available methods can be found
+        `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
 
     Returns
     -------
@@ -165,7 +166,8 @@ def _sample_tiff(
     resampling : rasterio.warp.Resampling
         The reasmpling method to use if the input crs is not in the supported
         3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
-        The available methods can be found `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
+        The available methods can be found
+        `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
 
     Returns
     -------
