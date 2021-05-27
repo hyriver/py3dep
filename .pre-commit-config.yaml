@@ -18,7 +18,7 @@ repos:
     hooks:
     - id: setup-cfg-fmt
       name: Autoformat setup.cfg
-      args: [--min-py3-version, "3.6"]
+      args: [--min-py3-version, "3.7"]
 
   - repo: https://github.com/timothycrosley/isort
     rev: 5.8.0
@@ -39,7 +39,7 @@ repos:
     - id: blacken-docs
       name: Autoformat codes in docstrings with blacken-docs
       additional_dependencies: [black]
-      args: [-t, py38, -l, "88"]
+      args: [-t, py38, -l, "100"]
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.8.0
@@ -56,12 +56,12 @@ repos:
       name: Check documentation formats with doc8
       args: [--max-line-length, "100"]
 
-  - repo: https://github.com/terrencepreilly/darglint
-    rev: v1.8.0
-    hooks:
-    - id: darglint
-      name: Lint docstrings with Darglint
-      exclude: py3dep/cli.py
+  # - repo: https://github.com/terrencepreilly/darglint
+  #   rev: v1.8.0
+  #   hooks:
+  #   - id: darglint
+  #     name: Lint docstrings with Darglint
+  #     exclude: py3dep/cli.py
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.0.0
@@ -70,11 +70,11 @@ repos:
       name: Checks for common misspellings in text files.
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.16.0
+    rev: v2.18.3
     hooks:
     - id: pyupgrade
-      name: Upgrade synax to python 3.6+ with pyupgrade
-      args: [--py36-plus]
+      name: Upgrade synax to python 3.7+ with pyupgrade
+      args: [--py37-plus]
 
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2
