@@ -51,7 +51,7 @@ def test_deg2mpm(geometry):
 def test_grid(geometry):
     geo_crs = DEF_CRS
     crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
-    geom = MatchCRS.geometry(geometry, geo_crs, crs)
+    geom = MatchCRS(geo_crs, crs).geometry(geometry)
     xmin, ymin, xmax, ymax = geom.bounds
     res = 1e3
     gx = np.arange(xmin, xmax, res)

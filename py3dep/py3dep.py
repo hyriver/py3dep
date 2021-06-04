@@ -4,7 +4,6 @@ from typing import Iterator, List, Optional, Tuple, Union
 
 import cytoolz as tlz
 import numpy as np
-import pygeoogc as ogc
 import pygeoutils as geoutils
 import rasterio as rio
 import rasterio.warp as rio_warp
@@ -241,37 +240,29 @@ def _elevation_bybox(
 
 
 def elevation_bycoords(coords: List[Tuple[float, float]], crs: str = DEF_CRS) -> List[int]:
-    """Get elevation from Airmap for a list of coordinates.
+    """Get elevation from Airmap at 1-arc resolution (~30 m) for a list of coordinates.
 
     Parameters
     ----------
     coords : list of tuples
-        Coordinates of the location as a tuple
+        Coordinates of target location as list of tuples [(x, y), ...].
     crs : str, optional
-        The spatial reference of the input coord, defaults to epsg:4326 (lon, lat)
+        Spatial reference (CRS) of coords, defaults to EPSG:4326 (lon, lat).
 
     Returns
     -------
     list of int
         Elevation in meter
     """
-    if not isinstance(coords, (list, Iterator)):
-        raise InvalidInputType("coord", "list (or iterator) of tuples of length 2", "[(x, y), ...]")
-
-    if isinstance(coords, list) and any(len(c) != 2 for c in coords):
-        raise InvalidInputType("coord", "list of tuples of length 2", "[(x, y), ...]")
-
-    coords_reproj = zip(*MatchCRS.coords(tuple(zip(*coords)), crs, DEF_CRS))
-    coords_reproj = tlz.partition_all(100, coords_reproj)
+    coords = MatchCRS(crs, DEF_CRS).coords(coords)
+    coords_chunks = tlz.partition_all(100, coords)
 
     headers = {"Content-Type": "application/json", "charset": "utf-8"}
     elevations = []
-    cache_name = ogc.utils.create_cachefile()
-    session = RetrySession(cache_name=cache_name)
-    url = ServiceURL().restful.airmap
-    for chunk in coords_reproj:
+    session = RetrySession()
+    for chunk in coords_chunks:
         payload = {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)}
-        resp = session.get(url, payload=payload, headers=headers)
+        resp = session.get(ServiceURL().restful.airmap, payload=payload, headers=headers)
         elevations.append(resp.json()["data"])
 
     return list(tlz.concat(elevations))
