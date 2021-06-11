@@ -119,7 +119,7 @@ def elevation_bygrid(
         available resolution that covers CONUS. Note that higher resolution
         increases computation time so chose this value with caution.
     dim_names : tuple
-        A tuple of length two containing the coordinate names, defaults to ``["x", "y"]``.
+        A tuple of length two containing the coordinate names, defaults to ``("x", "y")``.
     resampling : rasterio.warp.Resampling
         The reasmpling method to use if the input crs is not in the supported
         3DEP's CRS list which are ``EPSG:4326`` and ``EPSG:3857``.
