@@ -28,34 +28,36 @@ def get_map(
     The 3DEP service has multi-resolution sources so depending on the user
     provided resolution the data is resampled on server-side based
     on all the available data sources. The following layers are available:
-    - "DEM"
-    - "Hillshade Gray"
-    - "Aspect Degrees"
-    - "Aspect Map"
-    - "GreyHillshade_elevationFill"
-    - "Hillshade Multidirectional"
-    - "Slope Map"
-    - "Slope Degrees"
-    - "Hillshade Elevation Tinted"
-    - "Height Ellipsoidal"
-    - "Contour 25"
-    - "Contour Smoothed 25"
+
+    - ``DEM``
+    - ``Hillshade Gray``
+    - ``Aspect Degrees``
+    - ``Aspect Map``
+    - ``GreyHillshade_elevationFill``
+    - ``Hillshade Multidirectional``
+    - ``Slope Map``
+    - ``Slope Degrees``
+    - ``Hillshade Elevation Tinted``
+    - ``Height Ellipsoidal``
+    - ``Contour 25``
+    - ``Contour Smoothed 25``
 
     Parameters
     ----------
     layers : str or list
-        A valid 3DEP layer or a list of them
+        A valid 3DEP layer or a list of them.
     geometry : Polygon, MultiPolygon, or tuple
-        A shapely Polygon or a bounding box (west, south, east, north)
+        A shapely Polygon or a bounding box ``(west, south, east, north)``.
     resolution : float
-        The data resolution in meters. The width and height of the output are computed in pixel
+        The data resolution in meters. The width and height of the output are computed in
+        pixels
         based on the geometry bounds and the given resolution.
     geo_crs : str, optional
         The spatial reference system of the input geometry, defaults to
-        epsg:4326.
+        ``EPSG:4326``.
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
-        epsg:4326.
+        ``EPSG:4326``.
 
     Returns
     -------
@@ -106,22 +108,22 @@ def elevation_bygrid(
 
     Parameters
     ----------
-    xcoords : tuple of two lists of floats
-        A list containing x-coordinates of a mesh.
-    ycoords : tuple of two lists of floats
-        A list containing y-coordinates of a mesh.
+    xcoords : list
+        List x-coordinates of a a grid.
+    ycoords : list
+        List of y-coordinates of a grid.
     crs : str
-        The spatial reference system of the input grid, defaults to epsg:4326.
+        The spatial reference system of the input grid, defaults to ``EPSG:4326``.
     resolution : float
         The accuracy of the output, defaults to 10 m which is the highest
         available resolution that covers CONUS. Note that higher resolution
         increases computation time so chose this value with caution.
     dim_names : tuple
-        A tuple of length two containing the coordinate names, defaults to ["x", "y"]
+        A tuple of length two containing the coordinate names, defaults to ``["x", "y"]`.
     resampling : rasterio.warp.Resampling
         The reasmpling method to use if the input crs is not in the supported
-        3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
-        The available methods can be found
+        3DEP's CRS list which are ``EPSG:4326`` and ``EPSG:3857``.
+        It defaults to bilinear. The available methods can be found
         `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
 
     Returns
@@ -158,20 +160,20 @@ def _sample_tiff(
     ----------
     content : bytes
     coords : list of tuples
-        A list containing x- and y-coordinates of a mesh, [(x, y), ...].
+        A list containing x- and y-coordinates of a mesh, ``[(x, y), ...]``.
     crs : str
         The spatial reference system of the input grid, defaults to epsg:4326.
     resolution : float
     resampling : rasterio.warp.Resampling
         The reasmpling method to use if the input crs is not in the supported
-        3DEP's CRS list which are epsg:4326 and epsg:3857. It defaults to bilinear.
+        3DEP's CRS list which are epsg:4326 and ``epsg:3857``. It defaults to bilinear.
         The available methods can be found
         `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
 
     Returns
     -------
     numpy.ndarray
-        An array of elevations where its index matches the input coords list
+        An array of elevations where its index matches the input coords list.
     """
     with rio.MemoryFile() as memfile:
         memfile.write(content)
@@ -209,7 +211,7 @@ def _elevation_bybox(
     Parameters
     ----------
     bbox : tuple of two lists of floats
-        A list containing x- and y-coordinates of a mesh, [[x-coords], [y-coords]].
+        Bounding box as a tuple of length of 4 ``(west, south, east, north)``.
     crs : str
         The spatial reference system of the input grid, defaults to epsg:4326.
     resolution : float
@@ -245,14 +247,14 @@ def elevation_bycoords(coords: List[Tuple[float, float]], crs: str = DEF_CRS) ->
     Parameters
     ----------
     coords : list of tuples
-        Coordinates of target location as list of tuples [(x, y), ...].
+        Coordinates of target location as list of tuples ``[(x, y), ...]``.
     crs : str, optional
-        Spatial reference (CRS) of coords, defaults to EPSG:4326 (lon, lat).
+        Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
 
     Returns
     -------
     list of int
-        Elevation in meter
+        Elevation in meter.
     """
     coords = MatchCRS(crs, DEF_CRS).coords(coords)
     coords_chunks = tlz.partition_all(100, coords)
