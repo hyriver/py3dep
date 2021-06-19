@@ -21,7 +21,6 @@ GEOM = Polygon(
 LYR = "Slope Degrees"
 
 
-@pytest.mark.flaky(max_runs=3)
 def test_getmap():
     layers = ["DEM", LYR]
     ds = py3dep.get_map(layers, GEOM.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
@@ -29,7 +28,7 @@ def test_getmap():
     dem_1e3 = py3dep.get_map(layers[0], GEOM, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
     assert (
         sorted(ds.keys()) == ["elevation", "slope_degrees"]
-        and abs(dem_10.mean().item() - dem_1e3.mean().item()) < 7e-2
+        and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 7e-2
     )
 
 
@@ -38,11 +37,10 @@ def test_coords():
     assert elev == [363] * 3
 
 
-@pytest.mark.flaky(max_runs=3)
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1e3)
     slope = py3dep.deg2mpm(slope)
-    assert abs(slope.mean().item() - 0.05) < 1e-3
+    assert abs(slope.mean().compute().item() - 0.05) < 1e-3
 
 
 def test_grid():
