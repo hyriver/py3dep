@@ -2,7 +2,7 @@
 History
 =======
 
-0.11.0 (unreleased)
+0.11.0 (2021-06-19)
 -------------------
 
 New Features
@@ -13,8 +13,10 @@ New Features
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
-- Drop support for python 3.6 since many of the dependencies have done so, such as
-  ``xarray`` and ``pandas``.
+- Drop support for Python 3.6 since many of the dependencies such as ``xarray`` and ``pandas``
+  have done so.
+- The returned ``xarray`` objects are in parallel mode, i.e., in some cases ``compute`` method
+  should be used to get the results.
 - Save the output as a ``netcdf`` instead of ``raster`` since conversion
   from ``nc`` to ``tiff`` can be easily done with ``rioxarray``.
 
