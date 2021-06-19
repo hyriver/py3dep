@@ -18,6 +18,7 @@ dependencies:
 
   # pygeoutils deps
   - affine
+  - dask
   - geopandas
   - numpy
   - netcdf4
@@ -33,11 +34,14 @@ dependencies:
   - bottleneck
 
   # test deps
+  - nox
+  - psutil
   - pytest
-  - pytest-cov
-  - pytest-xdist
+  - pytest-clarity
   - pytest-console-scripts
-  - flaky
+  - pytest-cov
+  - pytest-sugar
+  - pytest-xdist
 
   - pip
   - pip:
