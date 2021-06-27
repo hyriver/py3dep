@@ -69,7 +69,7 @@ def get_map(
     if not isinstance(geometry, (Polygon, MultiPolygon, tuple)):
         raise InvalidInputType("geometry", "Polygon or tuple of length 4")
 
-    _geometry = geoutils.pygeoutils._geo2polygon(geometry, geo_crs, crs)
+    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
 
     _layers = layers if isinstance(layers, list) else [layers]
     if "DEM" in _layers:
