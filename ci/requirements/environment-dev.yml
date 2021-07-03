@@ -4,7 +4,6 @@ channels:
   - nodefaults
 dependencies:
   - python>=3.8
-  - setuptools
 
   # async_retriever
   - aiodns
@@ -14,11 +13,11 @@ dependencies:
   - brotlipy
   - cchardet
   - cytoolz
+  - defusedxml
   - nest-asyncio
   - orjson
 
   # pygeoogc deps
-  - defusedxml
   - owslib
   - pydantic
   - pyyaml
@@ -50,7 +49,6 @@ dependencies:
   - folium
   - lxml
   - matplotlib-base
-  - openpyxl
 
   # pydaymet deps
   - scipy

@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 import rasterio
 import xarray as xr
-from pygeoogc import MatchCRS
+from pygeoogc import utils
 from shapely.geometry import Polygon
 
 import py3dep
@@ -33,8 +33,8 @@ def test_getmap():
 
 
 def test_coords():
-    elev = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 3, ALT_CRS)
-    assert elev == [363] * 3
+    elev = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 200, ALT_CRS)
+    assert elev == [363] * 200
 
 
 def test_deg2mpm():
@@ -46,7 +46,7 @@ def test_deg2mpm():
 def test_grid():
     geo_crs = DEF_CRS
     crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
-    geom = MatchCRS(geo_crs, crs).geometry(GEOM)
+    geom = utils.match_crs(GEOM, geo_crs, crs)
     xmin, ymin, xmax, ymax = geom.bounds
     res = 1e3
     gx = np.arange(xmin, xmax, res)

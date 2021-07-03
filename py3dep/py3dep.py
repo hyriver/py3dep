@@ -2,13 +2,14 @@
 from itertools import product
 from typing import Iterator, List, Optional, Tuple, Union
 
+import async_retriever as ar
 import cytoolz as tlz
 import numpy as np
 import pygeoutils as geoutils
 import rasterio as rio
 import rasterio.warp as rio_warp
 import xarray as xr
-from pygeoogc import WMS, MatchCRS, RetrySession, ServiceURL
+from pygeoogc import WMS, ServiceURL, utils
 from shapely.geometry import MultiPolygon, Polygon
 
 from .exceptions import InvalidInputType
@@ -66,9 +67,6 @@ def get_map(
         from the WMS service as bytes. You can use ``utils.create_dataset`` function
         to convert the responses to ``xarray.Dataset``.
     """
-    if not isinstance(geometry, (Polygon, MultiPolygon, tuple)):
-        raise InvalidInputType("geometry", "Polygon or tuple of length 4")
-
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
 
     _layers = layers if isinstance(layers, list) else [layers]
@@ -256,17 +254,23 @@ def elevation_bycoords(coords: List[Tuple[float, float]], crs: str = DEF_CRS) ->
     list of int
         Elevation in meter.
     """
-    coords = MatchCRS(crs, DEF_CRS).coords(coords)
+    coords = utils.match_crs(coords, crs, DEF_CRS)
     coords_chunks = tlz.partition_all(100, coords)
 
     headers = {"Content-Type": "application/json", "charset": "utf-8"}
-    elevations = []
-    session = RetrySession()
-    for chunk in coords_chunks:
-        payload = {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)}
-        resp = session.get(ServiceURL().restful.airmap, payload=payload, headers=headers)
-        elevations.append(resp.json()["data"])
-
+    urls, kwds = zip(
+        *(
+            (
+                ServiceURL().restful.airmap,
+                {
+                    "params": {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)},
+                    "headers": headers,
+                },
+            )
+            for chunk in coords_chunks
+        )
+    )
+    elevations = list(tlz.pluck("data", ar.retrieve(urls, "json", kwds)))
     return list(tlz.concat(elevations))
 
 
