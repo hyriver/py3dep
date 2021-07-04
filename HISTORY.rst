@@ -2,6 +2,13 @@
 History
 =======
 
+0.11.1 (unreleased)
+-------------------
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Migrate to using ``AsyncRetriever`` for handling communications with web services.
+
 0.11.0 (2021-06-19)
 -------------------
 
