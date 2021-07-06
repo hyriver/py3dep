@@ -1,7 +1,7 @@
 """Top-level package for Py3DEP."""
 from pkg_resources import DistributionNotFound, get_distribution
 
-from .exceptions import InvalidInputType, MissingColumns
+from .exceptions import InvalidInputType, InvalidInputValue, MissingColumns
 from .print_versions import show_versions
 from .py3dep import deg2mpm, elevation_bycoords, elevation_bygrid, get_map
 
