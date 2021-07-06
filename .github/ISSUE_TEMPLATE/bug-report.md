@@ -33,7 +33,7 @@ Bug reports that follow these guidelines are easier to diagnose, and so are ofte
 
 <details><summary>Output of <tt>py3dep.show_versions()</tt></summary>
 
-<!-- Paste the output here py3dep.show_versions() here -->
+<!-- Paste the output below -->
 
 
 </details>
