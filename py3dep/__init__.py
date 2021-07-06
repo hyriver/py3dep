@@ -10,3 +10,18 @@ try:
 except DistributionNotFound:
     # package is not installed
     __version__ = "999"
+
+__all__ = [
+    # Functions
+    "get_map",
+    "deg2mpm",
+    "elevation_bycoords",
+    "elevation_bygrid",
+    "show_versions",
+    # Exceptions
+    "InvalidInputType",
+    "InvalidInputValue",
+    "MissingColumns",
+    # Constants
+    "__version__",
+]
