@@ -5,9 +5,6 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import pytest
-import rasterio
-import xarray as xr
 from pygeoogc import utils
 from shapely.geometry import Polygon
 
@@ -33,8 +30,11 @@ def test_getmap():
 
 
 def test_coords():
-    elev = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 200, ALT_CRS)
-    assert elev == [363] * 200
+    airmap = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 200, ALT_CRS)
+    tnm = py3dep.elevation_bycoords(
+        [(-7766049.664788851, 5691929.739021257)] * 200, ALT_CRS, source="tnm"
+    )
+    assert set(tnm) == {1169.9} and set(airmap) == {363}
 
 
 def test_deg2mpm():
@@ -52,7 +52,8 @@ def test_grid():
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(gx, gy, crs, res)
-    assert abs(elev.mean().item() - 295.763) < 1e-3
+    elev_fill = py3dep.elevation_bygrid(gx, gy, crs, res, depression_filling=True)
+    assert ((elev_fill - elev).sum().item() - 1404.618) < 1e-3
 
 
 def test_cli_map(script_runner):
