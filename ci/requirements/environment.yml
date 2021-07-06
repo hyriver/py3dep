@@ -28,6 +28,7 @@ dependencies:
 
   # py3dep
   - click
+  - richdem
 
   # deps to speed up xarray and geopandas
   - pygeos
