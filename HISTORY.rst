@@ -5,6 +5,18 @@ History
 0.11.1 (unreleased)
 -------------------
 
+New Features
+~~~~~~~~~~~~
+- Add a new argument to ``elevation_bycoords`` function, called ``source`` to support for getting
+  elevations of a list of coordinates via The National Map's
+  `Point Query Service <https://apps.nationalmap.gov/bulkpqs/>`__. This service is more
+  accurate than Airmap but it's limited to the US only. You can set ``source=tnm`` to use
+  this service. The default is ``airmap``.
+- Add a new argument to ``elevation_bygrid`` function, called ``fill_depressions`` to fill the
+  depressions in the obtained DEM before extracting elevation data for the input grid points.
+  This is achieved via `RichDEM <https://richdem.readthedocs.io>`__ that needs to be installed
+  if this functionality is desired. You can install it via ``pip`` or ``conda`` (``mamba``).
+
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Migrate to using ``AsyncRetriever`` for handling communications with web services.
