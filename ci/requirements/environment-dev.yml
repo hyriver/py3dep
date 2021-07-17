@@ -13,11 +13,11 @@ dependencies:
   - brotlipy
   - cchardet
   - cytoolz
-  - defusedxml
   - nest-asyncio
   - orjson
 
   # pygeoogc deps
+  - defusedxml
   - owslib
   - pydantic
   - pyyaml
@@ -39,6 +39,7 @@ dependencies:
 
   # py3dep
   - click
+  - scipy
   - richdem
 
   # pynhd deps
@@ -51,9 +52,6 @@ dependencies:
   - lxml
   - matplotlib-base
 
-  # pydaymet deps
-  - scipy
-
   # optional deps to speed up xarray and geopandas
   - bottleneck
   - pygeos
@@ -63,8 +61,6 @@ dependencies:
   - mapclassify
   - cartopy
   - colorcet
-  - hvplot
-  - geoviews
 
   # dev deps
   - codespell
@@ -95,7 +91,6 @@ dependencies:
   - pip
   - pip:
     - ward
-    - nbmake
 
     - git+https://github.com/cheginit/async_retriever.git
     - git+https://github.com/cheginit/pygeoogc.git

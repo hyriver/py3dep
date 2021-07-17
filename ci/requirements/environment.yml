@@ -3,15 +3,25 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  # pygeoogc deps
+  # async_retriever
+  - aiodns
+  - aiohttp
+  - aiohttp-client-cache
+  - aiosqlite
+  - brotlipy
+  - cchardet
   - cytoolz
+  - nest-asyncio
+  - orjson
+
+  # pygeoogc deps
   - defusedxml
   - owslib
+  - pydantic
   - pyyaml
   - pyproj
   - requests
   - requests-cache
-  - setuptools
   - shapely
   - simplejson
   - urllib3
@@ -20,14 +30,14 @@ dependencies:
   - affine
   - dask
   - geopandas
-  - numpy
   - netcdf4
-  - orjson
+  - numpy
   - rasterio
   - xarray
 
   # py3dep
   - click
+  - scipy
   - richdem
 
   # deps to speed up xarray and geopandas
