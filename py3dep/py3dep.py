@@ -1,25 +1,26 @@
 """Get data from 3DEP database."""
-from itertools import product
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
 import numpy as np
 import pygeoutils as geoutils
-import rasterio as rio
-import rasterio.warp as rio_warp
+import pyproj
 import xarray as xr
-from affine import Affine
-from pygeoogc import WMS, ServiceURL, utils
+from pydantic import BaseModel, validator
+from pygeoogc import WMS, InvalidInputType, InvalidInputValue, ServiceURL, utils
 from shapely.geometry import MultiPolygon, Polygon
 
 try:
     import richdem as rd
 except ImportError:
     rd = None
-from .exceptions import InvalidInputType, InvalidInputValue
+
+from .exceptions import MissingDependency
 
 DEF_CRS = "epsg:4326"
+
+__all__ = ["get_map", "elevation_bygrid", "elevation_bycoords", "deg2mpm"]
 
 
 def get_map(
@@ -102,9 +103,7 @@ def elevation_bygrid(
     ycoords: List[float],
     crs: str,
     resolution: float,
-    dim_names: Optional[Tuple[str, str]] = None,
     depression_filling: bool = False,
-    resampling: rio_warp.Resampling = rio_warp.Resampling.bilinear,
 ) -> xr.DataArray:
     """Get elevation from DEM data for a grid.
 
@@ -122,175 +121,16 @@ def elevation_bygrid(
         The accuracy of the output, defaults to 10 m which is the highest
         available resolution that covers CONUS. Note that higher resolution
         increases computation time so chose this value with caution.
-    dim_names : tuple
-        A tuple of length two containing the coordinate names, defaults to ``("x", "y")``.
     depression_filling : bool, optional
         Fill depressions before sampling using
         `RichDEM <https://richdem.readthedocs.io/en/latest/>`__ package, defaults to False.
-    resampling : rasterio.warp.Resampling
-        The reasmpling method to use if the input crs is not in the supported
-        3DEP's CRS list which are ``EPSG:4326`` and ``EPSG:3857``.
-        It defaults to bilinear. The available methods can be found
-        `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
 
     Returns
     -------
     xarray.DataArray
         An data array with name elevation and the given dim names.
     """
-    if dim_names is None:
-        dim_names = ("x", "y")
-
     bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
-    r_dict = _elevation_bybox(bbox, crs, resolution)
-    coords = product(xcoords, ycoords)
-    elev_arr = _sample_tiff(
-        r_dict["3DEPElevation:None_dd_0_0"], coords, crs, depression_filling, resampling
-    )
-
-    return xr.DataArray(
-        elev_arr.reshape((len(xcoords), len(ycoords))),
-        dims=dim_names,
-        coords=[xcoords, ycoords],
-        name="elevation",
-        attrs={"units": "meters"},
-    )
-
-
-def fill_depressions(
-    dem: Union[xr.DataArray, np.ndarray],
-    nodata: Optional[float] = None,
-    crs: Optional[str] = None,
-    transform: Optional[Affine] = None,
-) -> xr.DataArray:
-    """Fill depressions and adjust flat areas in a DEM using RichDEM.
-
-    Parameters
-    ----------
-    dem : xarray.DataArray or numpy.ndarray
-        Digital Elevation Model.
-    nodata : float, optional
-        Value for cell with no data, defaults to None. If input DEM is an ``xarray.DataArray``
-        nodata will be set to ``dem.nodatavals[0]``.
-    crs : str, optional
-        Coordinate reference system for the input DEM, defaults to None. If input DEM
-         is an ``xarray.DataArray`` crs will be set to ``dem.crs``.
-    transform : str, optional
-        Transform of the input DEM, defaults to None. If input DEM is an ``xarray.DataArray``
-        transform will be set to ``dem.transform``.
-
-    Returns
-    -------
-    xarray.DataArray
-        Conditioned DEM.
-    """
-    if rd is None:
-        raise ImportError(
-            "Depression filling operation uses richdem package which is not installed."
-        )
-
-    attrs = {"nodata": nodata, "crs": crs, "transform": transform}
-    if isinstance(dem, xr.DataArray):
-        try:
-            attrs = {"nodata": dem.nodatavals[0], "crs": dem.crs, "transform": dem.transform}
-        except AttributeError:
-            raise AttributeError("Input DEM must have nodatavals, crs, and transform attributes.")
-
-    rda = rd.rdarray(dem, no_data=attrs["nodata"])
-    rda.projection = attrs["crs"]
-    rda.geotransform = attrs["transform"]
-    rda = rd.FillDepressions(rda, epsilon=False)
-    rda = rd.ResolveFlats(rda)
-    if isinstance(dem, xr.DataArray):
-        dem.data = rda
-        return dem
-    return rda
-
-
-def _sample_tiff(
-    content: bytes,
-    coords: Union[List[Tuple[float, float]], Iterator[Tuple[float, float]]],
-    crs: str,
-    depression_filling: bool,
-    resampling: rio_warp.Resampling,
-) -> np.ndarray:
-    """Sample a tiff response for a list of coordinates.
-
-    Parameters
-    ----------
-    content : bytes
-    coords : list of tuples
-        A list containing x- and y-coordinates of a mesh, ``[(x, y), ...]``.
-    crs : str
-        The spatial reference system of the input grid, defaults to epsg:4326.
-    depression_filling : bool, optional
-        Fill depressions before sampling using
-        `RichDEM <https://richdem.readthedocs.io/en/latest/>`__ package, defaults to False.
-    resampling : rasterio.warp.Resampling
-        The reasmpling method to use if the input crs is not in the supported
-        3DEP's CRS list which are epsg:4326 and ``epsg:3857``. It defaults to bilinear.
-        The available methods can be found
-        `here <https://rasterio.readthedocs.io/en/latest/api/rasterio.enums.html#rasterio.enums.Resampling>`__
-
-    Returns
-    -------
-    numpy.ndarray
-        An array of elevations where its index matches the input coords list.
-    """
-    with rio.MemoryFile() as memfile:
-        memfile.write(content)
-        with memfile.open() as src:
-            transform, width, height = rio_warp.calculate_default_transform(
-                src.crs, crs, src.width, src.height, *src.bounds
-            )
-            kwargs = src.meta.copy()
-            kwargs.update({"crs": crs, "transform": transform, "width": width, "height": height})
-            if depression_filling:
-                src_nodata, src_crs = geoutils.get_nodata_crs(content)
-                data = fill_depressions(src.read(1), src_nodata, src_crs, src.transform)
-            else:
-                data = rio.band(src, 1)
-            with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
-                if crs != src.crs:
-                    rio_warp.reproject(
-                        source=data,
-                        destination=rio.band(vrt, 1),
-                        src_transform=src.transform,
-                        src_crs=src.crs,
-                        dst_transform=transform,
-                        crs=crs,
-                        resampling=resampling,
-                    )
-                return np.array([e.item() for e in vrt.sample(coords)])
-
-
-def _elevation_bybox(
-    bbox: Tuple[float, float, float, float],
-    crs: str,
-    resolution: float,
-) -> xr.DataArray:
-    """Get elevation within a bounding box.
-
-    This function is intended for getting elevations for a gridded dataset.
-
-    Parameters
-    ----------
-    bbox : tuple of two lists of floats
-        Bounding box as a tuple of length of 4 ``(west, south, east, north)``.
-    crs : str
-        The spatial reference system of the input grid, defaults to epsg:4326.
-    resolution : float
-        The accuracy of the output, defaults to 10 m which is the highest
-        available resolution that covers CONUS. Note that higher resolution
-        increases computation time so chose this value with caution.
-
-    Returns
-    -------
-    numpy.ndarray
-        An array of elevations where its index matches the input gridxy list
-    """
-    if not isinstance(bbox, tuple) or len(bbox) != 4:
-        raise InvalidInputType("bbox", "tuple of length 4")
 
     ratio_min = 0.01
     ratio_x = abs((bbox[2] - bbox[0]) / bbox[0])
@@ -303,7 +143,119 @@ def _elevation_bybox(
     wms = WMS(
         ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=req_crs
     )
-    return wms.getmap_bybox(bbox, resolution, box_crs=crs)
+    r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs)
+    dem = geoutils.gtiff2xarray(r_dict, bbox, crs)
+    dem.name = "elevation"
+    dem.attrs["units"] = "meters"
+
+    if depression_filling:
+        dem = fill_depressions(dem)
+
+    return dem.interp(x=xcoords, y=ycoords)
+
+
+def fill_depressions(
+    dem: Union[xr.DataArray, np.ndarray],
+) -> xr.DataArray:
+    """Fill depressions and adjust flat areas in a DEM using RichDEM.
+
+    Parameters
+    ----------
+    dem : xarray.DataArray or numpy.ndarray
+        Digital Elevation Model.
+
+    Returns
+    -------
+    xarray.DataArray
+        Conditioned DEM.
+    """
+    if rd is None:
+        raise MissingDependency
+
+    rda = rd.rdarray(dem, no_data=dem.nodatavals[0])
+    rda.projection = dem.crs
+    rda.geotransform = dem.transform
+    rda = rd.FillDepressions(rda, epsilon=False)
+    dem.data = rd.ResolveFlats(rda)
+    return dem
+
+
+class ElevationByCoords(BaseModel):
+    """Elevation model class.
+
+    Parameters
+    ----------
+    coords : list of tuple
+        List of coordinates.
+    crs : str, optional
+        Coordinate reference system of the input coordinates, defaults to ``EPSG:4326``.
+    source : str, optional
+        Elevation source, defaults to ``tnm``. Valid sources are: ``tnm``, ``airmap``.
+    """
+
+    crs: str = DEF_CRS
+    coords: List[Tuple[float, float]]
+    source: str = "airmap"
+
+    @validator("crs")
+    def _valid_crs(cls, v):
+        try:
+            return pyproj.CRS(v)
+        except pyproj.exceptions.CRSError as ex:
+            raise InvalidInputType("crs", "a valid CRS") from ex
+
+    @validator("coords")
+    def _validate_coords(cls, v, values):
+        return utils.match_crs(v, values["crs"], DEF_CRS)
+
+    @validator("source")
+    def _validate_source(cls, v):
+        valid_sources = ["tnm", "airmap"]
+        if v not in valid_sources:
+            raise InvalidInputValue("source", valid_sources)
+        return v
+
+    def airmap(self) -> List[Tuple[float, float]]:
+        """Return list of elevations in meters."""
+        coords_chunks = tlz.partition_all(100, self.coords)
+        headers = {"Content-Type": "application/json", "charset": "utf-8"}
+        urls, kwds = zip(
+            *(
+                (
+                    ServiceURL().restful.airmap,
+                    {
+                        "params": {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)},
+                        "headers": headers,
+                    },
+                )
+                for chunk in coords_chunks
+            )
+        )
+        elevations = list(tlz.pluck("data", ar.retrieve(urls, "json", kwds)))
+        return list(tlz.concat(elevations))
+
+    def tnm(self) -> List[Tuple[float, float]]:
+        """Return list of elevations in meters."""
+        urls, kwds = zip(
+            *(
+                (
+                    ServiceURL().restful.nm_pqs,
+                    {
+                        "params": {
+                            "units": "meters",
+                            "output": "json",
+                            "y": f"{lat:.5f}",
+                            "x": f"{lon:.5f}",
+                        },
+                    },
+                )
+                for lon, lat in self.coords
+            )
+        )
+        resp = ar.retrieve(urls, "json", kwds, max_workers=500)
+        return [
+            r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
+        ]
 
 
 def elevation_bycoords(
@@ -329,48 +281,8 @@ def elevation_bycoords(
     list of float
         Elevation in meter.
     """
-    coords = utils.match_crs(coords, crs, DEF_CRS)
-
-    valid_sources = ["airmap", "tnm"]
-    if source not in valid_sources:
-        raise InvalidInputValue("source", valid_sources)
-
-    if source == "airmap":
-        coords_chunks = tlz.partition_all(100, coords)
-        headers = {"Content-Type": "application/json", "charset": "utf-8"}
-        urls, kwds = zip(
-            *(
-                (
-                    ServiceURL().restful.airmap,
-                    {
-                        "params": {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)},
-                        "headers": headers,
-                    },
-                )
-                for chunk in coords_chunks
-            )
-        )
-        elevations = list(tlz.pluck("data", ar.retrieve(urls, "json", kwds)))
-        return list(tlz.concat(elevations))
-
-    urls, kwds = zip(
-        *(
-            (
-                ServiceURL().restful.nm_pqs,
-                {
-                    "params": {
-                        "units": "meters",
-                        "output": "json",
-                        "y": f"{lat:.5f}",
-                        "x": f"{lon:.5f}",
-                    },
-                },
-            )
-            for lon, lat in coords
-        )
-    )
-    resp = ar.retrieve(urls, "json", kwds, max_workers=500)
-    return [r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp]
+    service = ElevationByCoords(crs=crs, coords=coords, source=source)
+    return getattr(service, source)()
 
 
 def deg2mpm(da: xr.DataArray) -> xr.DataArray:
