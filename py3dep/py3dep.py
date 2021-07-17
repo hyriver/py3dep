@@ -1,11 +1,16 @@
 """Get data from 3DEP database."""
-from typing import List, Tuple, Union
+import tempfile
+import uuid
+from pathlib import Path
+from typing import Dict, List, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
 import numpy as np
 import pygeoutils as geoutils
 import pyproj
+import rasterio as rio
+import rasterio.warp as rio_warp
 import xarray as xr
 from pydantic import BaseModel, validator
 from pygeoogc import WMS, InvalidInputType, InvalidInputValue, ServiceURL, utils
@@ -64,7 +69,9 @@ def get_map(
         ``EPSG:4326``.
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
-        ``EPSG:4326``.
+        ``EPSG:4326``. Valis values are ``epsg:4326``, ``epsg:3576``, ``epsg:3571``,
+        ``epsg:3575``, ``epsg:3857``, ``epsg:3572``, ``crs:84``, ``epsg:3573``,
+        and ``epsg:3574``.
 
     Returns
     -------
@@ -139,19 +146,88 @@ def elevation_bygrid(
         rad = ratio_min * abs(bbox[0])
         bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
 
-    req_crs = crs if crs.lower() in [DEF_CRS, "epsg:3857"] else DEF_CRS
     wms = WMS(
-        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=req_crs
+        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=DEF_CRS
     )
     r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs)
-    dem = geoutils.gtiff2xarray(r_dict, bbox, crs)
-    dem.name = "elevation"
-    dem.attrs["units"] = "meters"
+    dem = _reproject_gtiff(r_dict, crs)
 
     if depression_filling:
         dem = fill_depressions(dem)
 
     return dem.interp(x=xcoords, y=ycoords)
+
+
+def _reproject_gtiff(
+    r_dict: Dict[str, bytes],
+    crs: str,
+) -> np.ndarray:
+    """Sample a tiff response for a list of coordinates.
+
+    Parameters
+    ----------
+    r_dict : dict
+        Dictionary of (Geo)Tiff byte responses where keys are some names that are used
+        for naming each responses, and values are bytes.
+    crs : str
+        The target spatial reference system.
+
+    Returns
+    -------
+    numpy.ndarray
+        An array of elevations where its index matches the input coords list.
+    """
+    tmp_dir = tempfile.gettempdir()
+    var_name = {lyr: "_".join(lyr.split("_")[:-3]) for lyr in r_dict.keys()}
+    attrs = geoutils.get_gtiff_attrs(next(iter(r_dict.values())), ("y", "x"))
+
+    def to_dataset(lyr: str, resp: bytes) -> xr.DataArray:
+        with rio.MemoryFile() as memfile:
+            memfile.write(resp)
+            with memfile.open() as src:
+                transform, width, height = rio_warp.calculate_default_transform(
+                    src.crs, crs, src.width, src.height, *src.bounds
+                )
+                kwargs = src.meta.copy()
+                kwargs.update(
+                    {"crs": crs, "transform": transform, "width": width, "height": height}
+                )
+
+                with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
+                    if crs != src.crs:
+                        for i in range(1, src.count + 1):
+                            rio_warp.reproject(
+                                source=rio.band(src, i),
+                                destination=rio.band(vrt, i),
+                                src_transform=src.transform,
+                                src_crs=src.crs,
+                                dst_transform=transform,
+                                crs=crs,
+                                resampling=rio_warp.Resampling.bilinear,
+                            )
+                    ds = xr.open_rasterio(vrt)
+                    ds = ds.squeeze("band", drop=True)
+                    ds = ds.sortby("y", ascending=False)
+                    ds.attrs["crs"] = crs
+                    ds.name = var_name[lyr]
+                    fpath = Path(tmp_dir, f"{uuid.uuid4().hex}.nc")
+                    ds.to_netcdf(fpath)
+                    return fpath
+
+    ds = xr.open_mfdataset(
+        (to_dataset(lyr, resp) for lyr, resp in r_dict.items()),
+        parallel=True,
+    )
+    ds = ds[list(ds.keys())[0]]
+    ds.name = "elevation"
+    ds.attrs["units"] = "meters"
+    ds.attrs["crs"] = crs
+    ds.attrs["nodatavals"] = (attrs.nodata,)
+    transform, _, _ = geoutils.get_transform(ds, attrs.dims)
+    ds = ds.sortby(attrs.dims[0], ascending=False)
+    ds.attrs["transform"] = transform
+    ds.attrs["res"] = (transform.a, transform.e)
+    return ds
 
 
 def fill_depressions(
