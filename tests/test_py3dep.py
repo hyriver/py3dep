@@ -18,8 +18,6 @@ GEOM = Polygon(
 LYR = "Slope Degrees"
 SMALL = 1e-3
 
-shutil.rmtree("cache", ignore_errors=True)
-
 
 def test_getmap():
     layers = ["DEM", LYR]
