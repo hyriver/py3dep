@@ -53,7 +53,7 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(gx, gy, crs, res)
     elev_fill = py3dep.elevation_bygrid(gx, gy, crs, res, depression_filling=True)
-    assert ((elev_fill - elev).sum().item() - 1404.618) < 1e-3
+    assert ((elev_fill - elev).sum().compute().item() - 1404.618) < 1e-3
 
 
 def test_cli_map(script_runner):
