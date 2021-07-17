@@ -16,6 +16,7 @@ GEOM = Polygon(
     [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
 )
 LYR = "Slope Degrees"
+SMALL = 1e-3
 
 
 def test_getmap():
@@ -40,20 +41,19 @@ def test_coords():
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1e3)
     slope = py3dep.deg2mpm(slope)
-    assert abs(slope.mean().compute().item() - 0.05) < 1e-3
+    assert abs(slope.mean().compute().item() - 0.05) < SMALL
 
 
 def test_grid():
-    geo_crs = DEF_CRS
     crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
-    geom = utils.match_crs(GEOM, geo_crs, crs)
+    geom = utils.match_crs(GEOM, DEF_CRS, crs)
     xmin, ymin, xmax, ymax = geom.bounds
     res = 1e3
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(gx, gy, crs, res)
     elev_fill = py3dep.elevation_bygrid(gx, gy, crs, res, depression_filling=True)
-    assert ((elev_fill - elev).sum().compute().item() - 1404.618) < 1e-3
+    assert ((elev_fill - elev).sum().compute().item() - 1935.074) < SMALL
 
 
 def test_cli_map(script_runner):
