@@ -22,7 +22,7 @@ New Features
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Migrate to using ``AsyncRetriever`` for handling communications with web services.
-- Handle the interpolation step in ``elevation_bygrid`` function more effeciently
+- Handle the interpolation step in ``elevation_bygrid`` function more efficiently
   using ``xarray``.
 
 0.11.0 (2021-06-19)
