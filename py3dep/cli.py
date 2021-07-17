@@ -9,7 +9,7 @@ import pandas as pd
 from shapely.geometry import MultiPolygon, Polygon
 
 from . import py3dep
-from .exceptions import MissingColumns
+from .exceptions import MissingColumns, MissingOption
 
 
 def get_target_df(
@@ -36,10 +36,12 @@ def from_geometry(
     py3dep.get_map(layer, geometry, res, geo_crs=crs, crs=crs).to_netcdf(nc_path)
 
 
-def from_coords(coords: List[Tuple[float, float]], crs: str, csv_path: Union[str, Path]) -> None:
+def from_coords(
+    coords: List[Tuple[float, float]], crs: str, query_source: str, csv_path: Union[str, Path]
+) -> None:
     """Get elevations of a set of coordinates in meter from airmap."""
     elev = pd.DataFrame.from_records(coords, columns=["x", "y"])
-    elev["elevation"] = py3dep.elevation_bycoords(coords, crs)
+    elev["elevation"] = py3dep.elevation_bycoords(coords, crs, query_source)
     elev.astype("f8").to_csv(csv_path)
 
 
@@ -66,6 +68,13 @@ CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 @click.argument("target_type", type=click.Choice(["geometry", "coords"], case_sensitive=False))
 @click.argument("crs", type=str)
 @click.option(
+    "-q",
+    "--query_source",
+    default="airmap",
+    type=click.Choice(["airmap", "tnm"], case_sensitive=False),
+    help="Source of the elevation data.",
+)
+@click.option(
     "-l",
     "--layer",
     default=None,
@@ -83,6 +92,7 @@ def main(
     target: Path,
     target_type: str,
     crs: str,
+    query_source: str = "airmap",
     layer: Optional[str] = None,
     save_dir: Union[str, Path] = "topo_3dep",
 ):
@@ -117,7 +127,7 @@ def main(
     target = Path(target)
     if target_type == "geometry":
         if layer is None:
-            raise ValueError("layer option is required when target_type is geometry.")
+            raise MissingOption
 
         target_df = gpd.read_file(target, crs=crs)
         target_df = get_target_df(target_df, ["id", "res", "geometry"])
@@ -139,8 +149,9 @@ def main(
         target_df = get_target_df(target_df, ["x", "y"])
         click.echo(f"Found {len(target_df)} items in {target}. Retrieving ...")
         from_coords(
-            list(target_df.to_records(index=False)),
+            list(target_df.itertuples(index=False, name=None)),
             crs,
+            query_source,
             Path(save_dir, f"{target.stem}_elevation.csv"),
         )
         click.echo(f"Retrieved elevation data for {len(target_df)} item(s).")
