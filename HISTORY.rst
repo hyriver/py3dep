@@ -12,7 +12,7 @@ New Features
   `Point Query Service <https://apps.nationalmap.gov/bulkpqs/>`__. This service is more
   accurate than Airmap but it's limited to the US only. You can select the source via
   a new argument called ``source``. You can set it to ``source=tnm`` to use the TNM
-  service. The default is ``airmap``.
+  service. The default is ``tnm``.
 - Refactor ``elevation_bygrid`` function to add a new capability via ``fill_depressions``
   argument for filling depressions in the obtained DEM before extracting elevation data
   for the input grid points.. This is achieved via
