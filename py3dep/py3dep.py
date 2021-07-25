@@ -335,7 +335,7 @@ class ElevationByCoords(BaseModel):
 
 
 def elevation_bycoords(
-    coords: List[Tuple[float, float]], crs: str = DEF_CRS, source: str = "airmap"
+    coords: List[Tuple[float, float]], crs: str = DEF_CRS, source: str = "tnm"
 ) -> List[float]:
     """Get elevation from Airmap at 1-arc resolution (~30 m) for a list of coordinates.
 
@@ -346,11 +346,10 @@ def elevation_bycoords(
     crs : str, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
-        Data source to be used, default to ``airmap``. Supported sources are
+        Data source to be used, default to ``tnm``. Supported sources are
         ``airmap`` (30 m resolution) and ``tnm`` (using The National Map's Bulk Point
         Query Service). The ``tnm`` source is more accurate since it uses the highest
-        available resolution DEM automatically but it is limited to the US and tends to
-        be slower than ``airmap``.
+        available resolution DEM automatically but it is limited to the US.
 
     Returns
     -------
