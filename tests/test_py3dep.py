@@ -30,12 +30,16 @@ def test_getmap():
     )
 
 
-def test_coords():
-    airmap = py3dep.elevation_bycoords([(-7766049.664788851, 5691929.739021257)] * 200, ALT_CRS)
-    tnm = py3dep.elevation_bycoords(
-        [(-7766049.664788851, 5691929.739021257)] * 200, ALT_CRS, source="tnm"
-    )
-    assert set(tnm) == {1169.9} and set(airmap) == {363}
+class TestByCoords:
+    coords = [(-7766049.664788851, 5691929.739021257)] * 200
+
+    def test_airmap(self):
+        airmap = py3dep.elevation_bycoords(self.coords, ALT_CRS, source="airmap")
+        assert set(airmap) == {363}
+
+    def test_tnm(self):
+        tnm = py3dep.elevation_bycoords(self.coords, ALT_CRS, source="tnm")
+        assert set(tnm) == {1169.9}
 
 
 def test_deg2mpm():
