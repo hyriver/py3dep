@@ -2,8 +2,13 @@
 History
 =======
 
-0.11.1 (unreleased)
+0.11.1 (2021-07-31)
 -------------------
+
+The highlight of this release is a major refactor of ``elevation_bycoords`` by
+adding support for the Bulk Point Query Service and improving overall performance
+of the function. Another highlight is support for performing depression filling
+in ``elevation_bygrid`` prior to sampling the underlying DEM.
 
 New Features
 ~~~~~~~~~~~~
