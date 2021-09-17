@@ -6,6 +6,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rioxarray  # noqa: F401
+import pyproj
 import xarray as xr
 from pygeoogc import utils
 from shapely.geometry import Polygon
@@ -45,7 +46,7 @@ class TestByCoords:
         assert set(airmap) == {363}
 
     def test_tnm(self):
-        tnm = py3dep.elevation_bycoords(self.coords, ALT_CRS, source="tnm")
+        tnm = py3dep.elevation_bycoords(self.coords, pyproj.CRS(ALT_CRS), source="tnm")
         assert set(tnm) == {1169.9}
 
 
