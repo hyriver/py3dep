@@ -69,10 +69,10 @@ def test_grid():
 
 
 def test_cli_map(script_runner):
-    gdf = gpd.GeoDataFrame({"id": "geo_test", "res": 1e3}, geometry=[GEOM], index=[0])
+    gdf = gpd.GeoDataFrame({"id": "geo_test", "res": 1e3}, geometry=[GEOM], index=[0], crs=DEF_CRS)
     geo_gpkg = "nat_geo.gpkg"
     gdf.to_file(geo_gpkg)
-    ret = script_runner.run("py3dep", geo_gpkg, "geometry", DEF_CRS, "-l", LYR, "-s", "geo_map")
+    ret = script_runner.run("py3dep", "-s", "geo_map", "geometry", geo_gpkg, LYR)
     shutil.rmtree(geo_gpkg)
     shutil.rmtree("geo_map")
     assert ret.success
@@ -84,7 +84,7 @@ def test_cli_coords(script_runner):
     df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
     coord_csv = "coords.csv"
     df.to_csv(coord_csv)
-    ret = script_runner.run("py3dep", coord_csv, "coords", ALT_CRS, "-s", "geo_coords")
+    ret = script_runner.run("py3dep", "-s", "geo_coords", "coords", coord_csv, ALT_CRS)
     Path(coord_csv).unlink()
     shutil.rmtree("geo_coords")
     assert ret.success
