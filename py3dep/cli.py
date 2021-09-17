@@ -69,10 +69,12 @@ def coords(
 
     Examples:
 
-        $ py3dep coords ny_coords.csv  epsg:4326
+        $ py3dep  -s topo_dir coords ny_coords.csv  epsg:4326
     """  # noqa: D412
     elev = get_target_df(pd.read_csv(fpath), ["x", "y"])
-    click.echo(f"Found {len(elev)} items in {fpath}. Retrieving ...")
+
+    item_str = "items" if len(elev) > 1 else "item"
+    click.echo(f"Found {len(elev)} {item_str} in {fpath}. Retrieving ...")
     coords = list(elev.itertuples(index=False, name=None))
     elev["elevation"] = py3dep.elevation_bycoords(coords, crs, ctx.obj["query_source"])
     elev.astype("f8").to_csv(Path(ctx.obj["save_dir"], f"{Path(fpath).stem}_elevation.csv"))
@@ -103,7 +105,7 @@ def geometry(
 
     Examples:
 
-        $ py3dep geometry ny_geom.gpkg "Slope Map"
+        $ py3dep -q airmap geometry ny_geom.gpkg "Slope Map"
     """  # noqa: D412
     target_df = gpd.read_file(fpath)
     if target_df.crs is None:
@@ -116,11 +118,10 @@ def geometry(
         for i, r, g in target_df.itertuples(index=False)
     )
 
-    click.echo(f"Found {len(target_df)} items in {fpath}. Retrieving ...")
+    item_str = "items" if len(target_df) > 1 else "item"
+    click.echo(f"Found {len(target_df)} {item_str} in {fpath}. Retrieving ...")
     with click.progressbar(
         args_list, label=f"Getting {layer} from 3DEP", length=len(target_df)
     ) as bar:
         for g, r, p in bar:
             py3dep.get_map(layer, g, r, geo_crs=crs, crs=crs).to_netcdf(p)
-
-    click.echo(f"Retrieved topography data for {len(target_df)} item(s).")
