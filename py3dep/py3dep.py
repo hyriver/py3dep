@@ -24,7 +24,20 @@ except ImportError:
 from .exceptions import MissingDependency
 
 DEF_CRS = "epsg:4326"
-
+LAYERS = [
+    "DEM",
+    "Hillshade Gray",
+    "Aspect Degrees",
+    "Aspect Map",
+    "GreyHillshade_elevationFill",
+    "Hillshade Multidirectional",
+    "Slope Map",
+    "Slope Degrees",
+    "Hillshade Elevation Tinted",
+    "Height Ellipsoidal",
+    "Contour 25",
+    "Contour Smoothed 25",
+]
 __all__ = ["get_map", "elevation_bygrid", "elevation_bycoords", "deg2mpm"]
 
 
@@ -80,14 +93,17 @@ def get_map(
         from the WMS service as bytes. You can use ``utils.create_dataset`` function
         to convert the responses to ``xarray.Dataset``.
     """
-    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
+    _layers = layers.copy() if isinstance(layers, list) else [layers]
+    invalid = [lyr for lyr in _layers if lyr not in LAYERS]
+    if len(invalid) > 0:
+        raise InvalidInputValue("layers", LAYERS)
 
-    _layers = layers if isinstance(layers, list) else [layers]
     if "DEM" in _layers:
         _layers[_layers.index("DEM")] = "None"
 
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
+    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
     wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
