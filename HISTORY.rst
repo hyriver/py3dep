@@ -2,6 +2,23 @@
 History
 =======
 
+0.11.3 (Unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Rewrite the command line using ``click.group`` (command/sub-command) to improve UX.
+  The command is now ``py3dep [options] [command] [args]``. Options are ``--save_dir``,
+  (or ``-s``) and ``--query_source`` (or ``-q``). The two supported commands are
+  ``coords`` for getting elevations of a list of coordinates and ``geometry`` for
+  getting the elevation of within a geometry. Each sub-command now has a separete
+  help message.
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- The ``get_map`` function now checks for validation of the input ``layers`` argument before
+  sending the actual request with a more helpful message.
+
 0.11.2 (2021-09-17)
 -------------------
 
