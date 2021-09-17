@@ -50,6 +50,7 @@ dependencies:
   - pytest-cov
   - pytest-sugar
   - pytest-xdist
+  - rioxarray
 
   - pip
   - pip:
