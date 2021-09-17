@@ -76,7 +76,7 @@ def test_cli_map(script_runner):
     shutil.rmtree(geo_gpkg)
     shutil.rmtree("geo_map")
     assert ret.success
-    assert "Retrieved topography data for 1 item(s)." in ret.stdout
+    assert "Found 1 item in" in ret.stdout
     assert ret.stderr == ""
 
 
@@ -88,7 +88,7 @@ def test_cli_coords(script_runner):
     Path(coord_csv).unlink()
     shutil.rmtree("geo_coords")
     assert ret.success
-    assert "Retrieved elevation data for 3 item(s)." in ret.stdout
+    assert "Found 3 items in" in ret.stdout
     assert ret.stderr == ""
 
 
