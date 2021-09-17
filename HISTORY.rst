@@ -2,6 +2,20 @@
 History
 =======
 
+0.11.2 (2021-09-17)
+-------------------
+
+Bug Fixes
+~~~~~~~~~
+- Fix a bug related to ``elevation_bycoords`` where crs validation fails if its
+  type is ``pyrpoj.CRS`` by converting inputs with CRS types to string.
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Fix a couple of typing issues and update the ``get_transform`` API based on the
+  recent changes in ``pygeoutils`` v0.11.5.
+
+
 0.11.1 (2021-07-31)
 -------------------
 
