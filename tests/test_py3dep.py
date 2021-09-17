@@ -5,6 +5,8 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import rioxarray  # noqa: F401
+import xarray as xr
 from pygeoogc import utils
 from shapely.geometry import Polygon
 
@@ -24,10 +26,15 @@ def test_getmap():
     ds = py3dep.get_map(layers, GEOM.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
     dem_10 = py3dep.get_map(layers[0], GEOM, 10, geo_crs=DEF_CRS, crs=ALT_CRS)
     dem_1e3 = py3dep.get_map(layers[0], GEOM, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
+    fpath = Path("dem_10.tif")
+    dem_10.rio.to_raster(fpath)
+    dem_10 = xr.open_rasterio(fpath)
     assert (
         sorted(ds.keys()) == ["elevation", "slope_degrees"]
         and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 7e-2
     )
+    dem_10.close()
+    fpath.unlink()
 
 
 class TestByCoords:
