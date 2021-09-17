@@ -5,8 +5,8 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import rioxarray  # noqa: F401
 import pyproj
+import rioxarray  # noqa: F401
 import xarray as xr
 from pygeoogc import utils
 from shapely.geometry import Polygon
