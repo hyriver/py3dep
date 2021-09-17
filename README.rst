@@ -186,33 +186,71 @@ provides access to two functionality:
 .. code-block:: console
 
     $ py3dep --help
-    Usage: py3dep [OPTIONS] TARGET [geometry|coords] CRS
+    Usage: py3dep [OPTIONS] COMMAND [ARGS]...
 
-      Retrieve topographic data within geometries or elevations for a list of coordinates.
-
-      TARGET: Path to a geospatial file (any file that geopandas.read_file can open) or a csv file.
-
-      The geospatial file should have three columns:
-
-          - id: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
-          - res: Target resolution in meters.
-          - geometry: A Polygon or MultiPloygon.
-
-      The csv file should have two column: x and y.
-
-      TARGET_TYPE: Type of input file: "coords" for csv, and "geometry" for geospatial.
-
-      CRS: CRS of the input data.
-
-      Examples:
-          $ py3dep ny_coords.csv coords epsg:4326
-          $ py3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
+    Command-line interface for Py3DEP.
 
     Options:
-      -l, --layer [DEM|Hillshade Gray|Aspect Degrees|Aspect Map|GreyHillshade_elevationFill|Hillshade Multidirectional|Slope Map|Slope Degrees|Hillshade Elevation Tinted|Height Ellipsoidal|Contour 25|Contour Smoothed 25]
-                                      Layer name when requesting for topographic data.
-      -s, --save_dir PATH             Path to a directory to save the requested files. Extension
-                                      for the outputs is .nc for geometry and .csv for coords.
+    -q, --query_source [airmap|tnm]
+                                    Source of the elevation data.
+    -s, --save_dir PATH             Path to a directory to save the requested
+                                    files.Extension for the outputs is either
+                                    `.nc` for geometry or `.csv` for coords.
+
+    -h, --help                      Show this message and exit.
+
+    Commands:
+    coords    Retrieve topographic data for a list of coordinates.
+    geometry  Retrieve topographic data within geometries.
+
+The ``coords`` sub-command is as follows:
+
+.. code-block:: console
+
+    $ py3dep coords -h
+    Usage: py3dep coords [OPTIONS] FPATH CRS
+
+    Retrieve topographic data for a list of coordinates.
+
+    FPATH: Path to a csv file with two columns named ``x`` and ``y``.
+
+    CRS: CRS of the input coordinates.
+
+    Examples:
+
+        $ py3dep -s topo_dir coords ny_coords.csv  epsg:4326
+
+And, the ``geometry`` sub-command is as follows:
+
+.. code-block:: console
+
+    $ py3dep geometry -h
+    Usage: py3dep geometry [OPTIONS] FPATH [DEM|Hillshade Gray|Aspect
+                        Degrees|Aspect
+                        Map|GreyHillshade_elevationFill|Hillshade
+                        Multidirectional|Slope Map|Slope Degrees|Hillshade
+                        Elevation Tinted|Height Ellipsoidal|Contour 25|Contour
+                        Smoothed 25]
+
+    Retrieve topographic data within geometries.
+
+    FPATH: Path to a geospatial file (any file that ``geopandas.read_file``
+    can open).
+
+    This file should have three columns and contain ``crs`` attribute:
+
+        - ``id``: Feature identifiers that py3dep uses as the output
+        netcdf/csv filenames.
+
+        - ``res``: Target resolution in meters.
+
+        - ``geometry``: A Polygon or MultiPloygon.
+
+    LAYER: A valid layer name when requesting for topographic data.
+
+    Examples:
+
+        $ py3dep -q airmap geometry ny_geom.gpkg "Slope Map"
 
 
 Now, let's see how we can use Py3DEP as a library.
