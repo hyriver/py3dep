@@ -1,15 +1,14 @@
 """Command-line interface for Py3DEP."""
-import os
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Union
 
 import click
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import MultiPolygon, Polygon
 
 from . import py3dep
-from .exceptions import MissingColumns, MissingOption
+from .exceptions import MissingColumns, MissingCRS
+from .py3dep import LAYERS
 
 
 def get_target_df(
@@ -25,133 +24,103 @@ def get_target_df(
     return tdf[req_cols]
 
 
-def from_geometry(
-    layer: str,
-    geometry: Union[Polygon, MultiPolygon, Tuple[float, float, float, float]],
-    res: float,
-    crs: str,
-    nc_path: Union[str, Path],
-) -> None:
-    """Get topographic data from 3DEP for a geometry."""
-    py3dep.get_map(layer, geometry, res, geo_crs=crs, crs=crs).to_netcdf(nc_path)
-
-
-def from_coords(
-    coords: List[Tuple[float, float]], crs: str, query_source: str, csv_path: Union[str, Path]
-) -> None:
-    """Get elevations of a set of coordinates in meter from airmap."""
-    elev = pd.DataFrame.from_records(coords, columns=["x", "y"])
-    elev["elevation"] = py3dep.elevation_bycoords(coords, crs, query_source)
-    elev.astype("f8").to_csv(csv_path)
-
-
-LAYERS = [
-    "DEM",
-    "Hillshade Gray",
-    "Aspect Degrees",
-    "Aspect Map",
-    "GreyHillshade_elevationFill",
-    "Hillshade Multidirectional",
-    "Slope Map",
-    "Slope Degrees",
-    "Hillshade Elevation Tinted",
-    "Height Ellipsoidal",
-    "Contour 25",
-    "Contour Smoothed 25",
-]
-
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.argument("target", type=click.Path(exists=True))
-@click.argument("target_type", type=click.Choice(["geometry", "coords"], case_sensitive=False))
-@click.argument("crs", type=str)
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.pass_context
 @click.option(
     "-q",
     "--query_source",
-    default="airmap",
+    default="tnm",
     type=click.Choice(["airmap", "tnm"], case_sensitive=False),
     help="Source of the elevation data.",
 )
 @click.option(
-    "-l",
-    "--layer",
-    default=None,
-    type=click.Choice(LAYERS, case_sensitive=True),
-    help="Layer name when requesting for topographic data.",
-)
-@click.option(
     "-s",
     "--save_dir",
-    type=click.Path(exists=False),
     default="topo_3dep",
-    help="Path to a directory to save the requested files. Extension for the outputs is .nc for geometry and .csv for coords.",
+    type=click.Path(exists=False),
+    help=(
+        "Path to a directory to save the requested files."
+        + "Extension for the outputs is either `.nc` for geometry or `.csv` for coords."
+    ),
 )
-def main(
-    target: Path,
-    target_type: str,
+def cli(ctx: click.Context, query_source: str = "tnm", save_dir: Union[str, Path] = "topo_3dep"):
+    """Command-line interface for Py3DEP."""
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+    ctx.obj = {"query_source": query_source, "save_dir": save_dir}
+
+
+@cli.command("coords", context_settings=CONTEXT_SETTINGS)
+@click.pass_context
+@click.argument("fpath", type=click.Path(exists=True))
+@click.argument("crs", type=str)
+def coords(
+    ctx: click.Context,
+    fpath: Path,
     crs: str,
-    query_source: str = "airmap",
-    layer: Optional[str] = None,
-    save_dir: Union[str, Path] = "topo_3dep",
 ):
-    r"""Retrieve topographic data within geometries or elevations for a list of coordinates.
+    r"""Retrieve topographic data for a list of coordinates.
 
-    TARGET: Path to a geospatial file (any file that geopandas.read_file can open) or a csv file.
+    FPATH: Path to a csv file with two columns named ``x`` and ``y``.
 
-    The geospatial file should have three columns:
-
-        - id: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
-
-        - res: Target resolution in meters.
-
-        - geometry: A Polygon or MultiPloygon.
-
-    The csv file should have two column: x and y.
-
-    TARGET_TYPE: Type of input file: "coords" for csv and "geometry" for geospatial.
-
-    CRS: CRS of the input data.
+    CRS: CRS of the input coordinates.
 
     Examples:
 
-        $ py3dep ny_coords.csv coords epsg:4326
-
-        $ py3dep ny_geom.gpkg geometry epsg:3857 --layer "Slope Map"
+        $ py3dep coords ny_coords.csv  epsg:4326
     """  # noqa: D412
-    save_dir = Path(save_dir)
-    if not save_dir.exists():
-        os.makedirs(save_dir, exist_ok=True)
+    elev = get_target_df(pd.read_csv(fpath), ["x", "y"])
+    click.echo(f"Found {len(elev)} items in {fpath}. Retrieving ...")
+    coords = list(elev.itertuples(index=False, name=None))
+    elev["elevation"] = py3dep.elevation_bycoords(coords, crs, ctx.obj["query_source"])
+    elev.astype("f8").to_csv(Path(ctx.obj["save_dir"], f"{Path(fpath).stem}_elevation.csv"))
 
-    target = Path(target)
-    if target_type == "geometry":
-        if layer is None:
-            raise MissingOption
 
-        target_df = gpd.read_file(target, crs=crs)
-        target_df = get_target_df(target_df, ["id", "res", "geometry"])
-        args_list = (
-            (layer, g, r, crs, Path(save_dir, f"{i}.nc"))
-            for i, r, g in target_df.itertuples(index=False)
-        )
+@cli.command("geometry", context_settings=CONTEXT_SETTINGS)
+@click.pass_context
+@click.argument("fpath", type=click.Path(exists=True))
+@click.argument("layer", type=click.Choice(LAYERS, case_sensitive=True))
+def geometry(
+    ctx: click.Context,
+    fpath: Path,
+    layer: str,
+):
+    r"""Retrieve topographic data within geometries.
 
-        click.echo(f"Found {len(target_df)} items in {target}. Retrieving ...")
-        with click.progressbar(
-            args_list, label=f"Getting {layer} from 3DEP", length=len(target_df)
-        ) as bar:
-            for args in bar:
-                from_geometry(*args)
+    FPATH: Path to a geospatial file (any file that ``geopandas.read_file`` can open).
 
-        click.echo(f"Retrieved topography data for {len(target_df)} item(s).")
-    else:
-        target_df = pd.read_csv(target)
-        target_df = get_target_df(target_df, ["x", "y"])
-        click.echo(f"Found {len(target_df)} items in {target}. Retrieving ...")
-        from_coords(
-            list(target_df.itertuples(index=False, name=None)),
-            crs,
-            query_source,
-            Path(save_dir, f"{target.stem}_elevation.csv"),
-        )
-        click.echo(f"Retrieved elevation data for {len(target_df)} item(s).")
+    This file should have three columns and contain ``crs`` attribute:
+
+        - ``id``: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
+
+        - ``res``: Target resolution in meters.
+
+        - ``geometry``: A Polygon or MultiPloygon.
+
+    LAYER: A valid layer name when requesting for topographic data.
+
+    Examples:
+
+        $ py3dep geometry ny_geom.gpkg "Slope Map"
+    """  # noqa: D412
+    target_df = gpd.read_file(fpath)
+    if target_df.crs is None:
+        raise MissingCRS
+    crs = target_df.crs
+
+    target_df = get_target_df(target_df, ["id", "res", "geometry"])
+    args_list = (
+        (g, r, Path(ctx.obj["save_dir"], f"{i}.nc"))
+        for i, r, g in target_df.itertuples(index=False)
+    )
+
+    click.echo(f"Found {len(target_df)} items in {fpath}. Retrieving ...")
+    with click.progressbar(
+        args_list, label=f"Getting {layer} from 3DEP", length=len(target_df)
+    ) as bar:
+        for g, r, p in bar:
+            py3dep.get_map(layer, g, r, geo_crs=crs, crs=crs).to_netcdf(p)
+
+    click.echo(f"Retrieved topography data for {len(target_df)} item(s).")
