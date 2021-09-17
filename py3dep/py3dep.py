@@ -161,8 +161,8 @@ def elevation_bygrid(
 def _reproject_gtiff(
     r_dict: Dict[str, bytes],
     crs: str,
-) -> np.ndarray:
-    """Sample a tiff response for a list of coordinates.
+) -> Union[xr.DataArray, xr.Dataset]:
+    """Reproject a GTiff response into another CRS.
 
     Parameters
     ----------
@@ -174,8 +174,8 @@ def _reproject_gtiff(
 
     Returns
     -------
-    numpy.ndarray
-        An array of elevations where its index matches the input coords list.
+    xarray.DataArray or xarray.Dataset
+        Reprojected data array.
     """
     tmp_dir = tempfile.gettempdir()
     var_name = {lyr: "_".join(lyr.split("_")[:-3]) for lyr in r_dict.keys()}
@@ -207,8 +207,9 @@ def _reproject_gtiff(
                             )
                     ds = xr.open_rasterio(vrt)
                     ds = ds.squeeze("band", drop=True)
-                    ds = ds.sortby("y", ascending=False)
-                    ds.attrs["crs"] = crs
+                    ds = ds.sortby(attrs.dims[0], ascending=False)
+                    ds.attrs["crs"] = attrs.crs.to_string()
+                    ds.attrs["transform"] = attrs.transform
                     ds.name = var_name[lyr]
                     fpath = Path(tmp_dir, f"{uuid.uuid4().hex}.nc")
                     ds.to_netcdf(fpath)
@@ -223,15 +224,20 @@ def _reproject_gtiff(
     ds.attrs["units"] = "meters"
     ds.attrs["crs"] = crs
     ds.attrs["nodatavals"] = (attrs.nodata,)
-    transform, _, _ = geoutils.get_transform(ds, attrs.dims)
+    _transform = geoutils.get_transform(ds, attrs.dims)[0]
+    transform = tuple(getattr(_transform, c) for c in ["a", "b", "c", "d", "e", "f"])
     ds = ds.sortby(attrs.dims[0], ascending=False)
     ds.attrs["transform"] = transform
-    ds.attrs["res"] = (transform.a, transform.e)
+    ds.attrs["res"] = (_transform.a, _transform.e)
+
+    for attr in ("scales", "offsets"):
+        if attr in ds.attrs and not isinstance(ds.attrs[attr], tuple):
+            ds.attrs[attr] = (ds.attrs[attr],)
     return ds
 
 
 def fill_depressions(
-    dem: Union[xr.DataArray, np.ndarray],
+    dem: Union[xr.DataArray, xr.Dataset],
 ) -> xr.DataArray:
     """Fill depressions and adjust flat areas in a DEM using RichDEM.
 
@@ -271,7 +277,7 @@ class ElevationByCoords(BaseModel):
 
     crs: str = DEF_CRS
     coords: List[Tuple[float, float]]
-    source: str = "airmap"
+    source: str = "tnm"
 
     @validator("crs")
     def _valid_crs(cls, v):
@@ -335,7 +341,7 @@ class ElevationByCoords(BaseModel):
 
 
 def elevation_bycoords(
-    coords: List[Tuple[float, float]], crs: str = DEF_CRS, source: str = "tnm"
+    coords: List[Tuple[float, float]], crs: Union[str, pyproj.CRS] = DEF_CRS, source: str = "tnm"
 ) -> List[float]:
     """Get elevation from Airmap at 1-arc resolution (~30 m) for a list of coordinates.
 
@@ -343,7 +349,7 @@ def elevation_bycoords(
     ----------
     coords : list of tuples
         Coordinates of target location as list of tuples ``[(x, y), ...]``.
-    crs : str, optional
+    crs : str or pyproj.CRS, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
         Data source to be used, default to ``tnm``. Supported sources are
@@ -356,7 +362,8 @@ def elevation_bycoords(
     list of float
         Elevation in meter.
     """
-    service = ElevationByCoords(crs=crs, coords=coords, source=source)
+    _crs = crs.to_string() if isinstance(crs, pyproj.CRS) else crs
+    service = ElevationByCoords(crs=_crs, coords=coords, source=source)
     return getattr(service, source)()
 
 
