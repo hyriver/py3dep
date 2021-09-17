@@ -1,7 +1,7 @@
 """Top-level package for Py3DEP."""
 from pkg_resources import DistributionNotFound, get_distribution
 
-from .exceptions import MissingColumns, MissingDependency, MissingOption
+from .exceptions import MissingColumns, MissingCRS, MissingDependency
 from .print_versions import show_versions
 from .py3dep import deg2mpm, elevation_bycoords, elevation_bygrid, get_map
 
@@ -19,7 +19,7 @@ __all__ = [
     "show_versions",
     # Exceptions
     "MissingColumns",
-    "MissingOption",
+    "MissingCRS",
     "MissingDependency",
     # Constants
     "__version__",

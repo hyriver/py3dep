@@ -30,11 +30,11 @@ class MissingDependency(ImportError):
         return self.message
 
 
-class MissingOption(Exception):
-    """Exception raised when layer is not provided."""
+class MissingCRS(Exception):
+    """Exception raised when input GeoDataFrame is missing CRS."""
 
     def __init__(self) -> None:
-        self.message = "layer option is required when target_type is geometry."
+        self.message = "The input GeoDataFrame is missing CRS."
         super().__init__(self.message)
 
     def __str__(self) -> str:
