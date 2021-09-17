@@ -28,12 +28,11 @@ dependencies:
   - urllib3
 
   # pygeoutils deps
-  - affine
   - dask
   - geopandas
   - netcdf4
   - numpy
-  - rasterio
+  - rasterio>=1.2
   - xarray
 
   # py3dep
