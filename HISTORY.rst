@@ -11,7 +11,7 @@ New Features
   The command is now ``py3dep [options] [command] [args]``. Options are ``--save_dir``,
   (or ``-s``) and ``--query_source`` (or ``-q``). The two supported commands are
   ``coords`` for getting elevations of a list of coordinates and ``geometry`` for
-  getting the elevation of within a geometry. Each sub-command now has a separete
+  getting the elevation of within a geometry. Each sub-command now has a separate
   help message.
 
 Internal Changes
