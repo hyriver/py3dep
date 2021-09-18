@@ -8,7 +8,7 @@ import pandas as pd
 
 from . import py3dep
 from .exceptions import MissingColumns, MissingCRS
-from .py3dep import LAYERS
+from .py3dep import DEF_CRS, LAYERS
 
 
 def get_target_df(
@@ -69,7 +69,7 @@ def coords(
 
     Examples:
 
-        $ py3dep  -s topo_dir coords ny_coords.csv  epsg:4326
+        $ py3dep  -s topo_dir coords ny_coords.csv epsg:4326
     """  # noqa: D412
     elev = get_target_df(pd.read_csv(fpath), ["x", "y"])
 
@@ -124,4 +124,4 @@ def geometry(
         args_list, label=f"Getting {layer} from 3DEP", length=len(target_df)
     ) as bar:
         for g, r, p in bar:
-            py3dep.get_map(layer, g, r, geo_crs=crs, crs=crs).to_netcdf(p)
+            py3dep.get_map(layer, g, r, geo_crs=crs, crs=DEF_CRS).to_netcdf(p)
