@@ -19,7 +19,7 @@ dependencies:
   - owslib
   - pydantic
   - pyyaml
-  - pyproj
+  - pyproj>=1.2
   - requests
   - requests-cache
   - shapely
@@ -27,11 +27,11 @@ dependencies:
 
   # pygeoutils deps
   - dask
-  - geopandas
+  - geopandas>=0.8
   - netcdf4
   - numpy
   - rasterio>=1.2
-  - xarray
+  - xarray>=0.17
 
   # py3dep
   - click

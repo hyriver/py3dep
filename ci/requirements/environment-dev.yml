@@ -31,9 +31,9 @@ dependencies:
   - dask
   - geopandas
   - netcdf4
-  - numpy
+  - numpy>=0.17
   - rasterio>=1.2
-  - xarray
+  - xarray>=0.17
 
   # py3dep
   - click
@@ -67,6 +67,7 @@ dependencies:
   - psutil
   - pytest
   - pytest-clarity
+  - pytest-console-scripts
   - pytest-cov
   - pytest-sugar
   - pytest-xdist
