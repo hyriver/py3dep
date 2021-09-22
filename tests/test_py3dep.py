@@ -6,12 +6,14 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
+import pytest
 import rioxarray  # noqa: F401
 import xarray as xr
 from pygeoogc import utils
 from shapely.geometry import Polygon
 
 import py3dep
+from py3dep.cli import cli
 
 DEF_CRS = "epsg:4326"
 ALT_CRS = "epsg:3857"
@@ -45,6 +47,7 @@ class TestByCoords:
         airmap = py3dep.elevation_bycoords(self.coords, ALT_CRS, source="airmap")
         assert set(airmap) == {363}
 
+    @pytest.mark.xfail(reason="TNM service is currently unstable.")
     def test_tnm(self):
         tnm = py3dep.elevation_bycoords(self.coords, pyproj.CRS(ALT_CRS), source="tnm")
         assert set(tnm) == {1169.9}
@@ -68,28 +71,30 @@ def test_grid():
     assert ((elev_fill - elev).sum().compute().item() - 1935.074) < SMALL
 
 
-def test_cli_map(script_runner):
-    gdf = gpd.GeoDataFrame({"id": "geo_test", "res": 1e3}, geometry=[GEOM], index=[0], crs=DEF_CRS)
-    geo_gpkg = "nat_geo.gpkg"
-    gdf.to_file(geo_gpkg)
-    ret = script_runner.run("py3dep", "-s", "geo_map", "geometry", geo_gpkg, LYR)
-    shutil.rmtree(geo_gpkg)
-    shutil.rmtree("geo_map")
-    assert ret.success
-    assert "Found 1 item in" in ret.stdout
-    assert ret.stderr == ""
+class TestCLI:
+    """Test the command-line interface."""
 
+    def test_grid(self, runner):
+        gdf = gpd.GeoDataFrame(
+            {"id": "geo_test", "res": 1e3}, geometry=[GEOM], index=[0], crs=DEF_CRS
+        )
+        geo_gpkg = "nat_geo.gpkg"
+        gdf.to_file(geo_gpkg)
+        ret = runner.invoke(cli, ["-s", "geo_map", "geometry", geo_gpkg, LYR])
+        shutil.rmtree(geo_gpkg)
+        shutil.rmtree("geo_map")
+        assert ret.exit_code == 0
+        assert "Found 1 item" in ret.output
 
-def test_cli_coords(script_runner):
-    df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
-    coord_csv = "coords.csv"
-    df.to_csv(coord_csv)
-    ret = script_runner.run("py3dep", "-s", "geo_coords", "coords", coord_csv, ALT_CRS)
-    Path(coord_csv).unlink()
-    shutil.rmtree("geo_coords")
-    assert ret.success
-    assert "Found 3 items in" in ret.stdout
-    assert ret.stderr == ""
+    def test_coords(self, runner):
+        df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
+        coord_csv = "coords.csv"
+        df.to_csv(coord_csv)
+        ret = runner.invoke(cli, ["-s", "geo_coords", "-q", "airmap", "coords", coord_csv, ALT_CRS])
+        Path(coord_csv).unlink()
+        shutil.rmtree("geo_coords")
+        assert ret.exit_code == 0
+        assert "Found 3 items" in ret.output
 
 
 def test_show_versions():
