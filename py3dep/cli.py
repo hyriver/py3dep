@@ -75,8 +75,8 @@ def coords(
 
     item_str = "items" if len(elev) > 1 else "item"
     click.echo(f"Found {len(elev)} {item_str} in {fpath}. Retrieving ...")
-    coords = list(elev.itertuples(index=False, name=None))
-    elev["elevation"] = py3dep.elevation_bycoords(coords, crs, ctx.obj["query_source"])
+    coords_list = list(elev.itertuples(index=False, name=None))
+    elev["elevation"] = py3dep.elevation_bycoords(coords_list, crs, ctx.obj["query_source"])
     elev.astype("f8").to_csv(Path(ctx.obj["save_dir"], f"{Path(fpath).stem}_elevation.csv"))
 
 
