@@ -24,6 +24,11 @@ def get_target_df(
     return tdf[req_cols]
 
 
+def get_item_plural(n: int) -> str:
+    """Get the plural of an item."""
+    return "item" if n == 1 else "items"
+
+
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
@@ -73,11 +78,13 @@ def coords(
     """  # noqa: D412
     elev = get_target_df(pd.read_csv(fpath), ["x", "y"])
 
-    item_str = "items" if len(elev) > 1 else "item"
-    click.echo(f"Found {len(elev)} {item_str} in {fpath}. Retrieving ...")
+    click.echo(
+        f"Found {len(elev)} {get_item_plural(len(elev))} in {fpath}. Retrieving ... ", nl=False
+    )
     coords_list = list(elev.itertuples(index=False, name=None))
     elev["elevation"] = py3dep.elevation_bycoords(coords_list, crs, ctx.obj["query_source"])
     elev.astype("f8").to_csv(Path(ctx.obj["save_dir"], f"{Path(fpath).stem}_elevation.csv"))
+    click.echo("Done.")
 
 
 @cli.command("geometry", context_settings=CONTEXT_SETTINGS)
@@ -118,10 +125,13 @@ def geometry(
         for i, r, g in target_df.itertuples(index=False)
     )
 
-    item_str = "items" if len(target_df) > 1 else "item"
-    click.echo(f"Found {len(target_df)} {item_str} in {fpath}. Retrieving ...")
+    click.echo(
+        f"Found {len(target_df)} {get_item_plural(len(target_df))} in {fpath}. Retrieving ... ",
+        nl=False,
+    )
     with click.progressbar(
         args_list, label=f"Getting {layer} from 3DEP", length=len(target_df)
     ) as bar:
         for g, r, p in bar:
             py3dep.get_map(layer, g, r, geo_crs=crs, crs=DEF_CRS).to_netcdf(p)
+    click.echo("Done.")
