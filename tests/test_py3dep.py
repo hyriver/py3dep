@@ -6,7 +6,6 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
-import pytest
 import rioxarray  # noqa: F401
 import xarray as xr
 from pygeoogc import utils
@@ -41,13 +40,12 @@ def test_getmap():
 
 
 class TestByCoords:
-    coords = [(-7766049.664788851, 5691929.739021257)] * 200
+    coords = [(-7766049.664788851, 5691929.739021257)] * 201
 
     def test_airmap(self):
         airmap = py3dep.elevation_bycoords(self.coords, ALT_CRS, source="airmap")
         assert set(airmap) == {363}
 
-    @pytest.mark.xfail(reason="TNM service is currently unstable.")
     def test_tnm(self):
         tnm = py3dep.elevation_bycoords(self.coords, pyproj.CRS(ALT_CRS), source="tnm")
         assert set(tnm) == {1169.9}
