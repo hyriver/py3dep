@@ -350,7 +350,7 @@ class ElevationByCoords(BaseModel):
                 for lon, lat in self.coords
             )
         )
-        resp = ar.retrieve(urls, "json", kwds, max_workers=500)
+        resp = ar.retrieve(urls, "json", kwds, max_workers=200)
         return [
             r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
         ]
