@@ -8,7 +8,7 @@ History
 New Features
 ~~~~~~~~~~~~
 - Rewrite the command line using ``click.group`` (command/sub-command) to improve UX.
-  The command is now ``py3dep [options] [command] [args]``. Options are ``--save_dir``,
+  The command is now ``py3dep [command] [args] [options]``. Options are ``--save_dir``,
   (or ``-s``) and ``--query_source`` (or ``-q``). The two supported commands are
   ``coords`` for getting elevations of a list of coordinates and ``geometry`` for
   getting the elevation of within a geometry. Each sub-command now has a separate

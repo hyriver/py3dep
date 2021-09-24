@@ -31,17 +31,7 @@ def get_item_plural(n: int) -> str:
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
-
-@click.group(context_settings=CONTEXT_SETTINGS)
-@click.pass_context
-@click.option(
-    "-q",
-    "--query_source",
-    default="tnm",
-    type=click.Choice(["airmap", "tnm"], case_sensitive=False),
-    help="Source of the elevation data.",
-)
-@click.option(
+save_arg = click.option(
     "-s",
     "--save_dir",
     default="topo_3dep",
@@ -51,20 +41,29 @@ CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
         + "Extension for the outputs is either `.nc` for geometry or `.csv` for coords."
     ),
 )
-def cli(ctx: click.Context, query_source: str = "tnm", save_dir: Union[str, Path] = "topo_3dep"):
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
+def cli():
     """Command-line interface for Py3DEP."""
-    Path(save_dir).mkdir(parents=True, exist_ok=True)
-    ctx.obj = {"query_source": query_source, "save_dir": save_dir}
 
 
 @cli.command("coords", context_settings=CONTEXT_SETTINGS)
-@click.pass_context
 @click.argument("fpath", type=click.Path(exists=True))
 @click.argument("crs", type=str)
+@click.option(
+    "-q",
+    "--query_source",
+    default="tnm",
+    type=click.Choice(["airmap", "tnm"], case_sensitive=False),
+    help="Source of the elevation data.",
+)
+@save_arg
 def coords(
-    ctx: click.Context,
     fpath: Path,
     crs: str,
+    query_source: str = "tnm",
+    save_dir: Union[str, Path] = "topo_3dep",
 ):
     r"""Retrieve topographic data for a list of coordinates.
 
@@ -74,27 +73,28 @@ def coords(
 
     Examples:
 
-        $ py3dep  -s topo_dir coords ny_coords.csv epsg:4326
+        $ py3dep coords ny_coords.csv epsg:4326 -q airmap -s topo_dir
     """  # noqa: D412
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
     elev = get_target_df(pd.read_csv(fpath), ["x", "y"])
 
     click.echo(
         f"Found {len(elev)} {get_item_plural(len(elev))} in {fpath}. Retrieving ... ", nl=False
     )
     coords_list = list(elev.itertuples(index=False, name=None))
-    elev["elevation"] = py3dep.elevation_bycoords(coords_list, crs, ctx.obj["query_source"])
-    elev.astype("f8").to_csv(Path(ctx.obj["save_dir"], f"{Path(fpath).stem}_elevation.csv"))
+    elev["elevation"] = py3dep.elevation_bycoords(coords_list, crs, query_source)
+    elev.astype("f8").to_csv(Path(save_dir, f"{Path(fpath).stem}_elevation.csv"))
     click.echo("Done.")
 
 
 @cli.command("geometry", context_settings=CONTEXT_SETTINGS)
-@click.pass_context
 @click.argument("fpath", type=click.Path(exists=True))
 @click.argument("layer", type=click.Choice(LAYERS, case_sensitive=True))
+@save_arg
 def geometry(
-    ctx: click.Context,
     fpath: Path,
     layer: str,
+    save_dir: Union[str, Path] = "topo_3dep",
 ):
     r"""Retrieve topographic data within geometries.
 
@@ -112,18 +112,16 @@ def geometry(
 
     Examples:
 
-        $ py3dep -q airmap geometry ny_geom.gpkg "Slope Map"
+        $ py3dep geometry ny_geom.gpkg "Slope Map" -s topo_dir
     """  # noqa: D412
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
     target_df = gpd.read_file(fpath)
     if target_df.crs is None:
         raise MissingCRS
     crs = target_df.crs
 
     target_df = get_target_df(target_df, ["id", "res", "geometry"])
-    args_list = (
-        (g, r, Path(ctx.obj["save_dir"], f"{i}.nc"))
-        for i, r, g in target_df.itertuples(index=False)
-    )
+    args_list = ((g, r, Path(save_dir, f"{i}.nc")) for i, r, g in target_df.itertuples(index=False))
 
     click.echo(
         f"Found {len(target_df)} {get_item_plural(len(target_df))} in {fpath}. Retrieving ... ",

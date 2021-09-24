@@ -191,13 +191,7 @@ provides access to two functionality:
     Command-line interface for Py3DEP.
 
     Options:
-    -q, --query_source [airmap|tnm]
-                                    Source of the elevation data.
-    -s, --save_dir PATH             Path to a directory to save the requested
-                                    files.Extension for the outputs is either
-                                    `.nc` for geometry or `.csv` for coords.
-
-    -h, --help                      Show this message and exit.
+    -h, --help  Show this message and exit.
 
     Commands:
     coords    Retrieve topographic data for a list of coordinates.
@@ -218,7 +212,16 @@ The ``coords`` sub-command is as follows:
 
     Examples:
 
-        $ py3dep -s topo_dir coords ny_coords.csv  epsg:4326
+        $ py3dep coords ny_coords.csv epsg:4326 -q airmap -s topo_dir
+
+    Options:
+    -q, --query_source [airmap|tnm]
+                                    Source of the elevation data.
+    -s, --save_dir PATH             Path to a directory to save the requested
+                                    files.Extension for the outputs is either
+                                    `.nc` for geometry or `.csv` for coords.
+
+    -h, --help                      Show this message and exit.
 
 And, the ``geometry`` sub-command is as follows:
 
@@ -250,7 +253,14 @@ And, the ``geometry`` sub-command is as follows:
 
     Examples:
 
-        $ py3dep -q airmap geometry ny_geom.gpkg "Slope Map"
+        $ py3dep geometry ny_geom.gpkg "Slope Map" -s topo_dir
+
+    Options:
+    -s, --save_dir PATH  Path to a directory to save the requested
+                        files.Extension for the outputs is either `.nc` for
+                        geometry or `.csv` for coords.
+
+    -h, --help           Show this message and exit.
 
 
 Now, let's see how we can use Py3DEP as a library.

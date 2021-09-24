@@ -78,7 +78,7 @@ class TestCLI:
         )
         geo_gpkg = "nat_geo.gpkg"
         gdf.to_file(geo_gpkg)
-        ret = runner.invoke(cli, ["-s", "geo_map", "geometry", geo_gpkg, LYR])
+        ret = runner.invoke(cli, ["geometry", geo_gpkg, LYR, "-s", "geo_map"])
         shutil.rmtree(geo_gpkg)
         shutil.rmtree("geo_map")
         assert ret.exit_code == 0
@@ -88,7 +88,7 @@ class TestCLI:
         df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
         coord_csv = "coords.csv"
         df.to_csv(coord_csv)
-        ret = runner.invoke(cli, ["-s", "geo_coords", "-q", "airmap", "coords", coord_csv, ALT_CRS])
+        ret = runner.invoke(cli, ["coords", coord_csv, ALT_CRS, "-s", "geo_coords", "-q", "airmap"])
         Path(coord_csv).unlink()
         shutil.rmtree("geo_coords")
         assert ret.exit_code == 0
