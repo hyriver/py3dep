@@ -101,7 +101,7 @@ def reproject_gtiff(
 def fill_depressions(
     dem: Union[xr.DataArray, xr.Dataset],
 ) -> xr.DataArray:
-    """Fill depressions and adjust flat areas in a DEM using RichDEM.
+    """Fill depressions and adjust flat areas in a DEM using `RichDEM <https://richdem.readthedocs.io>`__.
 
     Parameters
     ----------
@@ -132,13 +132,13 @@ def fill_depressions(
     return dem
 
 
-def deg2mpm(da: xr.DataArray) -> xr.DataArray:
-    """Convert slope from degree to meter/meter.
+def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
+    """Convert slope from degrees to meter/meter.
 
     Parameters
     ----------
     da : xarray.DataArray
-        Slope in degree.
+        Slope in degrees.
 
     Returns
     -------
@@ -146,9 +146,9 @@ def deg2mpm(da: xr.DataArray) -> xr.DataArray:
         Slope in meter/meter. The name is set to ``slope`` and the ``units`` attribute
         is set to ``m/m``.
     """
-    attrs = da.attrs
-    da = np.tan(np.deg2rad(da))
-    da.attrs = attrs
-    da.name = "slope"
-    da.attrs["units"] = "m/m"
-    return da
+    attrs = slope.attrs
+    slope = np.tan(np.deg2rad(slope))
+    slope.attrs = attrs
+    slope.name = "slope"
+    slope.attrs["units"] = "m/m"
+    return slope

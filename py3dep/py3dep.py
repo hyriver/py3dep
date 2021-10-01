@@ -77,7 +77,7 @@ def get_map(
     Returns
     -------
     xarray.DataArray or xarray.Dataset
-        The requested topographic data as an xarray.DataArray or xarray.Dataset.
+        The requested topographic data as an ``xarray.DataArray`` or ``xarray.Dataset``.
     """
     _layers = layers.copy() if isinstance(layers, list) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
@@ -170,7 +170,7 @@ class ElevationByCoords(BaseModel):
     crs : str, optional
         Coordinate reference system of the input coordinates, defaults to ``EPSG:4326``.
     source : str, optional
-        Elevation source, defaults to ``tnm``. Valid sources are: ``tnm``, ``airmap``.
+        Elevation source, defaults to ``airmap``. Valid sources are: ``tnm`` and ``airmap``.
     """
 
     crs: str = DEF_CRS
@@ -253,11 +253,11 @@ class ElevationByCoords(BaseModel):
 def elevation_bycoords(
     coords: List[Tuple[float, float]], crs: Union[str, pyproj.CRS] = DEF_CRS, source: str = "airmap"
 ) -> List[float]:
-    """Get elevation from Airmap at 1-arc resolution (~30 m) for a list of coordinates.
+    """Get elevation for a list of coordinates.
 
     Parameters
     ----------
-    coords : list of tuples
+    coords : list of tuple
         Coordinates of target location as list of tuples ``[(x, y), ...]``.
     crs : str or pyproj.CRS, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
