@@ -31,7 +31,7 @@ dependencies:
   - dask
   - geopandas
   - netcdf4
-  - numpy>=0.17
+  - numpy>=1.17
   - rasterio>=1.2
   - xarray>=0.17
 
