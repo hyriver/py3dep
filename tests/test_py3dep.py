@@ -40,15 +40,15 @@ def test_getmap():
 
 
 class TestByCoords:
-    coords = [(-7766049.664788851, 5691929.739021257)] * 201
+    coords = [(-7766049.664788851, 5691929.739021257)]
 
     def test_airmap(self):
-        airmap = py3dep.elevation_bycoords(self.coords, ALT_CRS, source="airmap")
+        airmap = py3dep.elevation_bycoords(self.coords * 101, ALT_CRS, source="airmap")
         assert set(airmap) == {363}
 
     def test_tnm(self):
         tnm = py3dep.elevation_bycoords(self.coords, pyproj.CRS(ALT_CRS), source="tnm")
-        assert set(tnm) == {1169.9}
+        assert set(tnm) == {356.59}
 
 
 def test_deg2mpm():
