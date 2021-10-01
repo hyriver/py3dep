@@ -1,9 +1,10 @@
 """Top-level package for Py3DEP."""
 from pkg_resources import DistributionNotFound, get_distribution
 
-from .exceptions import MissingColumns, MissingCRS, MissingDependency
+from .exceptions import MissingAttribute, MissingColumns, MissingCRS, MissingDependency
 from .print_versions import show_versions
-from .py3dep import deg2mpm, elevation_bycoords, elevation_bygrid, get_map
+from .py3dep import elevation_bycoords, elevation_bygrid, get_map
+from .utils import deg2mpm, fill_depressions
 
 try:
     __version__ = get_distribution(__name__).version
@@ -12,6 +13,7 @@ except DistributionNotFound:
 
 __all__ = [
     # Functions
+    "fill_depressions",
     "get_map",
     "deg2mpm",
     "elevation_bycoords",
@@ -21,6 +23,7 @@ __all__ = [
     "MissingColumns",
     "MissingCRS",
     "MissingDependency",
+    "MissingAttribute",
     # Constants
     "__version__",
 ]
