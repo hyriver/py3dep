@@ -1,21 +1,24 @@
+"""Utilities for Py3DEP."""
 import tempfile
 import uuid
 from pathlib import Path
 from typing import Dict, Union
+
 import numpy as np
-import xarray as xr
-
 import pygeoutils as geoutils
-
 import rasterio as rio
 import rasterio.warp as rio_warp
+import xarray as xr
+
 try:
     import richdem as rd
 except ImportError:
     rd = None
 
 from .exceptions import MissingAttribute, MissingDependency
+
 __all__ = ["deg2mpm", "fill_depressions"]
+
 
 def reproject_gtiff(
     r_dict: Dict[str, bytes],
@@ -127,6 +130,7 @@ def fill_depressions(
     rda = rd.FillDepressions(rda, epsilon=False)
     dem.data = rd.ResolveFlats(rda)
     return dem
+
 
 def deg2mpm(da: xr.DataArray) -> xr.DataArray:
     """Convert slope from degree to meter/meter.
