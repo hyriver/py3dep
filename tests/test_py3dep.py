@@ -66,7 +66,7 @@ def test_grid():
     res = 1e3
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
-    elev = py3dep.elevation_bygrid(gx, gy, crs, res)
+    elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(gx, gy, crs, res, depression_filling=True)
     assert ((elev_fill - elev).sum().compute().item() - 1935.074) < SMALL
 
