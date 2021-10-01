@@ -175,7 +175,7 @@ class ElevationByCoords(BaseModel):
 
     crs: str = DEF_CRS
     coords: List[Tuple[float, float]]
-    source: str = "tnm"
+    source: str = "airmap"
 
     @validator("crs")
     def _valid_crs(cls, v):
@@ -216,30 +216,42 @@ class ElevationByCoords(BaseModel):
 
     def tnm(self) -> List[Tuple[float, float]]:
         """Return list of elevations in meters."""
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip,deflate,br",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-User": "?1",
+        }
         urls, kwds = zip(
             *(
                 (
                     ServiceURL().restful.nm_pqs,
                     {
                         "params": {
-                            "units": "meters",
+                            "units": "Meters",
                             "output": "json",
                             "y": f"{lat:.5f}",
                             "x": f"{lon:.5f}",
                         },
+                        "headers": headers,
                     },
                 )
                 for lon, lat in self.coords
             )
         )
-        resp = ar.retrieve(urls, "json", kwds, max_workers=50)
+        resp = ar.retrieve(urls, "json", kwds, max_workers=5)
         return [
             r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
         ]
 
 
 def elevation_bycoords(
-    coords: List[Tuple[float, float]], crs: Union[str, pyproj.CRS] = DEF_CRS, source: str = "tnm"
+    coords: List[Tuple[float, float]], crs: Union[str, pyproj.CRS] = DEF_CRS, source: str = "airmap"
 ) -> List[float]:
     """Get elevation from Airmap at 1-arc resolution (~30 m) for a list of coordinates.
 
@@ -250,10 +262,12 @@ def elevation_bycoords(
     crs : str or pyproj.CRS, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
-        Data source to be used, default to ``tnm``. Supported sources are
+        Data source to be used, default to ``airmap``. Supported sources are
         ``airmap`` (30 m resolution) and ``tnm`` (using The National Map's Bulk Point
-        Query Service). The ``tnm`` source is more accurate since it uses the highest
-        available resolution DEM automatically but it is limited to the US.
+        Query Service with 10 m resolution). The ``tnm`` source is more accurate since it
+        uses the 1/3 arc-second DEM layer from 3DEP service but it is limited to the US.
+        It also tends to be slower than the Airmap service and more unstable.
+        It's recommended to use ``airmap`` unless you need 10-m resolution accuracy.
 
     Returns
     -------
