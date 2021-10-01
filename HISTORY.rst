@@ -7,17 +7,29 @@ History
 
 New Features
 ~~~~~~~~~~~~
-- Rewrite the command line using ``click.group`` (command/sub-command) to improve UX.
+- Refactor the command-line interface using ``click.group`` to improve UX.
   The command is now ``py3dep [command] [args] [options]``. Options are ``--save_dir``,
   (or ``-s``) and ``--query_source`` (or ``-q``). The two supported commands are
   ``coords`` for getting elevations of a list of coordinates and ``geometry`` for
   getting the elevation of within a geometry. Each sub-command now has a separate
   help message.
+- Make ``fill_depressions`` function public. This function conditions an input DEM
+  by applying
+  `depression filling <https://richdem.readthedocs.io/en/latest/depression_filling.html>`__
+  and
+  `flat area resolution <https://richdem.readthedocs.io/en/latest/flat_resolution.html>`__
+  operations.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - The ``get_map`` function now checks for validation of the input ``layers`` argument before
   sending the actual request with a more helpful message.
+- Improve docstrings.
+- Move ``deg2mpm``, ``fill_depressions``, and ``reproject_gtiff`` functions to a new file
+  called ``utils``. Both ``deg2mpm`` and ``fill_depressions`` functions are still accessible
+  from ``py3dep`` directly.
+- Increase the test coverage.
+- Use ``click``'s internal function, ``click..testing.CliRunner``, to run the tests.
 
 0.11.2 (2021-09-17)
 -------------------
