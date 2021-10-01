@@ -112,7 +112,7 @@ def elevation_bygrid(
     Parameters
     ----------
     xcoords : list
-        List x-coordinates of a a grid.
+        List of x-coordinates of a grid.
     ycoords : list
         List of y-coordinates of a grid.
     crs : str
@@ -148,7 +148,7 @@ def elevation_bygrid(
     if depression_filling:
         dem = utils.fill_depressions(dem)
 
-    dem = dem.interp(x=xcoords, y=ycoords)
+    dem = dem.interp(x=list(xcoords), y=list(ycoords))
     valid_layers = wms.get_validlayers()
     return utils.rename_layers(dem, valid_layers)
 
