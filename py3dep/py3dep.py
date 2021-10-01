@@ -94,17 +94,8 @@ def get_map(
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
     ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
-
     valid_layers = wms.get_validlayers()
-    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
-    rename.update({"3DEPElevation:None": "elevation"})
-
-    if isinstance(ds, xr.DataArray):
-        ds.name = rename[ds.name]
-    else:
-        ds = ds.rename({n: rename[n] for n in ds.keys()})
-
-    return ds
+    return utils.rename_layers(ds, valid_layers)
 
 
 def elevation_bygrid(
@@ -157,7 +148,9 @@ def elevation_bygrid(
     if depression_filling:
         dem = utils.fill_depressions(dem)
 
-    return dem.interp(x=xcoords, y=ycoords)
+    dem = dem.interp(x=xcoords, y=ycoords)
+    valid_layers = wms.get_validlayers()
+    return utils.rename_layers(dem, valid_layers)
 
 
 class ElevationByCoords(BaseModel):

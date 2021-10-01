@@ -2,7 +2,7 @@
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 import numpy as np
 import pygeoutils as geoutils
@@ -82,8 +82,6 @@ def reproject_gtiff(
         parallel=True,
     )
     ds = ds[list(ds.keys())[0]]
-    ds.name = "elevation"
-    ds.attrs["units"] = "meters"
     ds.attrs["crs"] = crs
     ds.attrs["nodatavals"] = (attrs.nodata,)
     _transform = geoutils.get_transform(ds, attrs.dims)[0]
@@ -152,3 +150,16 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
     slope.name = "slope"
     slope.attrs["units"] = "m/m"
     return slope
+
+
+def rename_layers(ds: xr.Dataset, valid_layers: List[str]) -> xr.Dataset:
+    """Rename layers in a dataset."""
+    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
+    rename.update({"3DEPElevation:None": "elevation"})
+
+    if isinstance(ds, xr.DataArray):
+        ds.name = rename[ds.name]
+    else:
+        ds = ds.rename({n: rename[n] for n in ds.keys()})
+
+    return ds
