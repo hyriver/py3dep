@@ -36,9 +36,9 @@ dependencies:
   - xarray>=0.17
 
   # py3dep
-  - click
+  - click>=7.0
   - scipy
-  - richdem
+  - richdem>=0.3.4
 
   # pynhd deps
   - networkx
