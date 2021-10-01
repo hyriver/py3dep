@@ -39,3 +39,22 @@ class MissingCRS(Exception):
 
     def __str__(self) -> str:
         return self.message
+
+
+class MissingAttribute(Exception):
+    """Exception raised for missing attribute.
+
+    Parameters
+    ----------
+    obj : object
+        Object that is missing the attribute.
+    attr : str
+        Name of the missing attribute
+    """
+
+    def __init__(self, obj: str, attr: str) -> None:
+        self.message = f"The ``{obj}`` object is missing {attr} attribute."
+        super().__init__(self.message)
+
+    def __str__(self) -> str:
+        return self.message
