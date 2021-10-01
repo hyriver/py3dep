@@ -1,27 +1,17 @@
 """Get data from 3DEP database."""
-import tempfile
-import uuid
-from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import List, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
-import numpy as np
 import pygeoutils as geoutils
 import pyproj
-import rasterio as rio
-import rasterio.warp as rio_warp
 import xarray as xr
 from pydantic import BaseModel, validator
-from pygeoogc import WMS, InvalidInputType, InvalidInputValue, ServiceURL, utils
+from pygeoogc import WMS, InvalidInputType, InvalidInputValue, ServiceURL
+from pygeoogc import utils as ogc_utils
 from shapely.geometry import MultiPolygon, Polygon
 
-try:
-    import richdem as rd
-except ImportError:
-    rd = None
-
-from .exceptions import MissingDependency
+from . import utils
 
 DEF_CRS = "epsg:4326"
 LAYERS = [
@@ -38,7 +28,7 @@ LAYERS = [
     "Contour 25",
     "Contour Smoothed 25",
 ]
-__all__ = ["get_map", "elevation_bygrid", "elevation_bycoords", "deg2mpm"]
+__all__ = ["get_map", "elevation_bygrid", "elevation_bycoords"]
 
 
 def get_map(
@@ -50,7 +40,7 @@ def get_map(
 ) -> Union[xr.DataArray, xr.Dataset]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
-    The 3DEP service has multi-resolution sources so depending on the user
+    The 3DEP service has multi-resolution sources, so depending on the user
     provided resolution the data is resampled on server-side based
     on all the available data sources. The following layers are available:
 
@@ -69,29 +59,25 @@ def get_map(
 
     Parameters
     ----------
-    layers : str or list
+    layers : str or list of str
         A valid 3DEP layer or a list of them.
     geometry : Polygon, MultiPolygon, or tuple
-        A shapely Polygon or a bounding box ``(west, south, east, north)``.
+        A shapely Polygon or a bounding box of the form ``(west, south, east, north)``.
     resolution : float
-        The data resolution in meters. The width and height of the output are computed in
-        pixels
-        based on the geometry bounds and the given resolution.
+        The target resolution in meters. The width and height of the output are computed in
+        pixels based on the geometry bounds and the given resolution.
     geo_crs : str, optional
-        The spatial reference system of the input geometry, defaults to
-        ``EPSG:4326``.
+        The spatial reference system of the input geometry, defaults to ``EPSG:4326``.
     crs : str, optional
         The spatial reference system to be used for requesting the data, defaults to
-        ``EPSG:4326``. Valis values are ``epsg:4326``, ``epsg:3576``, ``epsg:3571``,
-        ``epsg:3575``, ``epsg:3857``, ``epsg:3572``, ``crs:84``, ``epsg:3573``,
-        and ``epsg:3574``.
+        ``EPSG:4326``. Valid values are ``EPSG:4326``, ``EPSG:3576``, ``EPSG:3571``,
+        ``EPSG:3575``, ``EPSG:3857``, ``EPSG:3572``, ``CRS:84``, ``EPSG:3573``,
+        and ``EPSG:3574``.
 
     Returns
     -------
-    dict
-        A dict where the keys are the layer name and values are the returned response
-        from the WMS service as bytes. You can use ``utils.create_dataset`` function
-        to convert the responses to ``xarray.Dataset``.
+    xarray.DataArray or xarray.Dataset
+        The requested topographic data as an xarray.DataArray or xarray.Dataset.
     """
     _layers = layers.copy() if isinstance(layers, list) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
@@ -151,7 +137,7 @@ def elevation_bygrid(
     Returns
     -------
     xarray.DataArray
-        An data array with name elevation and the given dim names.
+        Elevations of the input coordinates as a ``xarray.DataArray``.
     """
     bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
 
@@ -166,116 +152,12 @@ def elevation_bygrid(
         ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=DEF_CRS
     )
     r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs)
-    dem = _reproject_gtiff(r_dict, crs)
+    dem = utils.reproject_gtiff(r_dict, crs)
 
     if depression_filling:
-        dem = fill_depressions(dem)
+        dem = utils.fill_depressions(dem)
 
     return dem.interp(x=xcoords, y=ycoords)
-
-
-def _reproject_gtiff(
-    r_dict: Dict[str, bytes],
-    crs: str,
-) -> Union[xr.DataArray, xr.Dataset]:
-    """Reproject a GTiff response into another CRS.
-
-    Parameters
-    ----------
-    r_dict : dict
-        Dictionary of (Geo)Tiff byte responses where keys are some names that are used
-        for naming each responses, and values are bytes.
-    crs : str
-        The target spatial reference system.
-
-    Returns
-    -------
-    xarray.DataArray or xarray.Dataset
-        Reprojected data array.
-    """
-    tmp_dir = tempfile.gettempdir()
-    var_name = {lyr: "_".join(lyr.split("_")[:-3]) for lyr in r_dict.keys()}
-    attrs = geoutils.get_gtiff_attrs(next(iter(r_dict.values())), ("y", "x"))
-
-    def to_dataset(lyr: str, resp: bytes) -> xr.DataArray:
-        with rio.MemoryFile() as memfile:
-            memfile.write(resp)
-            with memfile.open() as src:
-                transform, width, height = rio_warp.calculate_default_transform(
-                    src.crs, crs, src.width, src.height, *src.bounds
-                )
-                kwargs = src.meta.copy()
-                kwargs.update(
-                    {"crs": crs, "transform": transform, "width": width, "height": height}
-                )
-
-                with rio.vrt.WarpedVRT(src, **kwargs) as vrt:
-                    if crs != src.crs:
-                        for i in range(1, src.count + 1):
-                            rio_warp.reproject(
-                                source=rio.band(src, i),
-                                destination=rio.band(vrt, i),
-                                src_transform=src.transform,
-                                src_crs=src.crs,
-                                dst_transform=transform,
-                                crs=crs,
-                                resampling=rio_warp.Resampling.bilinear,
-                            )
-                    ds = xr.open_rasterio(vrt)
-                    ds = ds.squeeze("band", drop=True)
-                    ds = ds.sortby(attrs.dims[0], ascending=False)
-                    ds.attrs["crs"] = attrs.crs.to_string()
-                    ds.attrs["transform"] = attrs.transform
-                    ds.name = var_name[lyr]
-                    fpath = Path(tmp_dir, f"{uuid.uuid4().hex}.nc")
-                    ds.to_netcdf(fpath)
-                    return fpath
-
-    ds = xr.open_mfdataset(
-        (to_dataset(lyr, resp) for lyr, resp in r_dict.items()),
-        parallel=True,
-    )
-    ds = ds[list(ds.keys())[0]]
-    ds.name = "elevation"
-    ds.attrs["units"] = "meters"
-    ds.attrs["crs"] = crs
-    ds.attrs["nodatavals"] = (attrs.nodata,)
-    _transform = geoutils.get_transform(ds, attrs.dims)[0]
-    transform = tuple(getattr(_transform, c) for c in ["a", "b", "c", "d", "e", "f"])
-    ds = ds.sortby(attrs.dims[0], ascending=False)
-    ds.attrs["transform"] = transform
-    ds.attrs["res"] = (_transform.a, _transform.e)
-
-    for attr in ("scales", "offsets"):
-        if attr in ds.attrs and not isinstance(ds.attrs[attr], tuple):
-            ds.attrs[attr] = (ds.attrs[attr],)
-    return ds
-
-
-def fill_depressions(
-    dem: Union[xr.DataArray, xr.Dataset],
-) -> xr.DataArray:
-    """Fill depressions and adjust flat areas in a DEM using RichDEM.
-
-    Parameters
-    ----------
-    dem : xarray.DataArray or numpy.ndarray
-        Digital Elevation Model.
-
-    Returns
-    -------
-    xarray.DataArray
-        Conditioned DEM.
-    """
-    if rd is None:
-        raise MissingDependency
-
-    rda = rd.rdarray(dem, no_data=dem.nodatavals[0])
-    rda.projection = dem.crs
-    rda.geotransform = dem.transform
-    rda = rd.FillDepressions(rda, epsilon=False)
-    dem.data = rd.ResolveFlats(rda)
-    return dem
 
 
 class ElevationByCoords(BaseModel):
@@ -304,7 +186,7 @@ class ElevationByCoords(BaseModel):
 
     @validator("coords")
     def _validate_coords(cls, v, values):
-        return utils.match_crs(v, values["crs"], DEF_CRS)
+        return ogc_utils.match_crs(v, values["crs"], DEF_CRS)
 
     @validator("source")
     def _validate_source(cls, v):
@@ -381,13 +263,3 @@ def elevation_bycoords(
     _crs = crs.to_string() if isinstance(crs, pyproj.CRS) else crs
     service = ElevationByCoords(crs=_crs, coords=coords, source=source)
     return getattr(service, source)()
-
-
-def deg2mpm(da: xr.DataArray) -> xr.DataArray:
-    """Convert slope from degree to meter/meter."""
-    attrs = da.attrs
-    da = np.tan(np.deg2rad(da))
-    da.attrs = attrs
-    da.name = "slope"
-    da.attrs["units"] = "meters/meters"
-    return da
