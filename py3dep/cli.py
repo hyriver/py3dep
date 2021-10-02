@@ -7,7 +7,7 @@ import geopandas as gpd
 import pandas as pd
 
 from . import py3dep
-from .exceptions import MissingColumns, MissingCRS
+from .exceptions import InvalidInputType, MissingColumns, MissingCRS
 from .py3dep import DEF_CRS, LAYERS
 
 
@@ -24,11 +24,6 @@ def get_target_df(
     return tdf[req_cols]
 
 
-def get_item_plural(n: int) -> str:
-    """Get the plural of an item."""
-    return "item" if n == 1 else "items"
-
-
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 save_arg = click.option(
@@ -37,7 +32,7 @@ save_arg = click.option(
     default="topo_3dep",
     type=click.Path(exists=False),
     help=(
-        "Path to a directory to save the requested files."
+        "Path to a directory to save the requested files. "
         + "Extension for the outputs is either `.nc` for geometry or `.csv` for coords."
     ),
 )
@@ -50,71 +45,78 @@ def cli():
 
 @cli.command("coords", context_settings=CONTEXT_SETTINGS)
 @click.argument("fpath", type=click.Path(exists=True))
-@click.argument("crs", type=str)
 @click.option(
     "-q",
     "--query_source",
-    default="tnm",
+    default="airmap",
     type=click.Choice(["airmap", "tnm"], case_sensitive=False),
     help="Source of the elevation data.",
 )
 @save_arg
 def coords(
     fpath: Path,
-    crs: str,
-    query_source: str = "tnm",
+    query_source: str = "airmap",
     save_dir: Union[str, Path] = "topo_3dep",
 ):
-    r"""Retrieve topographic data for a list of coordinates.
+    """Retrieve topographic data for a list of coordinates.
 
-    FPATH: Path to a csv file with two columns named ``x`` and ``y``.
+    \b
+    FPATH: Path to a csv file with two columns named ``lon`` and ``lat``.
 
-    CRS: CRS of the input coordinates.
-
+    \b
     Examples:
+        $ cat coords.csv
+        lon,lat
+        -122.2493328,37.8122894
+        $ py3dep coords coords.csv -q airmap -s topo_dir
+    """  # noqa: D301
+    fpath = Path(fpath)
+    elev = get_target_df(pd.read_csv(fpath), ["lon", "lat"])
 
-        $ py3dep coords ny_coords.csv epsg:4326 -q airmap -s topo_dir
-    """  # noqa: D412
-    Path(save_dir).mkdir(parents=True, exist_ok=True)
-    elev = get_target_df(pd.read_csv(fpath), ["x", "y"])
+    count = "1 point" if len(elev) == 1 else f"{len(elev)} points"
+    click.echo(f"Found coordinates of {count} in {fpath.resolve()}. Retrieving ... ")
 
-    click.echo(
-        f"Found {len(elev)} {get_item_plural(len(elev))} in {fpath}. Retrieving ... ", nl=False
-    )
     coords_list = list(elev.itertuples(index=False, name=None))
-    elev["elevation"] = py3dep.elevation_bycoords(coords_list, crs, query_source)
-    elev.astype("f8").to_csv(Path(save_dir, f"{Path(fpath).stem}_elevation.csv"))
+    elev["elevation"] = py3dep.elevation_bycoords(coords_list, "epsg:4326", query_source)
+
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+    elev.astype("f8").to_csv(Path(save_dir, f"{fpath.stem}_elevation.csv"))
     click.echo("Done.")
 
 
 @cli.command("geometry", context_settings=CONTEXT_SETTINGS)
 @click.argument("fpath", type=click.Path(exists=True))
-@click.argument("layer", type=click.Choice(LAYERS, case_sensitive=True))
+@click.option(
+    "-l",
+    "--layers",
+    multiple=True,
+    default=["DEM"],
+    type=click.Choice(LAYERS, case_sensitive=True),
+    help="Target topographic data layers",
+)
 @save_arg
 def geometry(
     fpath: Path,
-    layer: str,
+    layers: Union[str, List[str]] = "DEM",
     save_dir: Union[str, Path] = "topo_3dep",
 ):
-    r"""Retrieve topographic data within geometries.
+    """Retrieve topographic data within geometries.
 
-    FPATH: Path to a geospatial file (any file that ``geopandas.read_file`` can open).
-
-    This file should have three columns and contain ``crs`` attribute:
-
+    \b
+    FPATH: Path to a shapefile (.shp) or geopackage (.gpkg) file.
+    This file must have three columns and contain a ``crs`` attribute:
         - ``id``: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
-
         - ``res``: Target resolution in meters.
-
         - ``geometry``: A Polygon or MultiPloygon.
 
-    LAYER: A valid layer name when requesting for topographic data.
-
+    \b
     Examples:
+        $ py3dep geometry ny_geom.gpkg -l "Slope Map" -l DEM -s topo_dir
+    """  # noqa: D301
+    fpath = Path(fpath)
+    if fpath.suffix not in (".shp", ".gpkg"):
+        raise InvalidInputType("file", ".shp or .gpkg")
 
-        $ py3dep geometry ny_geom.gpkg "Slope Map" -s topo_dir
-    """  # noqa: D412
-    Path(save_dir).mkdir(parents=True, exist_ok=True)
     target_df = gpd.read_file(fpath)
     if target_df.crs is None:
         raise MissingCRS
@@ -123,13 +125,12 @@ def geometry(
     target_df = get_target_df(target_df, ["id", "res", "geometry"])
     args_list = ((g, r, Path(save_dir, f"{i}.nc")) for i, r, g in target_df.itertuples(index=False))
 
-    click.echo(
-        f"Found {len(target_df)} {get_item_plural(len(target_df))} in {fpath}. Retrieving ... ",
-        nl=False,
-    )
+    count = "1 geometry" if len(target_df) == 1 else f"{len(target_df)} geometries"
+    click.echo(f"Found {count} in {fpath.resolve()}.")
+
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
     with click.progressbar(
-        args_list, label=f"Getting {layer} from 3DEP", length=len(target_df)
+        args_list, label="Getting topographic data from 3DEP", length=len(target_df)
     ) as bar:
         for g, r, p in bar:
-            py3dep.get_map(layer, g, r, geo_crs=crs, crs=DEF_CRS).to_netcdf(p)
-    click.echo("Done.")
+            py3dep.get_map(layers, g, r, geo_crs=crs, crs=DEF_CRS).to_netcdf(p)
