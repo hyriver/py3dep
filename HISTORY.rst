@@ -2,17 +2,17 @@
 History
 =======
 
-0.11.3 (Unreleased)
+0.12.0 (Unreleased)
 -------------------
 
 New Features
 ~~~~~~~~~~~~
-- Refactor the command-line interface using ``click.group`` to improve UX.
-  The command is now ``py3dep [command] [args] [options]``. Options are ``--save_dir``,
-  (or ``-s``) and ``--query_source`` (or ``-q``). The two supported commands are
-  ``coords`` for getting elevations of a list of coordinates and ``geometry`` for
-  getting the elevation of within a geometry. Each sub-command now has a separate
-  help message.
+- Rewrite the command-line interface using ``click.group`` to improve UX.
+  The command is now ``py3dep [command] [args] [options]``. The two supported commands are
+  ``coords`` for getting elevations of a dataframe of coordinates in EPSG:4326 CRS
+  and ``geometry`` for getting the elevation of geo-dataframe of geometries. Each sub-command
+  now has a separate help message. The input geometries for both commands must be in EPSG:4326 CRS.
+  Also, the ``geometry`` command now accepts multiple layers via the ``--layers`` (``-l``) option.
 - Make ``fill_depressions`` function public. This function conditions an input DEM
   by applying
   `depression filling <https://richdem.readthedocs.io/en/latest/depression_filling.html>`__
