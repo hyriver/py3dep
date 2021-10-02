@@ -79,7 +79,7 @@ def get_map(
     xarray.DataArray or xarray.Dataset
         The requested topographic data as an ``xarray.DataArray`` or ``xarray.Dataset``.
     """
-    _layers = layers.copy() if isinstance(layers, list) else [layers]
+    _layers = list(layers) if isinstance(layers, (tuple, list)) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
     if len(invalid) > 0:
         raise InvalidInputValue("layers", LAYERS)
