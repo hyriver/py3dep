@@ -202,23 +202,23 @@ The ``coords`` sub-command is as follows:
 .. code-block:: console
 
     $ py3dep coords -h
-    Usage: py3dep coords [OPTIONS] FPATH CRS
+    Usage: py3dep coords [OPTIONS] FPATH
 
     Retrieve topographic data for a list of coordinates.
 
-    FPATH: Path to a csv file with two columns named ``x`` and ``y``.
-
-    CRS: CRS of the input coordinates.
+    FPATH: Path to a csv file with two columns named ``lon`` and ``lat``.
 
     Examples:
-
-        $ py3dep coords ny_coords.csv epsg:4326 -q airmap -s topo_dir
+        $ cat coords.csv
+        lon,lat
+        -122.2493328,37.8122894
+        $ py3dep coords coords.csv -q airmap -s topo_dir
 
     Options:
     -q, --query_source [airmap|tnm]
                                     Source of the elevation data.
     -s, --save_dir PATH             Path to a directory to save the requested
-                                    files.Extension for the outputs is either
+                                    files. Extension for the outputs is either
                                     `.nc` for geometry or `.csv` for coords.
 
     -h, --help                      Show this message and exit.
@@ -228,39 +228,27 @@ And, the ``geometry`` sub-command is as follows:
 .. code-block:: console
 
     $ py3dep geometry -h
-    Usage: py3dep geometry [OPTIONS] FPATH [DEM|Hillshade Gray|Aspect
-                        Degrees|Aspect
-                        Map|GreyHillshade_elevationFill|Hillshade
-                        Multidirectional|Slope Map|Slope Degrees|Hillshade
-                        Elevation Tinted|Height Ellipsoidal|Contour 25|Contour
-                        Smoothed 25]
+    Usage: py3dep geometry [OPTIONS] FPATH
 
     Retrieve topographic data within geometries.
 
-    FPATH: Path to a geospatial file (any file that ``geopandas.read_file``
-    can open).
-
-    This file should have three columns and contain ``crs`` attribute:
-
-        - ``id``: Feature identifiers that py3dep uses as the output
-        netcdf/csv filenames.
-
+    FPATH: Path to a shapefile (.shp) or geopackage (.gpkg) file.
+    This file must have three columns and contain a ``crs`` attribute:
+        - ``id``: Feature identifiers that py3dep uses as the output netcdf/csv filenames.
         - ``res``: Target resolution in meters.
-
         - ``geometry``: A Polygon or MultiPloygon.
 
-    LAYER: A valid layer name when requesting for topographic data.
-
     Examples:
-
-        $ py3dep geometry ny_geom.gpkg "Slope Map" -s topo_dir
+        $ py3dep geometry ny_geom.gpkg -l "Slope Map" -l DEM -s topo_dir
 
     Options:
-    -s, --save_dir PATH  Path to a directory to save the requested
-                        files.Extension for the outputs is either `.nc` for
-                        geometry or `.csv` for coords.
+    -l, --layers [DEM|Hillshade Gray|Aspect Degrees|Aspect Map|GreyHillshade_elevationFill|Hillshade Multidirectional|Slope Map|Slope Degrees|Hillshade Elevation Tinted|Height Ellipsoidal|Contour 25|Contour Smoothed 25]
+                                    Target topographic data layers
+    -s, --save_dir PATH             Path to a directory to save the requested
+                                    files.Extension for the outputs is either
+                                    `.nc` for geometry or `.csv` for coords.
 
-    -h, --help           Show this message and exit.
+    -h, --help                      Show this message and exit.
 
 
 Now, let's see how we can use Py3DEP as a library.
