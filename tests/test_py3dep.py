@@ -74,27 +74,29 @@ def test_grid():
 class TestCLI:
     """Test the command-line interface."""
 
-    def test_grid(self, runner):
+    def test_geometry(self, runner):
         gdf = gpd.GeoDataFrame(
             {"id": "geo_test", "res": 1e3}, geometry=[GEOM], index=[0], crs=DEF_CRS
         )
         geo_gpkg = "nat_geo.gpkg"
         gdf.to_file(geo_gpkg)
-        ret = runner.invoke(cli, ["geometry", geo_gpkg, LYR, "-s", "geo_map"])
+        ret = runner.invoke(cli, ["geometry", geo_gpkg, "-l", "DEM", "-l", LYR, "-s", "geo_map"])
         shutil.rmtree(geo_gpkg)
         shutil.rmtree("geo_map")
         assert ret.exit_code == 0
-        assert "Found 1 item" in ret.output
+        assert "Found 1 geometry" in ret.output
 
     def test_coords(self, runner):
-        df = pd.DataFrame([(-7766049.664788851, 5691929.739021257)] * 3, columns=["x", "y"])
+        df = pd.DataFrame(
+            [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45]], columns=["lon", "lat"]
+        )
         coord_csv = "coords.csv"
         df.to_csv(coord_csv)
-        ret = runner.invoke(cli, ["coords", coord_csv, ALT_CRS, "-s", "geo_coords", "-q", "airmap"])
+        ret = runner.invoke(cli, ["coords", coord_csv, "-s", "geo_coords", "-q", "airmap"])
         Path(coord_csv).unlink()
         shutil.rmtree("geo_coords")
         assert ret.exit_code == 0
-        assert "Found 3 items" in ret.output
+        assert "Found coordinates of 3 points" in ret.output
 
 
 def test_show_versions():
