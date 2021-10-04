@@ -2,17 +2,22 @@
 History
 =======
 
-0.12.0 (Unreleased)
+0.12.0 (2021-10-03)
 -------------------
 
-New Features
-~~~~~~~~~~~~
+Breaking Changes
+~~~~~~~~~~~~~~~~
 - Rewrite the command-line interface using ``click.group`` to improve UX.
   The command is now ``py3dep [command] [args] [options]``. The two supported commands are
   ``coords`` for getting elevations of a dataframe of coordinates in EPSG:4326 CRS
-  and ``geometry`` for getting the elevation of geo-dataframe of geometries. Each sub-command
-  now has a separate help message. The input geometries for both commands must be in EPSG:4326 CRS.
-  Also, the ``geometry`` command now accepts multiple layers via the ``--layers`` (``-l``) option.
+  and ``geometry`` for getting the elevation of a geo-dataframe of geometries. Each sub-command
+  now has a separate help message. The format of the input file for the ``coords`` command
+  is now ``csv`` and for the ``geometry`` command is ``.shp`` or ``.gpkg`` and must have a
+  ``crs`` attribute. Also, the ``geometry`` command now accepts multiple layers via the
+  ``--layers`` (``-l``) option. More information and examples can be in the ``README.rst`` file.
+
+New Features
+~~~~~~~~~~~~
 - Make ``fill_depressions`` function public. This function conditions an input DEM
   by applying
   `depression filling <https://richdem.readthedocs.io/en/latest/depression_filling.html>`__
@@ -29,7 +34,7 @@ Internal Changes
   called ``utils``. Both ``deg2mpm`` and ``fill_depressions`` functions are still accessible
   from ``py3dep`` directly.
 - Increase the test coverage.
-- Use ``click``'s internal function, ``click..testing.CliRunner``, to run the tests.
+- Use ``click``'s internal function, ``click..testing.CliRunner``, to run the CLI tests.
 
 0.11.2 (2021-09-17)
 -------------------
