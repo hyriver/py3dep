@@ -78,13 +78,16 @@ class TestCLI:
         gdf = gpd.GeoDataFrame(
             {"id": "geo_test", "res": 1e3}, geometry=[GEOM], index=[0], crs=DEF_CRS
         )
-        geo_gpkg = "nat_geo.gpkg"
+        geo_gpkg = Path("nat_geo.gpkg")
         gdf.to_file(geo_gpkg)
-        ret = runner.invoke(cli, ["geometry", geo_gpkg, "-l", "DEM", "-l", LYR, "-s", "geo_map"])
-        shutil.rmtree(geo_gpkg)
-        shutil.rmtree("geo_map")
+        ret = runner.invoke(cli, ["geometry", str(geo_gpkg), "-l", "DEM", "-l", LYR, "-s", "geo_map"])
+        if geo_gpkg.is_dir():
+            shutil.rmtree(geo_gpkg)
+        else:
+            geo_gpkg.unlink()
         assert ret.exit_code == 0
         assert "Found 1 geometry" in ret.output
+        shutil.rmtree("geo_map")
 
     def test_coords(self, runner):
         df = pd.DataFrame(
@@ -94,9 +97,9 @@ class TestCLI:
         df.to_csv(coord_csv)
         ret = runner.invoke(cli, ["coords", coord_csv, "-s", "geo_coords", "-q", "airmap"])
         Path(coord_csv).unlink()
-        shutil.rmtree("geo_coords")
         assert ret.exit_code == 0
         assert "Found coordinates of 3 points" in ret.output
+        shutil.rmtree("geo_coords")
 
 
 def test_show_versions():
