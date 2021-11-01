@@ -80,7 +80,9 @@ class TestCLI:
         )
         geo_gpkg = Path("nat_geo.gpkg")
         gdf.to_file(geo_gpkg)
-        ret = runner.invoke(cli, ["geometry", str(geo_gpkg), "-l", "DEM", "-l", LYR, "-s", "geo_map"])
+        ret = runner.invoke(
+            cli, ["geometry", str(geo_gpkg), "-l", "DEM", "-l", LYR, "-s", "geo_map"]
+        )
         if geo_gpkg.is_dir():
             shutil.rmtree(geo_gpkg)
         else:
