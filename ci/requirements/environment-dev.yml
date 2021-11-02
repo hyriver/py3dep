@@ -75,7 +75,6 @@ dependencies:
   - pytest-cov
   - pytest-sugar
   - pytest-xdist
-  - ward
 
   - pip
   - pip:

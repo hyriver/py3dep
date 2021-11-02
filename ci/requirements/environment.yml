@@ -12,6 +12,7 @@ dependencies:
   - cchardet
   - cytoolz
   - nest-asyncio
+  - importlib_metadata
   - ujson
 
   # pygeoogc deps

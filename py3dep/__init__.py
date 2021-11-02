@@ -1,6 +1,4 @@
 """Top-level package for Py3DEP."""
-from pkg_resources import DistributionNotFound, get_distribution
-
 from .exceptions import (
     InvalidInputType,
     MissingAttribute,
@@ -13,8 +11,13 @@ from .py3dep import elevation_bycoords, elevation_bygrid, get_map
 from .utils import deg2mpm, fill_depressions
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
+    import importlib.metadata as metadata
+except ImportError:
+    import importlib_metadata as metadata  # type: ignore[no-redef]
+
+try:
+    __version__ = metadata.version("py3dep")
+except Exception:
     __version__ = "999"
 
 __all__ = [

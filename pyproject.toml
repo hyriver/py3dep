@@ -11,11 +11,8 @@ build-backend = "setuptools.build_meta"
 fallback_version = "999"
 
 [tool.pytest.ini_options]
-addopts = '--doctest-modules -n=auto -v --cov=py3dep --cov-report xml --durations=5'
+addopts = "--doctest-modules --ignore=noxfile.py -n=auto -v --cov=py3dep --cov-report xml --durations=5"
 doctest_optionflags = 'NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL NUMBER'
-markers = [
-    "slow",
-]
 testpaths = [
     "tests",
     "py3dep",
