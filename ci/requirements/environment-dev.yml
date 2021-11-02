@@ -23,12 +23,12 @@ dependencies:
   - pyyaml
   - pyproj>=1.2
   - requests
-  - requests-cache
+  - requests-cache>=0.8
   - shapely
   - urllib3
 
   # pygeoutils deps
-  - dask
+  - dask-core
   - geopandas>=0.8
   - netcdf4
   - numpy>=1.17
@@ -55,10 +55,15 @@ dependencies:
   - pygeos
 
   # plotting deps
-  - contextily
-  - mapclassify
   - cartopy
+  - mapclassify
+  - contextily
   - colorcet
+  - hvplot
+  - osmnx
+  - rich
+  - pytables
+  - ipywidgets
 
   # dev deps
   - codespell
@@ -70,26 +75,10 @@ dependencies:
   - pytest-cov
   - pytest-sugar
   - pytest-xdist
-  - setuptools-scm
-
-  # ward deps
-  - tomli
-  - markupsafe
-  - click-completion
-  - click-default-group
-  - colorama
-  - commonmark
-  - cucumber-tag-expressions
-  - jinja2
-  - pprintpp
-  - pygments
-  - rich
-  - shellingham
+  - ward
 
   - pip
   - pip:
-    - ward>=0.61.1
-
     - git+https://github.com/cheginit/async_retriever.git
     - git+https://github.com/cheginit/pygeoogc.git
     - git+https://github.com/cheginit/pygeoutils.git
