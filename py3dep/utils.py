@@ -8,6 +8,7 @@ import numpy as np
 import pygeoutils as geoutils
 import rasterio as rio
 import rasterio.warp as rio_warp
+import rioxarray as rxr
 import xarray as xr
 
 try:
@@ -67,11 +68,12 @@ def reproject_gtiff(
                                 crs=crs,
                                 resampling=rio_warp.Resampling.bilinear,
                             )
-                    ds = xr.open_rasterio(vrt)
+                    ds = rxr.open_rasterio(vrt)
                     ds = ds.squeeze("band", drop=True)
                     ds = ds.sortby(attrs.dims[0], ascending=False)
                     ds.attrs["crs"] = attrs.crs.to_string()
                     ds.attrs["transform"] = attrs.transform
+                    ds.attrs["nodatavals"] = (attrs.nodata,)
                     ds.name = var_name[lyr]
                     fpath = Path(tmp_dir, f"{uuid.uuid4().hex}.nc")
                     ds.to_netcdf(fpath)
@@ -80,6 +82,7 @@ def reproject_gtiff(
     ds = xr.open_mfdataset(
         (to_dataset(lyr, resp) for lyr, resp in r_dict.items()),
         parallel=True,
+        decode_coords="all",
     )
     ds = ds[list(ds.keys())[0]]
     ds.attrs["crs"] = crs

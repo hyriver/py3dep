@@ -6,9 +6,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
-import pytest
-import rioxarray  # noqa: F401
-import xarray as xr
+import rioxarray as rxr
 from pygeoogc import utils
 from shapely.geometry import Polygon
 
@@ -31,7 +29,7 @@ def test_getmap():
     dem_1e3 = py3dep.get_map(layers[0], GEOM, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
     fpath = Path("dem_10.tif")
     dem_10.rio.to_raster(fpath)
-    dem_10 = xr.open_rasterio(fpath)
+    dem_10 = rxr.open_rasterio(fpath)
     assert (
         sorted(ds.keys()) == ["elevation", "slope_degrees"]
         and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 7e-2
@@ -47,9 +45,8 @@ class TestByCoords:
         airmap = py3dep.elevation_bycoords(self.coords * 101, ALT_CRS, source="airmap")
         assert set(airmap) == {363}
 
-    @pytest.mark.xfail(reason="TNM is unstable likely to fail")
     def test_tnm(self):
-        tnm = py3dep.elevation_bycoords(self.coords, pyproj.CRS(ALT_CRS), source="tnm")
+        tnm = py3dep.elevation_bycoords(self.coords * 101, pyproj.CRS(ALT_CRS), source="tnm")
         assert set(tnm) == {356.59}
 
 
