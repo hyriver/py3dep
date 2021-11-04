@@ -2,6 +2,18 @@
 History
 =======
 
+0.11.4 (unreleased)
+-------------------
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Use ``rioxarray`` for dealing with ``GeoTIFF`` binaries since ``xarray``
+  deprecated the ``xarray.open_rasterio`` function, as it's discussed
+  in this `PR <https://github.com/pydata/xarray/pull/5808>`__.
+- Use ``importlib-metadata`` for getting the version insead of ``pkg_resources``
+  to decrease import time as discussed in this
+  `issue <https://github.com/pydata/xarray/issues/5676>`__.
+
 0.11.3 (2021-10-03)
 -------------------
 
