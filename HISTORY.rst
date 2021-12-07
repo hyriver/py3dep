@@ -10,7 +10,7 @@ Internal Changes
 - Use ``rioxarray`` for dealing with ``GeoTIFF`` binaries since ``xarray``
   deprecated the ``xarray.open_rasterio`` function, as it's discussed
   in this `PR <https://github.com/pydata/xarray/pull/5808>`__.
-- Use ``importlib-metadata`` for getting the version insead of ``pkg_resources``
+- Use ``importlib-metadata`` for getting the version instead of ``pkg_resources``
   to decrease import time as discussed in this
   `issue <https://github.com/pydata/xarray/issues/5676>`__.
 
@@ -111,13 +111,13 @@ Breaking Changes
 0.10.1 (2021-03-27)
 -------------------
 
-- Add announcement regarding the new name for the softwate stack, HyRiver.
+- Add announcement regarding the new name for the software stack, HyRiver.
 - Improve ``pip`` installation and release workflow.
 
 0.10.0 (2021-03-06)
 -------------------
 
-- The first release after renaming hydrodata to pygeohydro.
+- The first release after renaming hydrodata to PyGeoHydro.
 - Make ``mypy`` checks more strict and fix all the errors and prevent possible
   bugs.
 - Speed up CI testing by using ``mamba`` and caching.
@@ -125,7 +125,7 @@ Breaking Changes
 0.9.0 (2021-02-14)
 ------------------
 
-- Bump version to the same version as pygeohydro.
+- Bump version to the same version as PyGeoHydro.
 - Add support for saving maps as ``geotiff`` file(s).
 - Replace ``Elevation Point Query Service`` service with ``AirMap`` for getting
   elevations for a list of coordinates in bulk since ``AirMap`` is much faster.
