@@ -1,7 +1,7 @@
 import nox
 
 
-@nox.session(python="3.10")
+@nox.session(python="3.9")
 def tests(session):
     session.install(".[test,dem]")
     hr_deps = ["pygeoogc", "pygeoutils"]
