@@ -17,6 +17,9 @@ testpaths = [
     "tests",
     "py3dep",
 ]
+filterwarnings =[
+    "ignore:.*distutils.*"
+]
 
 [tool.isort]
 profile = "black"
