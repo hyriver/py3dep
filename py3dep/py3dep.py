@@ -14,6 +14,7 @@ from shapely.geometry import MultiPolygon, Polygon
 from . import utils
 
 DEF_CRS = "epsg:4326"
+EXPIRE = -1
 LAYERS = [
     "DEM",
     "Hillshade Gray",
@@ -37,6 +38,8 @@ def get_map(
     resolution: float,
     geo_crs: str = DEF_CRS,
     crs: str = DEF_CRS,
+    expire_after: int = EXPIRE,
+    disable_caching: bool = False,
 ) -> Union[xr.DataArray, xr.Dataset]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
@@ -73,6 +76,10 @@ def get_map(
         ``EPSG:4326``. Valid values are ``EPSG:4326``, ``EPSG:3576``, ``EPSG:3571``,
         ``EPSG:3575``, ``EPSG:3857``, ``EPSG:3572``, ``CRS:84``, ``EPSG:3573``,
         and ``EPSG:3574``.
+    expire_after : int, optional
+        Expiration time for response caching in seconds, defaults to -1 (never expire).
+    disable_caching : bool, optional
+        If ``True``, disable caching requests, defaults to False.
 
     Returns
     -------
@@ -90,7 +97,14 @@ def get_map(
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
-    wms = WMS(ServiceURL().wms.nm_3dep, layers=_layers, outformat="image/tiff", crs=crs)
+    wms = WMS(
+        ServiceURL().wms.nm_3dep,
+        layers=_layers,
+        outformat="image/tiff",
+        crs=crs,
+        expire_after=expire_after,
+        disable_caching=disable_caching,
+    )
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
     ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
@@ -104,6 +118,8 @@ def elevation_bygrid(
     crs: str,
     resolution: float,
     depression_filling: bool = False,
+    expire_after: int = EXPIRE,
+    disable_caching: bool = False,
 ) -> xr.DataArray:
     """Get elevation from DEM data for a grid.
 
@@ -124,6 +140,10 @@ def elevation_bygrid(
     depression_filling : bool, optional
         Fill depressions before sampling using
         `RichDEM <https://richdem.readthedocs.io/en/latest/>`__ package, defaults to False.
+    expire_after : int, optional
+        Expiration time for response caching in seconds, defaults to -1 (never expire).
+    disable_caching : bool, optional
+        If ``True``, disable caching requests, defaults to False.
 
     Returns
     -------
@@ -140,7 +160,12 @@ def elevation_bygrid(
         bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
 
     wms = WMS(
-        ServiceURL().wms.nm_3dep, layers="3DEPElevation:None", outformat="image/tiff", crs=DEF_CRS
+        ServiceURL().wms.nm_3dep,
+        layers="3DEPElevation:None",
+        outformat="image/tiff",
+        crs=DEF_CRS,
+        expire_after=expire_after,
+        disable_caching=disable_caching,
     )
     r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs)
     dem = utils.reproject_gtiff(r_dict, crs)
@@ -164,11 +189,17 @@ class ElevationByCoords(BaseModel):
         Coordinate reference system of the input coordinates, defaults to ``EPSG:4326``.
     source : str, optional
         Elevation source, defaults to ``airmap``. Valid sources are: ``tnm`` and ``airmap``.
+    expire_after : int, optional
+        Expiration time for response caching in seconds, defaults to -1 (never expire).
+    disable_caching : bool, optional
+        If ``True``, disable caching requests, defaults to False.
     """
 
     crs: str = DEF_CRS
     coords: List[Tuple[float, float]]
     source: str = "airmap"
+    expire_after: float = EXPIRE
+    disable_caching: bool = False
 
     @validator("crs")
     def _valid_crs(cls, v):
@@ -204,22 +235,18 @@ class ElevationByCoords(BaseModel):
                 for chunk in coords_chunks
             )
         )
-        elevations = list(tlz.pluck("data", ar.retrieve(urls, "json", kwds)))
+        elevations = list(
+            tlz.pluck(
+                "data",
+                ar.retrieve(
+                    urls, "json", kwds, expire_after=self.expire_after, disable=self.disable_caching
+                ),
+            )
+        )
         return list(tlz.concat(elevations))
 
     def tnm(self) -> List[Tuple[float, float]]:
         """Return list of elevations in meters."""
-        headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Accept-Encoding": "gzip,deflate,br",
-            "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1",
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "same-origin",
-            "Sec-Fetch-User": "?1",
-        }
         urls, kwds = zip(
             *(
                 (
@@ -231,20 +258,30 @@ class ElevationByCoords(BaseModel):
                             "y": f"{lat:.5f}",
                             "x": f"{lon:.5f}",
                         },
-                        "headers": headers,
                     },
                 )
                 for lon, lat in self.coords
             )
         )
-        resp = ar.retrieve(urls, "json", kwds, max_workers=5)
+        resp = ar.retrieve(
+            urls,
+            "json",
+            kwds,
+            max_workers=5,
+            expire_after=self.expire_after,
+            disable=self.disable_caching,
+        )
         return [
             r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
         ]
 
 
 def elevation_bycoords(
-    coords: List[Tuple[float, float]], crs: Union[str, pyproj.CRS] = DEF_CRS, source: str = "airmap"
+    coords: List[Tuple[float, float]],
+    crs: Union[str, pyproj.CRS] = DEF_CRS,
+    source: str = "airmap",
+    expire_after: float = EXPIRE,
+    disable_caching: bool = False,
 ) -> List[float]:
     """Get elevation for a list of coordinates.
 
@@ -261,6 +298,10 @@ def elevation_bycoords(
         uses the 1/3 arc-second DEM layer from 3DEP service but it is limited to the US.
         It also tends to be slower than the Airmap service and more unstable.
         It's recommended to use ``airmap`` unless you need 10-m resolution accuracy.
+    expire_after : int, optional
+        Expiration time for response caching in seconds, defaults to -1 (never expire).
+    disable_caching : bool, optional
+        If ``True``, disable caching requests, defaults to False.
 
     Returns
     -------
@@ -268,5 +309,11 @@ def elevation_bycoords(
         Elevation in meter.
     """
     _crs = crs.to_string() if isinstance(crs, pyproj.CRS) else crs
-    service = ElevationByCoords(crs=_crs, coords=coords, source=source)
+    service = ElevationByCoords(
+        crs=_crs,
+        coords=coords,
+        source=source,
+        expire_after=expire_after,
+        disable_caching=disable_caching,
+    )
     return getattr(service, source)()
