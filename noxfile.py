@@ -16,7 +16,7 @@ def tests(session):
 
 
 def install_deps(session):
-    deps = [".[test]"] + [f"git+https://github.com/cheginit/{p}.git" for p in HR_DEPS]
+    deps = [".[test,dem]"] + [f"git+https://github.com/cheginit/{p}.git" for p in HR_DEPS]
     session.install(*deps)
     dirs = [".pytest_cache", "build", "dist", ".eggs"]
     for d in dirs:
