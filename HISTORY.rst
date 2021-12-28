@@ -2,6 +2,19 @@
 History
 =======
 
+0.12.0 (2021-12-27)
+-------------------
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- Set the request caching's expiration time to never expire. Add two flags to all
+  functions to control the caching: ``expire_after`` and ``disable_caching``.
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Add all the missing types so ``mypy --strict`` passes.
+- Improve performance of ``elevation_bygrid`` by ignoring unnecessary validation.
+
 0.11.4 (2021-11-12)
 -------------------
 
@@ -21,7 +34,7 @@ Breaking Changes
 ~~~~~~~~~~~~~~~~
 - Rewrite the command-line interface using ``click.group`` to improve UX.
   The command is now ``py3dep [command] [args] [options]``. The two supported commands are
-  ``coords`` for getting elevations of a dataframe of coordinates in EPSG:4326 CRS
+  ``coords`` for getting elevations of a dataframe of coordinates in ``EPSG:4326`` CRS
   and ``geometry`` for getting the elevation of a geo-dataframe of geometries. Each sub-command
   now has a separate help message. The format of the input file for the ``coords`` command
   is now ``csv`` and for the ``geometry`` command is ``.shp`` or ``.gpkg`` and must have a
@@ -53,7 +66,7 @@ Internal Changes
 
 Bug Fixes
 ~~~~~~~~~
-- Fix a bug related to ``elevation_bycoords`` where crs validation fails if its
+- Fix a bug related to ``elevation_bycoords`` where CRS validation fails if its
   type is ``pyrpoj.CRS`` by converting inputs with CRS types to string.
 
 Internal Changes
@@ -80,7 +93,7 @@ New Features
   service. The default is ``tnm``.
 - Refactor ``elevation_bygrid`` function to add a new capability via ``fill_depressions``
   argument for filling depressions in the obtained DEM before extracting elevation data
-  for the input grid points.. This is achieved via
+  for the input grid points. This is achieved via
   `RichDEM <https://richdem.readthedocs.io>`__ that needs to be installed if this
   functionality is desired. You can install it via ``pip`` or ``conda`` (``mamba``).
 
@@ -130,7 +143,7 @@ Breaking Changes
 - Replace ``Elevation Point Query Service`` service with ``AirMap`` for getting
   elevations for a list of coordinates in bulk since ``AirMap`` is much faster.
   The resolution of ``AirMap`` is 30 m.
-- Use ``cytoolz`` for some of the operations for improving performance.
+- Use ``cytoolz`` for some operations for improving performance.
 
 0.2.0 (2020-12-06)
 ------------------
