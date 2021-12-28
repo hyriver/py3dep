@@ -39,7 +39,7 @@ save_arg = click.option(
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-def cli():
+def cli() -> None:
     """Command-line interface for Py3DEP."""
 
 
@@ -57,7 +57,7 @@ def coords(
     fpath: Path,
     query_source: str = "airmap",
     save_dir: Union[str, Path] = "topo_3dep",
-):
+) -> None:
     """Retrieve topographic data for a list of coordinates.
 
     \b
@@ -99,7 +99,7 @@ def geometry(
     fpath: Path,
     layers: Union[str, List[str]] = "DEM",
     save_dir: Union[str, Path] = "topo_3dep",
-):
+) -> None:
     """Retrieve topographic data within geometries.
 
     \b

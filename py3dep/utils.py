@@ -2,7 +2,7 @@
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, TypeVar
 
 import numpy as np
 import pygeoutils as geoutils
@@ -19,12 +19,13 @@ except ImportError:
 from .exceptions import MissingAttribute, MissingDependency
 
 __all__ = ["deg2mpm", "fill_depressions"]
+X = TypeVar("X", xr.DataArray, xr.Dataset)
 
 
 def reproject_gtiff(
     r_dict: Dict[str, bytes],
     crs: str,
-) -> Union[xr.DataArray, xr.Dataset]:
+) -> xr.DataArray:
     """Reproject a GTiff response into another CRS.
 
     Parameters
@@ -37,14 +38,14 @@ def reproject_gtiff(
 
     Returns
     -------
-    xarray.DataArray or xarray.Dataset
+    xarray.DataArray
         Reprojected data array.
     """
     tmp_dir = tempfile.gettempdir()
     var_name = {lyr: "_".join(lyr.split("_")[:-3]) for lyr in r_dict.keys()}
     attrs = geoutils.get_gtiff_attrs(next(iter(r_dict.values())), ("y", "x"))
 
-    def to_dataset(lyr: str, resp: bytes) -> xr.DataArray:
+    def to_dataset(lyr: str, resp: bytes) -> Path:
         with rio.MemoryFile() as memfile:
             memfile.write(resp)
             with memfile.open() as src:
@@ -79,28 +80,28 @@ def reproject_gtiff(
                     ds.to_netcdf(fpath)
                     return fpath
 
-    ds = xr.open_mfdataset(
+    ds: xr.Dataset = xr.open_mfdataset(  # type: ignore
         (to_dataset(lyr, resp) for lyr, resp in r_dict.items()),
         parallel=True,
         decode_coords="all",
     )
-    ds = ds[list(ds.keys())[0]]
-    ds.attrs["crs"] = crs
-    ds.attrs["nodatavals"] = (attrs.nodata,)
-    _transform = geoutils.get_transform(ds, attrs.dims)[0]
+    da: xr.DataArray = ds[list(ds.keys())[0]]
+    da.attrs["crs"] = crs
+    da.attrs["nodatavals"] = (attrs.nodata,)
+    _transform = geoutils.get_transform(da, attrs.dims)[0]
     transform = tuple(getattr(_transform, c) for c in ["a", "b", "c", "d", "e", "f"])
-    ds = ds.sortby(attrs.dims[0], ascending=False)
-    ds.attrs["transform"] = transform
-    ds.attrs["res"] = (_transform.a, _transform.e)
+    da = da.sortby(attrs.dims[0], ascending=False)
+    da.attrs["transform"] = transform
+    da.attrs["res"] = (_transform.a, _transform.e)
 
     for attr in ("scales", "offsets"):
-        if attr in ds.attrs and not isinstance(ds.attrs[attr], tuple):
-            ds.attrs[attr] = (ds.attrs[attr],)
-    return ds
+        if attr in da.attrs and not isinstance(da.attrs[attr], tuple):
+            da.attrs[attr] = (da.attrs[attr],)
+    return da
 
 
 def fill_depressions(
-    dem: Union[xr.DataArray, xr.Dataset],
+    dem: xr.DataArray,
 ) -> xr.DataArray:
     """Fill depressions and adjust flat areas in a DEM using `RichDEM <https://richdem.readthedocs.io>`__.
 
@@ -138,7 +139,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
 
     Parameters
     ----------
-    da : xarray.DataArray
+    slope : xarray.DataArray
         Slope in degrees.
 
     Returns
@@ -155,13 +156,13 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
     return slope
 
 
-def rename_layers(ds: xr.Dataset, valid_layers: List[str]) -> xr.Dataset:
+def rename_layers(ds: X, valid_layers: List[str]) -> X:
     """Rename layers in a dataset."""
     rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
     rename.update({"3DEPElevation:None": "elevation"})
 
     if isinstance(ds, xr.DataArray):
-        ds.name = rename[ds.name]
+        ds.name = rename[str(ds.name)]
     else:
         ds = ds.rename({n: rename[n] for n in ds.keys()})
 

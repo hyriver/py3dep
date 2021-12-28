@@ -1,5 +1,5 @@
 """Get data from 3DEP database."""
-from typing import List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -40,7 +40,7 @@ def get_map(
     crs: str = DEF_CRS,
     expire_after: int = EXPIRE,
     disable_caching: bool = False,
-) -> Union[xr.DataArray, xr.Dataset]:
+) -> xr.Dataset:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
     The 3DEP service has multi-resolution sources, so depending on the user
@@ -107,9 +107,9 @@ def get_map(
     )
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
 
-    ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+    ds: xr.Dataset = geoutils.gtiff2xarray(r_dict, _geometry, crs)
     valid_layers = wms.get_validlayers()
-    return utils.rename_layers(ds, valid_layers)
+    return utils.rename_layers(ds, list(valid_layers))
 
 
 def elevation_bygrid(
@@ -166,6 +166,7 @@ def elevation_bygrid(
         crs=DEF_CRS,
         expire_after=expire_after,
         disable_caching=disable_caching,
+        validation=False,
     )
     r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs)
     dem = utils.reproject_gtiff(r_dict, crs)
@@ -175,7 +176,7 @@ def elevation_bygrid(
 
     dem = dem.interp(x=list(xcoords), y=list(ycoords))
     valid_layers = wms.get_validlayers()
-    return utils.rename_layers(dem, valid_layers)
+    return utils.rename_layers(dem, list(valid_layers))
 
 
 class ElevationByCoords(BaseModel):
@@ -202,24 +203,26 @@ class ElevationByCoords(BaseModel):
     disable_caching: bool = False
 
     @validator("crs")
-    def _valid_crs(cls, v):
+    def _valid_crs(cls, v: str) -> pyproj.CRS:
         try:
             return pyproj.CRS(v)
         except pyproj.exceptions.CRSError as ex:
             raise InvalidInputType("crs", "a valid CRS") from ex
 
     @validator("coords")
-    def _validate_coords(cls, v, values):
+    def _validate_coords(
+        cls, v: List[Tuple[float, float]], values: Dict[str, str]
+    ) -> List[Tuple[float, float]]:
         return ogc_utils.match_crs(v, values["crs"], DEF_CRS)
 
     @validator("source")
-    def _validate_source(cls, v):
+    def _validate_source(cls, v: str) -> str:
         valid_sources = ["tnm", "airmap"]
         if v not in valid_sources:
             raise InvalidInputValue("source", valid_sources)
         return v
 
-    def airmap(self) -> List[Tuple[float, float]]:
+    def airmap(self) -> List[float]:
         """Return list of elevations in meters."""
         coords_chunks = tlz.partition_all(100, self.coords)
         headers = {"Content-Type": "application/json", "charset": "utf-8"}
@@ -245,7 +248,7 @@ class ElevationByCoords(BaseModel):
         )
         return list(tlz.concat(elevations))
 
-    def tnm(self) -> List[Tuple[float, float]]:
+    def tnm(self) -> List[float]:
         """Return list of elevations in meters."""
         urls, kwds = zip(
             *(
@@ -263,7 +266,7 @@ class ElevationByCoords(BaseModel):
                 for lon, lat in self.coords
             )
         )
-        resp = ar.retrieve(
+        resp: List[Dict[str, Any]] = ar.retrieve(  # type: ignore
             urls,
             "json",
             kwds,
@@ -316,4 +319,4 @@ def elevation_bycoords(
         expire_after=expire_after,
         disable_caching=disable_caching,
     )
-    return getattr(service, source)()
+    return getattr(service, source)()  # type: ignore
