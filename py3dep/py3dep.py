@@ -1,5 +1,5 @@
 """Get data from 3DEP database."""
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -241,8 +241,8 @@ class ElevationByCoords(BaseModel):
         elevations = list(
             tlz.pluck(
                 "data",
-                ar.retrieve(
-                    urls, "json", kwds, expire_after=self.expire_after, disable=self.disable_caching
+                ar.retrieve_json(
+                    urls, kwds, expire_after=self.expire_after, disable=self.disable_caching
                 ),
             )
         )
@@ -266,9 +266,8 @@ class ElevationByCoords(BaseModel):
                 for lon, lat in self.coords
             )
         )
-        resp: List[Dict[str, Any]] = ar.retrieve(  # type: ignore
+        resp = ar.retrieve_json(
             urls,
-            "json",
             kwds,
             max_workers=5,
             expire_after=self.expire_after,
@@ -319,4 +318,4 @@ def elevation_bycoords(
         expire_after=expire_after,
         disable_caching=disable_caching,
     )
-    return getattr(service, source)()  # type: ignore
+    return service.__getattribute__(source)()  # type: ignore
