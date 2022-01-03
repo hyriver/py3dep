@@ -106,8 +106,10 @@ def get_map(
         disable_caching=disable_caching,
     )
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
-
-    ds: xr.Dataset = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        ds: xr.Dataset = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+    else:
+        ds = geoutils.gtiff2xarray(r_dict)
     valid_layers = wms.get_validlayers()
     return utils.rename_layers(ds, list(valid_layers))
 
