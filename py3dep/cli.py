@@ -132,5 +132,5 @@ def geometry(
     with click.progressbar(
         args_list, label="Getting topographic data from 3DEP", length=len(target_df)
     ) as bar:
-        for g, r, p in bar:
-            py3dep.get_map(layers, g, r, geo_crs=crs, crs=DEF_CRS).to_netcdf(p)
+        for geo, res, f in bar:
+            py3dep.get_map(layers, geo, res, geo_crs=crs, crs=DEF_CRS).to_netcdf(f)
