@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 fallback_version = "999"
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules --ignore=noxfile.py -n=auto -v --cov=py3dep --cov-report xml --durations=5"
+addopts = "--ignore=noxfile.py -n=auto -v --cov=py3dep --cov-report xml --durations=5"
 doctest_optionflags = 'NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL NUMBER'
 testpaths = [
     "tests",
@@ -24,7 +24,6 @@ filterwarnings =[
 [tool.mypy]
 strict = true
 check_untyped_defs = true
-strict_equality = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
