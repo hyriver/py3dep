@@ -64,8 +64,13 @@ def test_grid():
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
-    elev_fill = py3dep.elevation_bygrid(gx, gy, crs, res, depression_filling=True)
+    elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
     assert ((elev_fill - elev).sum().compute().item() - 1935.074) < SMALL
+
+
+def test_check_3dep_availability():
+    avail = py3dep.check_3dep_availability(GEOM.bounds)
+    assert avail["1m"] and avail["10m"] and avail["30m"]
 
 
 class TestCLI:
