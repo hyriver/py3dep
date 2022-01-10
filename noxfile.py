@@ -109,7 +109,7 @@ def pre_commit(session) -> None:
 @nox.session(python=python_versions)
 def tests(session):
     """Run the test suite."""
-    install_deps(session, "test")
+    install_deps(session, "test,dem")
 
     session.run("pytest", "--doctest-modules", *session.posargs)
     session.run("coverage", "report")
@@ -119,6 +119,6 @@ def tests(session):
 @nox.session(python=python_versions)
 def typeguard(session):
     """Runtime type checking using Typeguard."""
-    install_deps(session, "typeguard")
+    install_deps(session, "typeguard,dem")
 
     session.run("pytest", f"--typeguard-packages={package}", *session.posargs)
