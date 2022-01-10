@@ -1,5 +1,6 @@
 """Get data from 3DEP database."""
-from typing import Dict, List, Tuple, Union
+import contextlib
+from typing import Dict, List, Sequence, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -7,7 +8,14 @@ import pygeoutils as geoutils
 import pyproj
 import xarray as xr
 from pydantic import BaseModel, validator
-from pygeoogc import WMS, InvalidInputType, InvalidInputValue, ServiceURL
+from pygeoogc import (
+    WMS,
+    ArcGISRESTful,
+    InvalidInputType,
+    InvalidInputValue,
+    ServiceError,
+    ServiceURL,
+)
 from pygeoogc import utils as ogc_utils
 from shapely.geometry import MultiPolygon, Polygon
 
@@ -29,7 +37,7 @@ LAYERS = [
     "Contour 25",
     "Contour Smoothed 25",
 ]
-__all__ = ["get_map", "elevation_bygrid", "elevation_bycoords"]
+__all__ = ["get_map", "elevation_bygrid", "elevation_bycoords", "check_3dep_availability"]
 
 
 def get_map(
@@ -40,7 +48,7 @@ def get_map(
     crs: str = DEF_CRS,
     expire_after: int = EXPIRE,
     disable_caching: bool = False,
-) -> xr.Dataset:
+) -> Union[xr.Dataset, xr.DataArray]:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
     The 3DEP service has multi-resolution sources, so depending on the user
@@ -115,8 +123,8 @@ def get_map(
 
 
 def elevation_bygrid(
-    xcoords: List[float],
-    ycoords: List[float],
+    xcoords: Sequence[float],
+    ycoords: Sequence[float],
     crs: str,
     resolution: float,
     depression_filling: bool = False,
@@ -224,7 +232,7 @@ class ElevationByCoords(BaseModel):
             raise InvalidInputValue("source", valid_sources)
         return v
 
-    def airmap(self) -> List[float]:
+    def airmap(self) -> Sequence[float]:
         """Return list of elevations in meters."""
         coords_chunks = tlz.partition_all(100, self.coords)
         headers = {"Content-Type": "application/json", "charset": "utf-8"}
@@ -250,7 +258,7 @@ class ElevationByCoords(BaseModel):
         )
         return list(tlz.concat(elevations))
 
-    def tnm(self) -> List[float]:
+    def tnm(self) -> Sequence[float]:
         """Return list of elevations in meters."""
         urls, kwds = zip(
             *(
@@ -321,3 +329,54 @@ def elevation_bycoords(
         disable_caching=disable_caching,
     )
     return service.__getattribute__(source)()  # type: ignore
+
+
+def check_3dep_availability(
+    bbox: Tuple[float, float, float, float], crs: Union[str, pyproj.CRS] = DEF_CRS
+) -> Dict[str, bool]:
+    """Query 3DEP's resolution availability within a bounding box.
+
+    This function checks availability of 3DEP's at the following resolutions:
+    1 m, 3 m, 5 m, 10 m, 30 m, and 60 m.
+
+    Parameters
+    ----------
+    bbox : tuple
+        Bounding box as tuple of ``(min_x, min_y, max_x, max_y)``.
+    crs : str or pyproj.CRS, optional
+        Spatial reference (CRS) of bbox, defaults to ``EPSG:4326``.
+
+    Returns
+    -------
+    dict
+        True if bbox intersects 3DEP elevation for each available resolution.
+        Keys are the supported resolutions and values are their availability.
+
+    Examples
+    --------
+    >>> import py3dep
+    >>> bbox = (-69.77, 45.07, -69.31, 45.45)
+    >>> py3dep.check_3dep_availability(bbox)
+    {'1m': True, '3m': False, '5m': False, '10m': True, '30m': True, '60m': False}
+    """
+    if not isinstance(bbox, Sequence) or len(bbox) != 4:
+        raise InvalidInputType("bbox", "a tuple of 4 elements")
+
+    res_layers = {
+        "1m": 18,
+        "3m": 19,
+        "5m": 20,
+        "10m": 21,
+        "30m": 22,
+        "60m": 23,
+    }
+    _bbox = ogc_utils.match_crs(bbox, crs, DEF_CRS)
+    url = ServiceURL().restful.nm_3dep_index
+
+    def _check(lyr: int) -> bool:
+        wms = ArcGISRESTful(url, lyr)
+        with contextlib.suppress(ServiceError, TypeError):
+            return len(list(wms.oids_bygeom(_bbox))[0]) > 0
+        return False
+
+    return {res: _check(lyr) for res, lyr in res_layers.items()}
