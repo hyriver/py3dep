@@ -164,6 +164,6 @@ def rename_layers(ds: X, valid_layers: List[str]) -> X:
     if isinstance(ds, xr.DataArray):
         ds.name = rename[str(ds.name)]
     else:
-        ds = ds.rename({n: rename[n] for n in ds})
+        ds = ds.rename({n: rename[str(n)] for n in ds})
 
     return ds
