@@ -4,6 +4,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 
 import async_retriever as ar
 import cytoolz as tlz
+import geopandas as gpd
 import pygeoutils as geoutils
 import pyproj
 import xarray as xr
@@ -31,7 +32,6 @@ LAYERS = [
     "GreyHillshade_elevationFill",
     "Hillshade Multidirectional",
     "Slope Map",
-    "Slope Degrees",
     "Hillshade Elevation Tinted",
     "Height Ellipsoidal",
     "Contour 25",
@@ -41,7 +41,7 @@ __all__ = ["get_map", "elevation_bygrid", "elevation_bycoords", "check_3dep_avai
 
 
 def get_map(
-    layers: Union[str, List[str]],
+    layers: Union[str, Sequence[str]],
     geometry: Union[Polygon, MultiPolygon, Tuple[float, float, float, float]],
     resolution: float,
     geo_crs: str = DEF_CRS,
@@ -62,7 +62,6 @@ def get_map(
     - ``GreyHillshade_elevationFill``
     - ``Hillshade Multidirectional``
     - ``Slope Map``
-    - ``Slope Degrees``
     - ``Hillshade Elevation Tinted``
     - ``Height Ellipsoidal``
     - ``Contour 25``
@@ -194,12 +193,13 @@ class ElevationByCoords(BaseModel):
 
     Parameters
     ----------
-    coords : list of tuple
-        List of coordinates.
     crs : str, optional
         Coordinate reference system of the input coordinates, defaults to ``EPSG:4326``.
+    coords : list of tuple
+        List of coordinates.
     source : str, optional
-        Elevation source, defaults to ``airmap``. Valid sources are: ``tnm`` and ``airmap``.
+        Elevation source, defaults to ``tep``. Valid sources are: ``tnm``, ``tep``,
+        and ``airmap``.
     expire_after : int, optional
         Expiration time for response caching in seconds, defaults to -1 (never expire).
     disable_caching : bool, optional
@@ -208,33 +208,31 @@ class ElevationByCoords(BaseModel):
 
     crs: str = DEF_CRS
     coords: List[Tuple[float, float]]
-    source: str = "airmap"
+    source: str = "tep"
     expire_after: float = EXPIRE
     disable_caching: bool = False
 
     @validator("crs")
-    def _valid_crs(cls, v: str) -> pyproj.CRS:
-        try:
-            return pyproj.CRS(v)
-        except pyproj.exceptions.CRSError as ex:
-            raise InvalidInputType("crs", "a valid CRS") from ex
+    def _valid_crs(cls, v: str) -> str:
+        return ogc_utils.validate_crs(v)
 
     @validator("coords")
     def _validate_coords(
         cls, v: List[Tuple[float, float]], values: Dict[str, str]
-    ) -> List[Tuple[float, float]]:
-        return ogc_utils.match_crs(v, values["crs"], DEF_CRS)
+    ) -> gpd.GeoSeries:
+        return gpd.GeoSeries(gpd.points_from_xy(*zip(*v)), crs=values["crs"])
 
     @validator("source")
     def _validate_source(cls, v: str) -> str:
-        valid_sources = ["tnm", "airmap"]
+        valid_sources = ["tnm", "airmap", "tep"]
         if v not in valid_sources:
             raise InvalidInputValue("source", valid_sources)
         return v
 
-    def airmap(self) -> Sequence[float]:
+    def airmap(self) -> List[float]:
         """Return list of elevations in meters."""
-        coords_chunks = tlz.partition_all(100, self.coords)
+        pts = self.coords.to_crs(DEF_CRS)  # type: ignore
+        coords_chunks = tlz.partition_all(100, zip(pts.x, pts.y))
         headers = {"Content-Type": "application/json", "charset": "utf-8"}
         urls, kwds = zip(
             *(
@@ -258,26 +256,15 @@ class ElevationByCoords(BaseModel):
         )
         return list(tlz.concat(elevations))
 
-    def tnm(self) -> Sequence[float]:
+    def tnm(self) -> List[float]:
         """Return list of elevations in meters."""
-        urls, kwds = zip(
-            *(
-                (
-                    ServiceURL().restful.nm_pqs,
-                    {
-                        "params": {
-                            "units": "Meters",
-                            "output": "json",
-                            "y": f"{lat:.5f}",
-                            "x": f"{lon:.5f}",
-                        },
-                    },
-                )
-                for lon, lat in self.coords
-            )
-        )
+        pts = self.coords.to_crs(DEF_CRS)  # type: ignore
+        kwds = [
+            {"params": {"units": "Meters", "output": "json", "x": f"{x:.5f}", "y": f"{y:.5f}"}}
+            for x, y in zip(pts.x, pts.y)
+        ]
         resp = ar.retrieve_json(
-            urls,
+            [ServiceURL().restful.nm_pqs] * len(kwds),
             kwds,
             max_workers=5,
             expire_after=self.expire_after,
@@ -287,11 +274,35 @@ class ElevationByCoords(BaseModel):
             r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
         ]
 
+    def tep(self) -> List[float]:
+        """Get elevation from 3DEP."""
+        wms_3dep = WMS(
+            ServiceURL().wms.nm_3dep,
+            layers="3DEPElevation:None",
+            outformat="image/tiff",
+            crs="EPSG:3857",
+            expire_after=self.expire_after,
+            disable_caching=self.disable_caching,
+            validation=False,
+        )
+        get_dem = tlz.partial(wms_3dep.getmap_bybox, resolution=10, box_crs=wms_3dep.crs)
+
+        points_proj = self.coords.to_crs(wms_3dep.crs)  # type: ignore
+        bounds = points_proj.buffer(30, cap_style=3)
+        da_list = [geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds]
+
+        def get_value(da: xr.DataArray, x: float, y: float) -> float:
+            nodata = da.attrs["nodatavals"][0]
+            value = da.fillna(nodata).interp(x=[x], y=[y])
+            return float(value.values[0, 0])
+
+        return [get_value(da, p.x, p.y) for da, p in zip(da_list, points_proj)]
+
 
 def elevation_bycoords(
     coords: List[Tuple[float, float]],
     crs: Union[str, pyproj.CRS] = DEF_CRS,
-    source: str = "airmap",
+    source: str = "tep",
     expire_after: float = EXPIRE,
     disable_caching: bool = False,
 ) -> List[float]:
@@ -305,11 +316,13 @@ def elevation_bycoords(
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
         Data source to be used, default to ``airmap``. Supported sources are
-        ``airmap`` (30 m resolution) and ``tnm`` (using The National Map's Bulk Point
-        Query Service with 10 m resolution). The ``tnm`` source is more accurate since it
-        uses the 1/3 arc-second DEM layer from 3DEP service but it is limited to the US.
-        It also tends to be slower than the Airmap service and more unstable.
-        It's recommended to use ``airmap`` unless you need 10-m resolution accuracy.
+        ``airmap`` (30 m resolution), ``tnm`` (using The National Map's Bulk Point
+        Query Service with 10 m resolution) and ``tep`` (using 3DEP's WMS service
+        at 10 m resolution). The ``tnm`` and ``tep`` sources are more accurate since they
+        use the 1/3 arc-second DEM layer from 3DEP service but it is limited to the US.
+        They both tend to be slower than the Airmap service. Note that ``tnm`` is bit unstable.
+        It's recommended to use ``tep`` unless 10-m resolution accuracy is not necessary which
+        in that case ``airmap`` is more appropriate.
     expire_after : int, optional
         Expiration time for response caching in seconds, defaults to -1 (never expire).
     disable_caching : bool, optional
