@@ -2,6 +2,26 @@
 History
 =======
 
+0.12.2 (unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add a new DEM source to ``elevation_bycoords`` to get elevation from
+  the National Map's 3DEP WMS service. This can replace the ``tnm`` source
+  since ``tnm`` is not stable.
+- Add a new function called ``check_3dep_availability`` to check the availability
+  of 3DEP's native resolutions within an area of interest. It returns a ``dict``
+  with keys corresponding to the available resolutions and its values are boolean
+  values indicating whether the resolution is available or not.
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Add type checking with ``typeguard`` and fixed typing issues raised by
+  ``typeguard``.
+- Refactor ``show_versions`` to ensure getting correct versions of all
+  dependencies.
+
 0.12.1 (2021-12-31)
 -------------------
 
