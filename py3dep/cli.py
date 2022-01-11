@@ -49,7 +49,7 @@ def cli() -> None:
     "-q",
     "--query_source",
     default="airmap",
-    type=click.Choice(["airmap", "tnm"], case_sensitive=False),
+    type=click.Choice(["airmap", "tnm", "tep"], case_sensitive=False),
     help="Source of the elevation data.",
 )
 @save_arg
@@ -80,7 +80,7 @@ def coords(
     elev["elevation"] = py3dep.elevation_bycoords(coords_list, "epsg:4326", query_source)
 
     Path(save_dir).mkdir(parents=True, exist_ok=True)
-    elev.astype("f8").to_csv(Path(save_dir, f"{fpath.stem}_elevation.csv"))
+    elev.astype("f4").to_csv(Path(save_dir, f"{fpath.stem}_elevation.csv"))
     click.echo("Done.")
 
 
@@ -120,7 +120,7 @@ def geometry(
     target_df = gpd.read_file(fpath)
     if target_df.crs is None:
         raise MissingCRS
-    crs = target_df.crs
+    crs = target_df.crs.to_string()
 
     target_df = get_target_df(target_df, ["id", "res", "geometry"])
     args_list = ((g, r, Path(save_dir, f"{i}.nc")) for i, r, g in target_df.itertuples(index=False))
@@ -134,3 +134,4 @@ def geometry(
     ) as bar:
         for geo, res, f in bar:
             py3dep.get_map(layers, geo, res, geo_crs=crs, crs=DEF_CRS).to_netcdf(f)
+    click.echo("Done.")
