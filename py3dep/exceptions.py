@@ -1,6 +1,18 @@
 """Customized Py3DEP exceptions."""
 from typing import List, Optional
 
+import pygeoogc as ogc
+
+
+class ServiceUnavailable(ogc.ServiceUnavailable):
+    """Exception raised when the service is not available.
+
+    Parameters
+    ----------
+    url : str
+        The server url
+    """
+
 
 class InvalidInputType(Exception):
     """Exception raised when a function argument type is invalid.

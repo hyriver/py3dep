@@ -5,6 +5,7 @@ from .exceptions import (
     MissingColumns,
     MissingCRS,
     MissingDependency,
+    ServiceUnavailable,
 )
 from .print_versions import show_versions
 from .py3dep import check_3dep_availability, elevation_bycoords, elevation_bygrid, get_map
@@ -34,6 +35,7 @@ __all__ = [
     "MissingCRS",
     "MissingDependency",
     "MissingAttribute",
+    "ServiceUnavailable",
     "InvalidInputType",
     # Constants
     "__version__",
