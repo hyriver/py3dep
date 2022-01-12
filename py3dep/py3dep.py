@@ -32,6 +32,7 @@ LAYERS = [
     "GreyHillshade_elevationFill",
     "Hillshade Multidirectional",
     "Slope Map",
+    "Slope Degrees",
     "Hillshade Elevation Tinted",
     "Height Ellipsoidal",
     "Contour 25",
@@ -62,6 +63,7 @@ def get_map(
     - ``GreyHillshade_elevationFill``
     - ``Hillshade Multidirectional``
     - ``Slope Map``
+    - ``Slope Degrees``
     - ``Hillshade Elevation Tinted``
     - ``Height Ellipsoidal``
     - ``Contour 25``

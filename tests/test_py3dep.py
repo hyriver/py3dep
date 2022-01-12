@@ -18,7 +18,7 @@ ALT_CRS = "epsg:3857"
 GEOM = Polygon(
     [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
 )
-LYR = "Aspect Degrees"
+LYR = "Slope Degrees"
 SMALL = 1e-3
 
 
@@ -31,7 +31,7 @@ def test_getmap():
     dem_10.rio.to_raster(fpath)
     dem_10 = rxr.open_rasterio(fpath)
     assert (
-        sorted(ds.keys()) == ["aspect_degrees", "elevation"]
+        sorted(ds.keys()) == ["elevation", "slope_degrees"]
         and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 7e-2
     )
     dem_10.close()
@@ -57,7 +57,7 @@ class TestByCoords:
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1e3)
     slope = py3dep.deg2mpm(slope)
-    assert abs(slope.mean().compute().item() - (-156315.375)) < SMALL
+    assert abs(slope.mean().compute().item() - 0.050) < SMALL
 
 
 def test_grid():
