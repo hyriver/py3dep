@@ -21,8 +21,6 @@ Internal Changes
   ``typeguard``.
 - Refactor ``show_versions`` to ensure getting correct versions of all
   dependencies.
-- Remove ``Slope Degrees`` from the list of supported layers since 3DEP's
-  service does not support it anymore.
 
 0.12.1 (2021-12-31)
 -------------------
