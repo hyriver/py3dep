@@ -14,6 +14,8 @@ New Features
   of 3DEP's native resolutions within an area of interest. It returns a ``dict``
   with keys corresponding to the available resolutions and its values are boolean
   values indicating whether the resolution is available or not.
+- Replace no data values of ``slope`` in ``deg2mm`` with ``np.nan`` so they don not
+  get converted to another values. The output of this function has ``np.float64`` type.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
