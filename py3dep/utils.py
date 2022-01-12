@@ -148,11 +148,15 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
         Slope in meter/meter. The name is set to ``slope`` and the ``units`` attribute
         is set to ``m/m``.
     """
-    attrs = slope.attrs
-    slope = np.tan(np.deg2rad(slope))
-    slope.attrs = attrs
-    slope.name = "slope"
-    slope.attrs["units"] = "m/m"
+    with xr.set_options(keep_attrs=True):  # type: ignore
+        nodata = slope._FillValue if hasattr(slope, "_FillValue") else slope.nodatavals[0]
+        slope = slope.where(slope != nodata, drop=False)
+        slope = np.tan(np.deg2rad(slope))
+        slope.attrs["nodatavals"] = (np.nan,)
+        if hasattr(slope, "_FillValue"):
+            slope.attrs["_FillValue"] = np.nan
+        slope.name = "slope"
+        slope.attrs["units"] = "m/m"
     return slope
 
 
