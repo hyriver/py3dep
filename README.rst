@@ -121,7 +121,6 @@ the performance significantly. The 3DEP web service includes the following layer
 - GreyHillshade Elevation Fill
 - Hillshade Multidirectional
 - Slope Map
-- Slope Degrees
 - Hillshade Elevation Tinted
 - Height Ellipsoidal
 - Contour 25
@@ -216,7 +215,7 @@ The ``coords`` sub-command is as follows:
         $ py3dep coords coords.csv -q airmap -s topo_dir
 
     Options:
-    -q, --query_source [airmap|tnm]
+    -q, --query_source [airmap|tnm|tep]
                                     Source of the elevation data.
     -s, --save_dir PATH             Path to a directory to save the requested
                                     files. Extension for the outputs is either
@@ -306,7 +305,7 @@ add the elevation as a new variable to the dataset:
     clm["elevation"] = clm.elevation.where(~np.isnan(clm.isel(time=0).tmin), drop=True)
     clm.attrs.update(attrs)
 
-Now, let's get street network data using `osmnx <https://github.com/gboeing/osmnx>`_ package
+Now, let's get street network data using `osmnx <https://github.com/gboeing/osmnx>`__ package
 and add elevation data for its nodes using ``elevation_bycoords`` function.
 
 .. code-block:: python
