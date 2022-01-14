@@ -46,7 +46,7 @@ def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
         rda.geotransform = geoutils.transform2tuple(dem.rio.transform())
         rda = rd.FillDepressions(rda, epsilon=False)
         dem.data = rd.ResolveFlats(rda)
-        return dem.where(dem > nodata, dem.attrs["_FillValue"])  # type: ignore
+        return dem.where(dem > nodata, dem.attrs["nodatavals"][0])  # type: ignore
 
 
 def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
