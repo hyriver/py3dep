@@ -105,9 +105,10 @@ repos:
       files: py3dep
       additional_dependencies:
       - types-all
-      - git+https://github.com/cheginit/async_retriever.git
+      - xarray
+      - git+https://github.com/cheginit/async_retriever.git@main
       - git+https://github.com/cheginit/pygeoogc.git@main
-      - git+https://github.com/cheginit/pygeoutils.git
+      - git+https://github.com/cheginit/pygeoutils.git@main
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.1
