@@ -14,11 +14,15 @@ New Features
   of 3DEP's native resolutions within an area of interest. It returns a ``dict``
   with keys corresponding to the available resolutions and its values are boolean
   values indicating whether the resolution is available or not.
-- Replace no data values of ``slope`` in ``deg2mm`` with ``np.nan`` so they don not
+- Replace no data values of ``slope`` in ``deg2mm`` with ``np.nan``, so they do not
   get converted to another values. The output of this function has ``np.float64`` type.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Refactor ``ElevationByCoords`` by using ``__post_init__`` for validating the
+  input parameters rather than ``pydantic``'s validators.
+- Refactor ``elevation_bygrid`` by using ``get_map`` to get DEM and ``rioxarray``
+  for re-projection.
 - Add type checking with ``typeguard`` and fixed typing issues raised by
   ``typeguard``.
 - Refactor ``show_versions`` to ensure getting correct versions of all
