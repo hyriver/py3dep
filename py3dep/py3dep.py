@@ -1,5 +1,7 @@
 """Get data from 3DEP database."""
 import contextlib
+import itertools
+from dataclasses import dataclass
 from typing import Dict, List, Sequence, Tuple, Union
 
 import async_retriever as ar
@@ -7,20 +9,15 @@ import cytoolz as tlz
 import geopandas as gpd
 import pygeoutils as geoutils
 import pyproj
+import rioxarray  # noqa: F401
 import xarray as xr
-from pydantic import BaseModel, validator
-from pygeoogc import (
-    WMS,
-    ArcGISRESTful,
-    InvalidInputType,
-    InvalidInputValue,
-    ServiceError,
-    ServiceURL,
-)
+from pygeoogc import WMS, ArcGISRESTful, ServiceError, ServiceURL
 from pygeoogc import utils as ogc_utils
+from rasterio.enums import Resampling
 from shapely.geometry import MultiPolygon, Polygon
 
 from . import utils
+from .exceptions import InvalidInputType, InvalidInputValue
 
 DEF_CRS = "epsg:4326"
 EXPIRE = -1
@@ -45,8 +42,8 @@ def get_map(
     layers: Union[str, Sequence[str]],
     geometry: Union[Polygon, MultiPolygon, Tuple[float, float, float, float]],
     resolution: float,
-    geo_crs: str = DEF_CRS,
-    crs: str = DEF_CRS,
+    geo_crs: Union[str, pyproj.CRS] = DEF_CRS,
+    crs: Union[str, pyproj.CRS] = DEF_CRS,
     expire_after: int = EXPIRE,
     disable_caching: bool = False,
 ) -> Union[xr.Dataset, xr.DataArray]:
@@ -95,38 +92,44 @@ def get_map(
     xarray.DataArray or xarray.Dataset
         The requested topographic data as an ``xarray.DataArray`` or ``xarray.Dataset``.
     """
-    _layers = list(layers) if isinstance(layers, (tuple, list)) else [layers]
+    _layers = list(layers) if isinstance(layers, (list, tuple)) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
     if len(invalid) > 0:
-        raise InvalidInputValue("layers", LAYERS)
+        raise InvalidInputValue(f"layers ({invalid})", LAYERS)
 
     if "DEM" in _layers:
         _layers[_layers.index("DEM")] = "None"
 
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
+    wms_url = ServiceURL().wms.nm_3dep
+    valid_crs = ogc_utils.valid_wms_crs(wms_url)
+    if ogc_utils.validate_crs(crs).lower() not in valid_crs:
+        raise InvalidInputValue("crs", valid_crs)
+
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
     wms = WMS(
-        ServiceURL().wms.nm_3dep,
+        wms_url,
         layers=_layers,
         outformat="image/tiff",
         crs=crs,
         expire_after=expire_after,
         disable_caching=disable_caching,
+        validation=False,
     )
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
     if isinstance(geometry, (Polygon, MultiPolygon)):
-        ds: xr.Dataset = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+        ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
     else:
         ds = geoutils.gtiff2xarray(r_dict)
     valid_layers = wms.get_validlayers()
-    return utils.rename_layers(ds, list(valid_layers))
+    return utils.rename_layers(ds, list(valid_layers))  # type: ignore
 
 
 def elevation_bygrid(
     xcoords: Sequence[float],
     ycoords: Sequence[float],
-    crs: str,
+    crs: Union[str, pyproj.CRS],
     resolution: float,
     depression_filling: bool = False,
     expire_after: int = EXPIRE,
@@ -142,7 +145,7 @@ def elevation_bygrid(
         List of x-coordinates of a grid.
     ycoords : list
         List of y-coordinates of a grid.
-    crs : str
+    crs : str or pyproj.CRS
         The spatial reference system of the input grid, defaults to ``EPSG:4326``.
     resolution : float
         The accuracy of the output, defaults to 10 m which is the highest
@@ -161,36 +164,34 @@ def elevation_bygrid(
     xarray.DataArray
         Elevations of the input coordinates as a ``xarray.DataArray``.
     """
-    bbox = (min(xcoords), min(ycoords), max(xcoords), max(ycoords))
+    wms_crs = "epsg:3857"
+    pts_crs = ogc_utils.validate_crs(crs)
 
-    ratio_min = 0.01
-    ratio_x = abs((bbox[2] - bbox[0]) / bbox[0])
-    ratio_y = abs((bbox[3] - bbox[1]) / bbox[1])
-    if (ratio_x < ratio_min) or (ratio_y < ratio_min):
-        rad = ratio_min * abs(bbox[0])
-        bbox = (bbox[0] - rad, bbox[1] - rad, bbox[2] + rad, bbox[3] + rad)
-
-    wms = WMS(
-        ServiceURL().wms.nm_3dep,
-        layers="3DEPElevation:None",
-        outformat="image/tiff",
-        crs=DEF_CRS,
-        expire_after=expire_after,
-        disable_caching=disable_caching,
-        validation=False,
+    points = gpd.GeoSeries(
+        gpd.points_from_xy(*zip(*itertools.product(xcoords, ycoords)), crs=pts_crs)
     )
-    r_dict = wms.getmap_bybox(bbox, resolution, box_crs=crs)
-    dem = utils.reproject_gtiff(r_dict, crs)
+    points = points.to_crs(crs=wms_crs).buffer(2 * resolution)
+    bbox = tuple(points.total_bounds)
+
+    dem: xr.DataArray = get_map(  # type: ignore
+        "DEM", bbox, resolution, wms_crs, wms_crs, expire_after, disable_caching
+    )
+
+    attrs = dem.attrs
+    attrs["crs"] = pts_crs
+    encoding = dem.encoding
+    dem = dem.rio.reproject(pts_crs, resampling=Resampling.bilinear)
+    dem.rio.update_attrs(attrs, inplace=True)
+    dem.rio.update_encoding(encoding, inplace=True)
 
     if depression_filling:
         dem = utils.fill_depressions(dem)
 
-    dem = dem.interp(x=list(xcoords), y=list(ycoords))
-    valid_layers = wms.get_validlayers()
-    return utils.rename_layers(dem, list(valid_layers))
+    return dem.interp(x=list(xcoords), y=list(ycoords))
 
 
-class ElevationByCoords(BaseModel):
+@dataclass
+class ElevationByCoords:
     """Elevation model class.
 
     Parameters
@@ -208,28 +209,18 @@ class ElevationByCoords(BaseModel):
         If ``True``, disable caching requests, defaults to False.
     """
 
-    crs: str = DEF_CRS
     coords: List[Tuple[float, float]]
+    crs: Union[str, pyproj.CRS] = DEF_CRS
     source: str = "tep"
     expire_after: float = EXPIRE
     disable_caching: bool = False
 
-    @validator("crs")
-    def _valid_crs(cls, v: str) -> str:
-        return ogc_utils.validate_crs(v)
-
-    @validator("coords")
-    def _validate_coords(
-        cls, v: List[Tuple[float, float]], values: Dict[str, str]
-    ) -> gpd.GeoSeries:
-        return gpd.GeoSeries(gpd.points_from_xy(*zip(*v)), crs=values["crs"])
-
-    @validator("source")
-    def _validate_source(cls, v: str) -> str:
+    def __post_init__(self) -> None:
+        self.crs = ogc_utils.validate_crs(self.crs)
+        self.coords = gpd.GeoSeries(gpd.points_from_xy(*zip(*self.coords)), crs=self.crs)
         valid_sources = ["tnm", "airmap", "tep"]
-        if v not in valid_sources:
+        if self.source not in valid_sources:
             raise InvalidInputValue("source", valid_sources)
-        return v
 
     def airmap(self) -> List[float]:
         """Return list of elevations in meters."""
@@ -375,7 +366,7 @@ def check_3dep_availability(
     {'1m': True, '3m': False, '5m': False, '10m': True, '30m': True, '60m': False}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
-        raise InvalidInputType("bbox", "a tuple of 4 elements")
+        raise InvalidInputType("bbox", "a tuple of length 4")
 
     res_layers = {
         "1m": 18,
