@@ -1,11 +1,10 @@
 """Top-level package for Py3DEP."""
 from .exceptions import (
     InvalidInputType,
-    MissingAttribute,
+    InvalidInputValue,
     MissingColumns,
     MissingCRS,
     MissingDependency,
-    ServiceUnavailable,
 )
 from .print_versions import show_versions
 from .py3dep import check_3dep_availability, elevation_bycoords, elevation_bygrid, get_map
@@ -34,9 +33,8 @@ __all__ = [
     "MissingColumns",
     "MissingCRS",
     "MissingDependency",
-    "MissingAttribute",
-    "ServiceUnavailable",
     "InvalidInputType",
+    "InvalidInputValue",
     # Constants
     "__version__",
 ]

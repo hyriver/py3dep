@@ -1,20 +1,10 @@
 """Customized Py3DEP exceptions."""
-from typing import List, Optional
+from typing import List
 
-import pygeoogc as ogc
-
-
-class ServiceUnavailable(ogc.ServiceUnavailable):
-    """Exception raised when the service is not available.
-
-    Parameters
-    ----------
-    url : str
-        The server url
-    """
+import async_retriever as ar
 
 
-class InvalidInputType(Exception):
+class InvalidInputType(ar.InvalidInputType):
     """Exception raised when a function argument type is invalid.
 
     Parameters
@@ -27,14 +17,17 @@ class InvalidInputType(Exception):
         An example of a valid form of the argument, defaults to None.
     """
 
-    def __init__(self, arg: str, valid_type: str, example: Optional[str] = None) -> None:
-        self.message = f"The {arg} argument should be of type {valid_type}"
-        if example is not None:
-            self.message += f":\n{example}"
-        super().__init__(self.message)
 
-    def __str__(self) -> str:
-        return self.message
+class InvalidInputValue(ar.InvalidInputValue):
+    """Exception raised for invalid input.
+
+    Parameters
+    ----------
+    inp : str
+        Name of the input parameter
+    valid_inputs : tuple
+        List of valid inputs
+    """
 
 
 class MissingColumns(Exception):
@@ -70,25 +63,6 @@ class MissingCRS(Exception):
 
     def __init__(self) -> None:
         self.message = "The input GeoDataFrame is missing CRS."
-        super().__init__(self.message)
-
-    def __str__(self) -> str:
-        return self.message
-
-
-class MissingAttribute(Exception):
-    """Exception raised for missing attribute.
-
-    Parameters
-    ----------
-    obj : object
-        Object that is missing the attribute.
-    attr : str
-        Name of the missing attribute
-    """
-
-    def __init__(self, obj: str, attr: str) -> None:
-        self.message = f"The ``{obj}`` object is missing {attr} attribute."
         super().__init__(self.message)
 
     def __str__(self) -> str:
