@@ -39,12 +39,9 @@ def test_getmap():
 
 
 def test_fill_depressions():
-    geom = Polygon(
-        [[-69.77, 45.17], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
-    )
-    ds = py3dep.get_map("DEM", geom, 1e3)
+    ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
-    assert abs(ds.mean().compute().item() - 294.584) < SMALL
+    assert abs(ds.mean().compute().item() - 296.206) < SMALL
 
 
 class TestByCoords:
