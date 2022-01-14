@@ -51,7 +51,7 @@ class TestByCoords:
 
     def test_tep(self):
         tep = py3dep.elevation_bycoords(self.coords * 101, pyproj.CRS(ALT_CRS), source="tep")
-        assert abs(sum(set(tep)) - 356.0854) < SMALL
+        assert abs(sum(set(tep)) - 356.085) < SMALL
 
 
 def test_deg2mpm():
@@ -69,7 +69,7 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
-    assert ((elev_fill - elev).sum().compute().item() - 1935.074) < SMALL
+    assert ((elev_fill - elev).sum().compute().item() - 2710.839) < SMALL
 
 
 def test_check_3dep_availability():
