@@ -34,14 +34,14 @@ repos:
       name: Sort imports with isort
 
   - repo: https://github.com/psf/black
-    rev: 21.12b0
+    rev: 22.1.0
     hooks:
     - id: black
       name: Autoformat with black
       args: [-t, py38, -l, "100"]
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.12.0
+    rev: v1.12.1
     hooks:
     - id: blacken-docs
       name: Autoformat codes in docstrings with blacken-docs
@@ -118,7 +118,7 @@ repos:
       - git+https://github.com/cheginit/pygeoutils.git@main
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.1
+    rev: 1.7.2
     hooks:
     - id: bandit
       name: Check for security issues with bandit
