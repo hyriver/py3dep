@@ -5,10 +5,10 @@ channels:
 dependencies:
   # async_retriever
   - aiodns
-  - aiohttp
+  - aiohttp>=3.8.1
   - aiohttp-client-cache>=0.5.1
   - aiosqlite
-  - brotlipy
+  - brotli
   - cchardet
   - cytoolz
   - importlib_metadata
@@ -21,26 +21,26 @@ dependencies:
   - pyyaml
   - pyproj>=1.2
   - requests
-  - requests-cache
+  - requests-cache>=0.8
   - shapely
   - urllib3
 
   # pygeoutils deps
-  - dask
+  - dask-core
   - geopandas>=0.8
   - netcdf4
   - numpy>=1.17
+  - pygeos
   - rasterio>=1.2
+  - scipy
   - xarray>=0.18
   - rioxarray>=0.8
 
   # py3dep
-  - click
-  - scipy
-  - richdem
+  - click>=7.0
+  - richdem>=0.3.4
 
-  # deps to speed up xarray and geopandas
-  - pygeos
+  # optional deps to speed up xarray
   - bottleneck
 
   # test deps
