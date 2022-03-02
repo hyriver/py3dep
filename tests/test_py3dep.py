@@ -6,6 +6,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
+import pytest
 import rioxarray as rxr
 from pygeoogc import utils
 from shapely.geometry import Polygon
@@ -44,20 +45,14 @@ def test_fill_depressions():
     assert abs(ds.mean().compute().item() - 296.206) < SMALL
 
 
-class TestByCoords:
+@pytest.mark.parametrize(
+    "source,expected",
+    [("airmap", 363), ("tnm", 356.59), ("tep", 356.088)],
+)
+def test_bycoords(source, expected):
     coords = [(-7766049.664788851, 5691929.739021257)]
-
-    def test_airmap(self):
-        airmap = py3dep.elevation_bycoords(self.coords * 101, ALT_CRS, source="airmap")
-        assert set(airmap) == {363}
-
-    def test_tnm(self):
-        tnm = py3dep.elevation_bycoords(self.coords * 101, pyproj.CRS(ALT_CRS), source="tnm")
-        assert set(tnm) == {356.59}
-
-    def test_tep(self):
-        tep = py3dep.elevation_bycoords(self.coords * 101, pyproj.CRS(ALT_CRS), source="tep")
-        assert abs(sum(set(tep)) - 356.085) < SMALL
+    dem = py3dep.elevation_bycoords(coords * 101, pyproj.CRS(ALT_CRS), source=source)
+    assert abs(sum(set(dem)) - expected) < SMALL
 
 
 def test_deg2mpm():
