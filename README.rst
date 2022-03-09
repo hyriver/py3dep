@@ -104,7 +104,7 @@ Features
 --------
 
 Py3DEP is a part of `HyRiver <https://github.com/cheginit/HyRiver>`__ software stack that
-is designed to aid in watershed analysis through web services. This package provides
+is designed to aid in hydroclimate analysis through web services. This package provides
 access to the `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__
 database which is a part of the
 `National Map services <https://viewer.nationalmap.gov/services/>`__.
