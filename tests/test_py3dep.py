@@ -9,7 +9,8 @@ import pyproj
 import pytest
 import rioxarray as rxr
 from pygeoogc import utils
-from shapely.geometry import Polygon
+from shapely import ops
+from shapely.geometry import MultiLineString, Polygon
 
 import py3dep
 from py3dep.cli import cli
@@ -19,8 +20,24 @@ ALT_CRS = "epsg:3857"
 GEOM = Polygon(
     [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
 )
+LINE = MultiLineString(
+    [
+        [[-69.77, 45.07], [-69.31, 45.07]],
+        [[-69.31, 45.07], [-69.31, 45.45]],
+        [[-69.31, 45.45], [-69.77, 45.45]],
+    ]
+)
 LYR = "Slope Degrees"
 SMALL = 1e-3
+
+
+def test_profile():
+    ep = py3dep.elevation_profile(LINE, 10)
+    epm = py3dep.elevation_profile(ops.linemerge(LINE), 10)
+    assert (
+        abs(ep.mean().compute().item() - 397.6385) < SMALL
+        and abs(epm.mean().compute().item() - 397.6385) < SMALL
+    )
 
 
 def test_getmap():
@@ -76,6 +93,14 @@ def test_grid():
 def test_check_3dep_availability():
     avail = py3dep.check_3dep_availability(GEOM.bounds)
     assert avail["1m"] and avail["10m"] and avail["30m"]
+
+
+def test_query_3dep_source():
+    src = py3dep.query_3dep_sources(GEOM.bounds)
+    res_all = src.groupby("dem_res")["OBJECTID"].count().to_dict()
+    src = py3dep.query_3dep_sources(GEOM.bounds, res="1m")
+    res_1m = src.groupby("dem_res")["OBJECTID"].count().to_dict()
+    assert res_all == {"10m": 8, "1m": 4, "30m": 8} and res_1m == {"1m": 4}
 
 
 class TestCLI:
