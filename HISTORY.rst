@@ -2,6 +2,17 @@
 History
 =======
 
+0.12.3 (unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add a new function called ``query_3dep_sources`` for querying bounds of 3DEP's
+  data sources within a bounding box.
+- Add a new function called ``elevation_profile`` for getting elevation profile
+  along a line at a given spacing. This function converts the line to a B-spline
+  and then calculates the elevation along the spline at a given uniform spacing.
+
 0.12.2 (2022-01-15)
 -------------------
 
@@ -15,7 +26,7 @@ New Features
   with keys corresponding to the available resolutions and its values are boolean
   values indicating whether the resolution is available or not.
 - Replace no data values of ``slope`` in ``deg2mm`` with ``np.nan``, so they do not
-  get converted to another values. The output of this function has ``np.float64`` type.
+  get converted to another value. The output of this function has ``np.float64`` type.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
@@ -93,7 +104,8 @@ Internal Changes
   called ``utils``. Both ``deg2mpm`` and ``fill_depressions`` functions are still accessible
   from ``py3dep`` directly.
 - Increase the test coverage.
-- Use ``click``'s internal function, ``click..testing.CliRunner``, to run the CLI tests.
+- Use one of the ``click``'s internal functions, ``click..testing.CliRunner``,
+  to run the CLI tests.
 
 0.11.2 (2021-09-17)
 -------------------
@@ -113,16 +125,16 @@ Internal Changes
 -------------------
 
 The first highlight of this release is a major refactor of ``elevation_bycoords`` by
-adding support for the Bulk Point Query Service and improving overall performance
+adding support for the Bulk Point Query Service and improving the overall performance
 of the function. Another highlight is support for performing depression filling
-in ``elevation_bygrid`` prior to sampling the underlying DEM.
+in ``elevation_bygrid`` before sampling the underlying DEM.
 
 New Features
 ~~~~~~~~~~~~
 - Refactor ``elevation_bycoords`` function to add support for getting
   elevations of a list of coordinates via The National Map's
   `Point Query Service <https://apps.nationalmap.gov/bulkpqs/>`__. This service is more
-  accurate than Airmap but it's limited to the US only. You can select the source via
+  accurate than Airmap, but it's limited to the US only. You can select the source via
   a new argument called ``source``. You can set it to ``source=tnm`` to use the TNM
   service. The default is ``tnm``.
 - Refactor ``elevation_bygrid`` function to add a new capability via ``fill_depressions``
