@@ -311,7 +311,7 @@ def __get_idx(d_sp: np.ndarray, distance: float) -> np.ndarray:  # type: ignore
 
 def __get_spline_params(
     line: LineString, n_seg: int, distance: float, crs: Union[str, pyproj.CRS]
-) -> Tuple[np.ndarray, np.ndarray]:  # type: ignore[type-arg]
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:  # type: ignore[type-arg]
     """Get perpendiculars to a line."""
     _n_seg = n_seg
     spline = __get_spline(line, _n_seg, crs)
@@ -320,7 +320,7 @@ def __get_spline_params(
         _n_seg *= 2
         spline = __get_spline(line, _n_seg, crs)
         idx = __get_idx(spline.distance, distance)
-    return spline.x[idx].flatten(), spline.y[idx].flatten()
+    return spline.x[idx].flatten(), spline.y[idx].flatten(), spline.distance[idx].flatten()
 
 
 def elevation_profile(
@@ -328,7 +328,7 @@ def elevation_profile(
     spacing: float,
     dem_res: float = 10,
     crs: Union[str, pyproj.CRS] = DEF_CRS,
-) -> xr.DataArray:
+) -> xr.Dataset:
     """Get the elevation profile along a line at a given uniform spacing.
 
     This function converts the line to a B-spline and then calculates the elevation
@@ -337,11 +337,11 @@ def elevation_profile(
     Parameters
     ----------
     lines : LineString or MultiLineString
-        Line segment(s) to be profiled. If ``MultiLineString``,
+        Line segment(s) to be profiled. If its type is ``MultiLineString``,
         it will be converted to a single ``LineString`` and if this operation
         fails, a ``InvalidInputType`` will be raised.
     spacing : float
-        Spacing between the sample points in meters.
+        Spacing between the sample points along the line in meters.
     dem_res : float, optional
         Resolution of the DEM source to use in meter, defaults to 10.
     crs : str or pyproj.CRS, optional
@@ -349,8 +349,10 @@ def elevation_profile(
 
     Returns
     -------
-    xarray.DataArray
-        Elevation profile with dimension ``z``.
+    xarray.Dataset
+        Elevation profile with dimension ``z`` and three coordinates: ``x``, ``y``,
+        and ``distance``. The ``distance`` coordinate is in meters and represents
+        the distance from the start of the line.
     """
     if not isinstance(lines, (LineString, MultiLineString)):
         raise InvalidInputType("lines", "LineString or MultiLineString")
@@ -364,17 +366,19 @@ def elevation_profile(
 
     crs_prj = "epsg:5070"
     geom = gpd.GeoSeries([path], crs=crs).to_crs(crs_prj)
-    geom_buff = geom.buffer(10 * dem_res).unary_union
+    geom_buff = geom.buffer(20 * dem_res).unary_union
     dem = get_map("DEM", geom_buff, dem_res, crs_prj)
 
     n_seg = int(np.ceil(geom.length.sum() / spacing)) * 100
-    x, y = __get_spline_params(geom.geometry[0], n_seg, spacing, crs_prj)
+    x, y, distance = __get_spline_params(geom.geometry[0], n_seg, spacing, crs_prj)
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, dem.rio.crs))
 
     elevation = dem.interp(x=("z", list(xp)), y=("z", list(yp)), method="nearest")
+    elevation = elevation.drop_vars("spatial_ref")
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
     elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
-    return elevation.drop_vars("spatial_ref")  # type: ignore
+    elevation["distance"] = ("z", distance)
+    return elevation
 
 
 def check_3dep_availability(
