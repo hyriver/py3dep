@@ -328,7 +328,7 @@ def elevation_profile(
     spacing: float,
     dem_res: float = 10,
     crs: Union[str, pyproj.CRS] = DEF_CRS,
-) -> xr.Dataset:
+) -> xr.DataArray:
     """Get the elevation profile along a line at a given uniform spacing.
 
     This function converts the line to a B-spline and then calculates the elevation
@@ -349,10 +349,10 @@ def elevation_profile(
 
     Returns
     -------
-    xarray.Dataset
+    xarray.DataArray
         Elevation profile with dimension ``z`` and three coordinates: ``x``, ``y``,
-        and ``distance``. The ``distance`` coordinate is in meters and represents
-        the distance from the start of the line.
+        and ``distance``. The ``distance`` coordinate is the distance from the start
+        of the line in meters.
     """
     if not isinstance(lines, (LineString, MultiLineString)):
         raise InvalidInputType("lines", "LineString or MultiLineString")
@@ -378,7 +378,7 @@ def elevation_profile(
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
     elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
     elevation["distance"] = ("z", distance)
-    return elevation
+    return elevation  # type: ignore
 
 
 def check_3dep_availability(
