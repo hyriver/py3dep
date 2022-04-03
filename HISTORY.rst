@@ -8,7 +8,9 @@ History
 New Features
 ~~~~~~~~~~~~
 - Add a new function called ``query_3dep_sources`` for querying bounds of 3DEP's
-  data sources within a bounding box.
+  data sources within a bounding box. It returns a geo-dataframe that contains
+  the bounding box of each data source and a column ``dem_res`` identifying the
+  resolution of the raw topographic data within each geometry.
 - Add a new function called ``elevation_profile`` for getting elevation profile
   along a line at a given spacing. This function converts the line to a B-spline
   and then calculates the elevation along the spline at a given uniform spacing.
