@@ -2,7 +2,7 @@
 History
 =======
 
-0.12.3 (unreleased)
+0.13.0 (2022-04-03)
 -------------------
 
 New Features
@@ -12,6 +12,25 @@ New Features
 - Add a new function called ``elevation_profile`` for getting elevation profile
   along a line at a given spacing. This function converts the line to a B-spline
   and then calculates the elevation along the spline at a given uniform spacing.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- Remove caching-related arguments from all functions since now they
+  can be set globally via three environmental variables:
+
+  * ``HYRIVER_CACHE_NAME``: Path to the caching SQLite database.
+  * ``HYRIVER_CACHE_EXPIRE``: Expiration time for cached requests in seconds.
+  * ``HYRIVER_CACHE_DISABLE``: Disable reading/writing from/to the cache file.
+
+  You can do this like so:
+
+.. code-block:: python
+
+    import os
+
+    os.environ["HYRIVER_CACHE_NAME"] = "path/to/file.sqlite"
+    os.environ["HYRIVER_CACHE_EXPIRE"] = "3600"
+    os.environ["HYRIVER_CACHE_DISABLE"] = "true"
 
 0.12.2 (2022-01-15)
 -------------------
