@@ -139,10 +139,31 @@ Moreover, Py3DEP offers some additional utilities:
 
 You can find some example notebooks `here <https://github.com/cheginit/HyRiver-examples>`__.
 
-Moreover, to fully utilize the capabilities of the 3DEP, under-the-hood, Py3DEP uses
+Moreover, under the hood, Py3DEP uses
 `AsyncRetriever <https://github.com/cheginit/async_retriever>`__
-for retrieving topographic data asynchronously with persistent caching. This improves the
-reliability and speed of data retrieval significantly.
+for making requests asynchronously with persistent caching. This improves the
+reliability and speed of data retrieval significantly. AsyncRetriever caches all request/response
+pairs and upon making an already cached request, it will retrieve the responses from the cache
+if the server's response is unchanged.
+
+You can control the request/response caching behavior by setting the following
+environment variables:
+
+* ``HYRIVER_CACHE_NAME``: Path to the caching SQLite database. It defaults to
+  ``./cache/aiohttp_cache.sqlite``
+* ``HYRIVER_CACHE_EXPIRE``: Expiration time for cached requests in seconds. It defaults to
+  -1 (never expire).
+* ``HYRIVER_CACHE_DISABLE``: Disable reading/writing from/to the cache. The default is false.
+
+For example, in your code before making any requests you can do:
+
+.. code-block:: python
+
+    import os
+
+    os.environ["HYRIVER_CACHE_NAME"] = "path/to/file.sqlite"
+    os.environ["HYRIVER_CACHE_EXPIRE"] = "3600"
+    os.environ["HYRIVER_CACHE_DISABLE"] = "true"
 
 You can also try using Py3DEP without installing
 it on your system by clicking on the binder badge. A Jupyter Lab
