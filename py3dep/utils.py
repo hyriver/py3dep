@@ -70,8 +70,10 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
     with xr.set_options(keep_attrs=True):  # type: ignore
         if hasattr(slope, "_FillValue"):
             nodata = slope.attrs["_FillValue"]
-        else:
+        elif hasattr(slope, "nodatavals"):
             nodata = slope.attrs["nodatavals"][0]
+        else:
+            nodata = np.nan
         slope = slope.where(slope != nodata, drop=False)
         slope = np.tan(np.deg2rad(slope))
         slope.attrs["nodatavals"] = (np.nan,)
