@@ -2,6 +2,14 @@
 History
 =======
 
+0.13.1 (unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- In ``deg2mpm`` function look for ``_FillValue`` and ``nodatavals`` in
+  the attributes and if not found, fall back to ``numpy.nan``.
+
 0.13.0 (2022-04-03)
 -------------------
 
