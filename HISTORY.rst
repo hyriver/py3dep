@@ -10,6 +10,11 @@ New Features
 - In ``deg2mpm`` function look for ``_FillValue`` and ``nodatavals`` in
   the attributes and if not found, fall back to ``numpy.nan``.
 
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Ensure that the ``deg2mpm`` function uses ``dask`` if the input is ``dask``-enabled.
+- Ensure that the ``get_map`` function returns an array with correct grid mapping.
+
 0.13.0 (2022-04-03)
 -------------------
 
