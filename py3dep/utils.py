@@ -99,8 +99,7 @@ def rename_layers(ds: X, valid_layers: List[str]) -> X:
         ds.name = rename[str(ds.name)]
     else:
         ds = ds.rename({n: rename[str(n)] for n in ds})
-
-    return ds.drop_vars("spatial_ref").rio.write_grid_mapping("spatial_ref")  # type: ignore
+    return ds
 
 
 class RESTful:
