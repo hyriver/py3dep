@@ -13,7 +13,8 @@ New Features
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Ensure that the ``deg2mpm`` function uses ``dask`` if the input is ``dask``-enabled.
-- Ensure that the ``get_map`` function returns an array with correct grid mapping.
+- In the ``elevation_profile`` function use a bounding box to get DEM and a linear
+  interpolation to get the elevation along the profile.
 
 0.13.0 (2022-04-03)
 -------------------
