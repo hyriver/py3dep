@@ -75,7 +75,13 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
         else:
             nodata = np.nan
         slope = slope.where(slope != nodata, drop=False)
-        slope = np.tan(np.deg2rad(slope))
+
+        def to_mpm(da: xr.DataArray) -> xr.DataArray:
+            """Convert slope from degrees to meter/meter."""
+            func = lambda x: np.tan(np.deg2rad(x))
+            return xr.apply_ufunc(func, da, dask="parallelized")  # type: ignore
+
+        slope = to_mpm(slope)
         slope.attrs["nodatavals"] = (np.nan,)
         if hasattr(slope, "_FillValue"):
             slope.attrs["_FillValue"] = np.nan
@@ -94,7 +100,7 @@ def rename_layers(ds: X, valid_layers: List[str]) -> X:
     else:
         ds = ds.rename({n: rename[str(n)] for n in ds})
 
-    return ds
+    return ds.drop_vars("spatial_ref").rio.write_grid_mapping("spatial_ref")  # type: ignore
 
 
 class RESTful:
