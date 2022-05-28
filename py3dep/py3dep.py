@@ -366,15 +366,14 @@ def elevation_profile(
 
     crs_prj = "epsg:5070"
     geom = gpd.GeoSeries([path], crs=crs).to_crs(crs_prj)
-    geom_buff = geom.buffer(20 * dem_res).unary_union
+    geom_buff = geom.buffer(5 * dem_res).unary_union.bounds
     dem = get_map("DEM", geom_buff, dem_res, crs_prj)
 
     n_seg = int(np.ceil(geom.length.sum() / spacing)) * 100
     x, y, distance = __get_spline_params(geom.geometry[0], n_seg, spacing, crs_prj)
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, dem.rio.crs))
 
-    elevation = dem.interp(x=("z", list(xp)), y=("z", list(yp)), method="nearest")
-    elevation = elevation.drop_vars("spatial_ref")
+    elevation = dem.interp(x=("z", list(xp)), y=("z", list(yp)))
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
     elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
     elevation["distance"] = ("z", distance)
