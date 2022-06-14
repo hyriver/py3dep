@@ -1,4 +1,6 @@
 """Top-level package for Py3DEP."""
+import importlib.metadata
+
 from .exceptions import (
     InvalidInputType,
     InvalidInputValue,
@@ -17,14 +19,7 @@ from .py3dep import (
 )
 from .utils import deg2mpm, fill_depressions
 
-try:
-    import importlib.metadata
-except ImportError:
-    import importlib_metadata
-
-    __version__ = importlib_metadata.version("py3dep")
-else:
-    __version__ = importlib.metadata.version("py3dep")
+__version__ = importlib.metadata.version("py3dep")
 
 __all__ = [
     # Functions
