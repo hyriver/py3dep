@@ -8,7 +8,7 @@ History
 Breaking Changes
 ~~~~~~~~~~~~~~~~
 - Set the minimum supported version of Python to 3.8 since many of the
-  dependencies such as `xarray`, `pandas`, `rioxarray` have dropped support
+  dependencies such as ``xarray``, ``pandas``, ``rioxarray`` have dropped support
   for Python 3.7.
 
 Internal Changes
