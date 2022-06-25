@@ -2,6 +2,15 @@
 History
 =======
 
+0.13.3 (2022-06-25)
+-------------------
+
+Bug Fixes
+~~~~~~~~~
+- Fix a bug in ``check_3dep_availability`` where due to changes in ``pygeoogc``
+  ``ZeroMatched`` exception is raised instead of ``TypeError`` and as a result
+  ``check_3dep_availability`` was not working as expected.
+
 0.13.2 (2022-06-14)
 -------------------
 
