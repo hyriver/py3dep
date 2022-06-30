@@ -2,6 +2,7 @@
 from typing import List
 
 import async_retriever as ar
+import pygeoogc as ogc
 
 
 class InvalidInputType(ar.InvalidInputType):
@@ -67,3 +68,13 @@ class MissingCRS(Exception):
 
     def __str__(self) -> str:
         return self.message
+
+
+class ServiceUnavailable(ogc.ServiceUnavailable):
+    """Exception raised when the service is not available.
+
+    Parameters
+    ----------
+    url : str
+        The server url
+    """

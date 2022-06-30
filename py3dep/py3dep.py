@@ -19,11 +19,12 @@ from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatched
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from pygeoutils.pygeoutils import Spline
+from rasterio import RasterioIOError
 from rasterio.enums import Resampling
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 
 from . import utils
-from .exceptions import InvalidInputType, InvalidInputValue
+from .exceptions import InvalidInputType, InvalidInputValue, ServiceUnavailable
 
 DEF_CRS = "epsg:4326"
 EXPIRE = -1
@@ -117,10 +118,15 @@ def get_map(
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
-    if isinstance(geometry, (Polygon, MultiPolygon)):
-        ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
-    else:
-        ds = geoutils.gtiff2xarray(r_dict)
+
+    try:
+        if isinstance(geometry, (Polygon, MultiPolygon)):
+            ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+        else:
+            ds = geoutils.gtiff2xarray(r_dict)
+    except RasterioIOError as ex:
+        raise ServiceUnavailable(wms_url) from ex
+
     valid_layers = wms.get_validlayers()
     return utils.rename_layers(ds, list(valid_layers))  # type: ignore
 
@@ -252,9 +258,12 @@ class ElevationByCoords:
 
         points_proj = self.coords.to_crs(wms_3dep.crs)  # type: ignore
         bounds = points_proj.buffer(30, cap_style=3)
-        da_list: List[xr.DataArray] = [
-            geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds  # type: ignore
-        ]
+        try:
+            da_list: List[xr.DataArray] = [
+                geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds  # type: ignore
+            ]
+        except RasterioIOError as ex:
+            raise ServiceUnavailable(ServiceURL().wms.nm_3dep) from ex
 
         def get_value(da: xr.DataArray, x: float, y: float) -> float:
             nodata = da.attrs["nodatavals"][0]
