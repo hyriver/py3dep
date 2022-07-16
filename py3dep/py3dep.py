@@ -112,6 +112,10 @@ def get_map(
 
     wms_url = ServiceURL().wms.nm_3dep
     valid_crs = ogc_utils.valid_wms_crs(wms_url)
+
+    if len(valid_crs) == 0:
+        raise ServiceUnavailable(wms_url)
+
     if ogc_utils.validate_crs(crs).lower() not in valid_crs:
         raise InvalidInputValue("crs", valid_crs)
 
