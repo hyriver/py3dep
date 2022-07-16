@@ -34,9 +34,10 @@ SMALL = 1e-3
 def test_profile():
     ep = py3dep.elevation_profile(LINE, 10)
     epm = py3dep.elevation_profile(ops.linemerge(LINE), 10)
+    expected = 281.295
     assert (
-        abs(ep.mean().compute().item() - 389.7205) < SMALL
-        and abs(epm.mean().compute().item() - 389.7205) < SMALL
+        abs(ep.mean().compute().item() - expected) < SMALL
+        and abs(epm.mean().compute().item() - expected) < SMALL
     )
 
 
