@@ -78,8 +78,11 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
 
         def to_mpm(da: xr.DataArray) -> xr.DataArray:
             """Convert slope from degrees to meter/meter."""
-            func = lambda x: np.tan(np.deg2rad(x))
-            return xr.apply_ufunc(func, da, dask="parallelized")  # type: ignore
+            return xr.apply_ufunc(  # type: ignore
+                lambda x: np.tan(np.deg2rad(x)),
+                da,
+                dask="parallelized",
+            )
 
         slope = to_mpm(slope)
         slope.attrs["nodatavals"] = (np.nan,)
