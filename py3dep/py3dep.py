@@ -14,7 +14,6 @@ import pyproj
 import rioxarray  # noqa: F401
 import shapely.ops as ops
 import xarray as xr
-from async_retriever import ServiceError
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatched
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
@@ -438,7 +437,7 @@ def check_3dep_availability(
 
     def _check(lyr: int) -> bool:
         wms = ArcGISRESTful(url, lyr)
-        with contextlib.suppress(ServiceError, ZeroMatched):
+        with contextlib.suppress(ZeroMatched):
             return len(list(wms.oids_bygeom(_bbox))[0]) > 0
         return False
 
@@ -503,7 +502,7 @@ def query_3dep_sources(
 
     def _check(lyr: int) -> Optional[gpd.GeoDataFrame]:
         wms = utils.RESTful(url, lyr)
-        with contextlib.suppress(ServiceError, ZeroMatched):
+        with contextlib.suppress(ZeroMatched):
             return wms.bygeom(_bbox)
         return None
 
