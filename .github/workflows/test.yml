@@ -58,6 +58,7 @@ jobs:
           python -c "import ${REPO_NAME}; ${REPO_NAME}.show_versions()"
       - name: Run pytest
         run: |-
+          rm -rf cache
           pytest
       - name: Run typeguard
         run: |-
