@@ -22,7 +22,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       REPO_NAME: ${{ github.event.repository.name }}
-      HYRIVER_CACHE_DISABLE: true
     defaults:
       run:
         shell: bash -l {0}
