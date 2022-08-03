@@ -2,9 +2,9 @@
 from pathlib import Path
 from typing import List, Union
 
-import click
 import geopandas as gpd
 import pandas as pd
+import rich_click as click
 
 from . import py3dep
 from .exceptions import InvalidInputType, MissingColumns, MissingCRS
