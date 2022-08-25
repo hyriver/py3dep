@@ -120,7 +120,7 @@ def get_map(
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
-    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs)
+    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px= 10000000)
 
     try:
         if isinstance(geometry, (Polygon, MultiPolygon)):
