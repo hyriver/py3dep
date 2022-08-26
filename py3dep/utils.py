@@ -1,5 +1,5 @@
 """Utilities for Py3DEP."""
-from typing import Iterable, List, Tuple, TypeVar, Union
+from typing import List, Sequence, Tuple, TypeVar, Union
 
 import geopandas as gpd
 import numpy as np
@@ -72,7 +72,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
             nodata = slope.attrs["_FillValue"]
         elif hasattr(slope, "nodatavals"):
             _nodata = slope.attrs["nodatavals"]
-            nodata = _nodata[0] if isinstance(_nodata, Iterable) else _nodata
+            nodata = _nodata[0] if isinstance(_nodata, Sequence) else _nodata
         else:
             nodata = np.nan
         slope = slope.where(slope != nodata, drop=False)
