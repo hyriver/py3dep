@@ -2,6 +2,15 @@
 History
 =======
 
+0.13.4 (unreleased)
+-------------------
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Increase the pixel limit for 3DEP's WMS from 8M to 10M to reduce number
+  of service calls and improve performance.
+
+
 0.13.3 (2022-06-25)
 -------------------
 
