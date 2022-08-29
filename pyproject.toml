@@ -32,10 +32,6 @@ show_column_numbers = true
 show_error_codes = true
 show_error_context = true
 
-[[tool.mypy.overrides]]
-module = "py3dep.cli"
-disallow_untyped_decorators = false
-
 [tool.isort]
 profile = "black"
 default_section = "THIRDPARTY"
@@ -54,4 +50,4 @@ no_gitignore = false
 
 [tool.black]
 line-length = 100
-target-version = ['py37']
+target-version = ['py38']
