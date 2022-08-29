@@ -1,12 +1,12 @@
 """Top-level package for Py3DEP."""
-import importlib.metadata
+from importlib.metadata import version, PackageNotFoundError
 
 from .exceptions import (
-    InvalidInputType,
-    InvalidInputValue,
-    MissingColumns,
-    MissingCRS,
-    MissingDependency,
+    InputTypeError,
+    InputValueError,
+    MissingColumnError,
+    MissingCRSError,
+    DependencyError,
 )
 from .print_versions import show_versions
 from .py3dep import (
@@ -19,7 +19,12 @@ from .py3dep import (
 )
 from .utils import deg2mpm, fill_depressions
 
-__version__ = importlib.metadata.version("py3dep")
+
+
+try:
+    __version__ = version("py3dep")
+except PackageNotFoundError:
+    __version__ = "999"
 
 __all__ = [
     # Functions
@@ -33,11 +38,11 @@ __all__ = [
     "elevation_profile",
     "show_versions",
     # Exceptions
-    "MissingColumns",
-    "MissingCRS",
-    "MissingDependency",
-    "InvalidInputType",
-    "InvalidInputValue",
+    "MissingColumnError",
+    "MissingCRSError",
+    "DependencyError",
+    "InputTypeError",
+    "InputValueError",
     # Constants
     "__version__",
 ]
