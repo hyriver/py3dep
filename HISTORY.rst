@@ -2,8 +2,12 @@
 History
 =======
 
-0.13.4 (unreleased)
+0.14.0 (unreleased)
 -------------------
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- Append "Error" to all exception classes for conforming to PEP-8 naming conventions.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
