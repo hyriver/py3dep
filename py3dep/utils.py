@@ -14,7 +14,7 @@ try:
 except ImportError:
     rd = None
 
-from .exceptions import MissingDependency
+from .exceptions import DependencyError
 
 __all__ = ["deg2mpm", "fill_depressions"]
 X = TypeVar("X", xr.DataArray, xr.Dataset)
@@ -40,7 +40,7 @@ def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
     """
     dem = dem_da.copy()
     if rd is None:
-        raise MissingDependency
+        raise DependencyError
 
     nodata = -9999
     with xr.set_options(keep_attrs=True):  # type: ignore

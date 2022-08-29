@@ -1,12 +1,12 @@
 """Top-level package for Py3DEP."""
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
 from .exceptions import (
+    DependencyError,
     InputTypeError,
     InputValueError,
     MissingColumnError,
     MissingCRSError,
-    DependencyError,
 )
 from .print_versions import show_versions
 from .py3dep import (
@@ -18,8 +18,6 @@ from .py3dep import (
     query_3dep_sources,
 )
 from .utils import deg2mpm, fill_depressions
-
-
 
 try:
     __version__ = version("py3dep")

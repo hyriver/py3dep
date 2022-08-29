@@ -14,7 +14,7 @@ import pyproj
 import rioxarray  # noqa: F401
 import shapely.ops as ops
 import xarray as xr
-from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatched
+from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from pygeoutils.pygeoutils import Spline
@@ -23,7 +23,7 @@ from rasterio.enums import Resampling
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 
 from . import utils
-from .exceptions import InvalidInputType, InvalidInputValue, ServiceUnavailable
+from .exceptions import InputTypeError, InputValueError, ServiceUnavailableError
 
 DEF_CRS = "epsg:4326"
 EXPIRE = -1
@@ -102,7 +102,7 @@ def get_map(
     _layers = list(layers) if isinstance(layers, (list, tuple)) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
     if len(invalid) > 0:
-        raise InvalidInputValue(f"layers ({invalid})", LAYERS)
+        raise InputValueError(f"layers ({invalid})", LAYERS)
 
     if "DEM" in _layers:
         _layers[_layers.index("DEM")] = "None"
@@ -113,10 +113,10 @@ def get_map(
     valid_crs = ogc_utils.valid_wms_crs(wms_url)
 
     if len(valid_crs) == 0:
-        raise ServiceUnavailable(wms_url)
+        raise ServiceUnavailableError(wms_url)
 
     if ogc_utils.validate_crs(crs).lower() not in valid_crs:
-        raise InvalidInputValue("crs", valid_crs)
+        raise InputValueError("crs", valid_crs)
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
@@ -128,7 +128,7 @@ def get_map(
         else:
             ds = geoutils.gtiff2xarray(r_dict)
     except RasterioIOError as ex:
-        raise ServiceUnavailable(wms_url) from ex
+        raise ServiceUnavailableError(wms_url) from ex
 
     valid_layers = wms.get_validlayers()
     return utils.rename_layers(ds, list(valid_layers))  # type: ignore
@@ -214,7 +214,7 @@ class ElevationByCoords:
         self.coords = gpd.GeoSeries(gpd.points_from_xy(*zip(*self.coords)), crs=self.crs)
         valid_sources = ["tnm", "airmap", "tep"]
         if self.source not in valid_sources:
-            raise InvalidInputValue("source", valid_sources)
+            raise InputValueError("source", valid_sources)
 
     def airmap(self) -> List[float]:
         """Return list of elevations in meters."""
@@ -266,7 +266,7 @@ class ElevationByCoords:
                 geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds  # type: ignore
             ]
         except RasterioIOError as ex:
-            raise ServiceUnavailable(ServiceURL().wms.nm_3dep) from ex
+            raise ServiceUnavailableError(ServiceURL().wms.nm_3dep) from ex
 
         def get_value(da: xr.DataArray, x: float, y: float) -> float:
             nodata = da.attrs["nodatavals"][0]
@@ -351,7 +351,7 @@ def elevation_profile(
     lines : LineString or MultiLineString
         Line segment(s) to be profiled. If its type is ``MultiLineString``,
         it will be converted to a single ``LineString`` and if this operation
-        fails, a ``InvalidInputType`` will be raised.
+        fails, a ``InputTypeError`` will be raised.
     spacing : float
         Spacing between the sample points along the line in meters.
     dem_res : float, optional
@@ -367,12 +367,12 @@ def elevation_profile(
         of the line in meters.
     """
     if not isinstance(lines, (LineString, MultiLineString)):
-        raise InvalidInputType("lines", "LineString or MultiLineString")
+        raise InputTypeError("lines", "LineString or MultiLineString")
 
     if isinstance(lines, MultiLineString):
         path = ops.linemerge(lines)
         if not isinstance(path, LineString):
-            raise InvalidInputType("lines", "mergeable to a single line")
+            raise InputTypeError("lines", "mergeable to a single line")
     else:
         path = lines
 
@@ -421,7 +421,7 @@ def check_3dep_availability(
     {'1m': True, '3m': False, '5m': False, '10m': True, '30m': True, '60m': False, 'topobathy': False}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
-        raise InvalidInputType("bbox", "a tuple of length 4")
+        raise InputTypeError("bbox", "a tuple of length 4")
 
     res_layers = {
         "1m": 18,
@@ -437,7 +437,7 @@ def check_3dep_availability(
 
     def _check(lyr: int) -> bool:
         wms = ArcGISRESTful(url, lyr)
-        with contextlib.suppress(ZeroMatched):
+        with contextlib.suppress(ZeroMatchedError):
             return len(list(wms.oids_bygeom(_bbox))[0]) > 0
         return False
 
@@ -482,7 +482,7 @@ def query_3dep_sources(
     {'1m': 4}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
-        raise InvalidInputType("bbox", "a tuple of length 4")
+        raise InputTypeError("bbox", "a tuple of length 4")
     res_layers = {
         "1m": 18,
         "3m": 19,
@@ -493,7 +493,7 @@ def query_3dep_sources(
         "topobathy": 30,
     }
     if res is not None and res not in res_layers:
-        raise InvalidInputValue("res", list(res_layers.keys()))
+        raise InputValueError("res", list(res_layers.keys()))
 
     layers = {res: res_layers[res]} if res is not None else res_layers
 
@@ -502,7 +502,7 @@ def query_3dep_sources(
 
     def _check(lyr: int) -> Optional[gpd.GeoDataFrame]:
         wms = utils.RESTful(url, lyr)
-        with contextlib.suppress(ZeroMatched):
+        with contextlib.suppress(ZeroMatchedError):
             return wms.bygeom(_bbox)
         return None
 

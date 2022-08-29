@@ -2,12 +2,12 @@
 from pathlib import Path
 from typing import List, Union
 
+import click
 import geopandas as gpd
 import pandas as pd
-import rich_click as click
 
 from . import py3dep
-from .exceptions import InvalidInputType, MissingColumns, MissingCRS
+from .exceptions import InputTypeError, MissingColumnError, MissingCRSError
 from .py3dep import DEF_CRS, LAYERS
 
 
@@ -20,7 +20,7 @@ def get_target_df(
     """
     missing = [c for c in req_cols if c not in tdf]
     if len(missing) > 0:
-        raise MissingColumns(missing)
+        raise MissingColumnError(missing)
     return tdf[req_cols]
 
 
@@ -115,11 +115,11 @@ def geometry(
     """  # noqa: D301
     fpath = Path(fpath)
     if fpath.suffix not in (".shp", ".gpkg"):
-        raise InvalidInputType("file", ".shp or .gpkg")
+        raise InputTypeError("file", ".shp or .gpkg")
 
     target_df = gpd.read_file(fpath)
     if target_df.crs is None:
-        raise MissingCRS
+        raise MissingCRSError
     crs = target_df.crs.to_string()
 
     target_df = get_target_df(target_df, ["id", "res", "geometry"])

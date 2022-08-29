@@ -5,7 +5,7 @@ import async_retriever as ar
 import pygeoogc as ogc
 
 
-class InvalidInputType(ar.InvalidInputType):
+class InputTypeError(ar.InputTypeError):
     """Exception raised when a function argument type is invalid.
 
     Parameters
@@ -19,7 +19,7 @@ class InvalidInputType(ar.InvalidInputType):
     """
 
 
-class InvalidInputValue(ar.InvalidInputValue):
+class InputValueError(ar.InputValueError):
     """Exception raised for invalid input.
 
     Parameters
@@ -31,7 +31,7 @@ class InvalidInputValue(ar.InvalidInputValue):
     """
 
 
-class MissingColumns(Exception):
+class MissingColumnError(Exception):
     """Exception raised when a required column is missing from a dataframe.
 
     Parameters
@@ -48,7 +48,7 @@ class MissingColumns(Exception):
         return self.message
 
 
-class MissingDependency(ImportError):
+class DependencyError(ImportError):
     """Exception raised when RichDEM is not installed."""
 
     def __init__(self) -> None:
@@ -59,7 +59,7 @@ class MissingDependency(ImportError):
         return self.message
 
 
-class MissingCRS(Exception):
+class MissingCRSError(Exception):
     """Exception raised when input GeoDataFrame is missing CRS."""
 
     def __init__(self) -> None:
@@ -70,7 +70,7 @@ class MissingCRS(Exception):
         return self.message
 
 
-class ServiceUnavailable(ogc.ServiceUnavailable):
+class ServiceUnavailableError(ogc.ServiceUnavailableError):
     """Exception raised when the service is not available.
 
     Parameters
