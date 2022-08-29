@@ -2,7 +2,7 @@
 History
 =======
 
-0.13.5 (unreleased)
+0.13.5 (2022-08-29)
 -------------------
 
 Breaking Changes
@@ -13,6 +13,8 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 - Increase the pixel limit for 3DEP's WMS from 8M to 10M to reduce number
   of service calls and improve performance.
+- Bump the minimum versions of ``pygeoogc`` and ``pygeoutils`` to 0.13.5 and that of
+  ``async-retriever`` to 0.3.5.
 
 
 0.13.3 (2022-06-25)
