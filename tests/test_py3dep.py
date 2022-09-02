@@ -51,7 +51,7 @@ def test_getmap():
     dem_10 = rxr.open_rasterio(fpath)
     assert (
         sorted(ds.keys()) == ["elevation", "slope_degrees"]
-        and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 7e-2
+        and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 0.5
     )
     dem_10.close()
     fpath.unlink()
@@ -60,12 +60,12 @@ def test_getmap():
 def test_fill_depressions():
     ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
-    assert abs(ds.mean().compute().item() - 296.206) < SMALL
+    assert abs(ds.mean().compute().item() - 295.862) < SMALL
 
 
 @pytest.mark.parametrize(
     "source,expected",
-    [("airmap", 363), ("tnm", 356.59), ("tep", 356.088)],
+    [("airmap", 363), ("tnm", 356.59), ("tep", 356.139)],
 )
 def test_bycoords(source, expected):
     coords = [(-7766049.664788851, 5691929.739021257)]
