@@ -21,7 +21,7 @@ gh_deps = {
     "pygeoutils": ["async_retriever", "pygeoogc"],
     "pynhd": ["async_retriever", "pygeoogc", "pygeoutils"],
     "py3dep": ["async_retriever", "pygeoogc", "pygeoutils"],
-    "pygeohydro": ["async_retriever", "pygeoogc", "pygeoutils", "pynhd"],
+    "pygeohydro": ["async_retriever", "pygeoogc", "pygeoutils", "pynhd", "hydrosignatures"],
     "pydaymet": ["async_retriever", "pygeoogc", "pygeoutils", "py3dep"],
 }
 nox.options.sessions = (
@@ -109,7 +109,7 @@ def pre_commit(session) -> None:
 @nox.session(python=python_versions)
 def tests(session):
     """Run the test suite."""
-    install_deps(session, "test,dem")
+    install_deps(session, "test")
 
     session.run("pytest", "--doctest-modules", *session.posargs)
     session.run("coverage", "report")
@@ -119,6 +119,6 @@ def tests(session):
 @nox.session(python=python_versions)
 def typeguard(session):
     """Runtime type checking using Typeguard."""
-    install_deps(session, "typeguard,dem")
+    install_deps(session, "typeguard")
 
     session.run("pytest", f"--typeguard-packages={package}", *session.posargs)
