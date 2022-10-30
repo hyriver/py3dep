@@ -4,7 +4,7 @@ from __future__ import annotations
 import contextlib
 import itertools
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Sequence, Union
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -42,7 +42,7 @@ LAYERS = [
     "Contour 25",
     "Contour Smoothed 25",
 ]
-CRSTYPE = int | str | pyproj.CRS
+CRSTYPE = Union[int, str, pyproj.CRS]
 __all__ = [
     "get_map",
     "elevation_bygrid",
