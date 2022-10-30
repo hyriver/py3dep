@@ -157,7 +157,10 @@ def show_versions(file: TextIO = sys.stdout) -> None:
         ("matplotlib", lambda mod: mod.__version__),
         #  pydaymet
         ("pydaymet", lambda mod: mod.__version__),
+        #  hydrosignatures
+        ("hydrosignatures", lambda mod: mod.__version__),
         #  misc
+        ("numba", lambda mod: mod.__version__),
         ("bottleneck", lambda mod: mod.__version__),
         ("pygeos", lambda mod: mod.__version__),
         ("tables", lambda mod: mod.__version__),
