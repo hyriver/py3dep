@@ -1,24 +1,28 @@
 """Utilities for Py3DEP."""
-from typing import List, Sequence, Tuple, TypeVar, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Sequence, TypeVar
 
 import geopandas as gpd
 import numpy as np
 import pygeoutils as geoutils
-import rioxarray  # noqa: F401
+import pyproj
 import xarray as xr
 from pygeoogc import ArcGISRESTful
-from shapely.geometry import Polygon
 
 try:
     import richdem as rd
 except ImportError:
     rd = None
 
+if TYPE_CHECKING:
+    from shapely.geometry import Polygon
+
 from .exceptions import DependencyError
 
 __all__ = ["deg2mpm", "fill_depressions"]
 X = TypeVar("X", xr.DataArray, xr.Dataset)
-DEF_CRS = "EPSG:4326"
+CRSTYPE = int | str | pyproj.CRS
 
 
 def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
@@ -94,7 +98,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
     return slope
 
 
-def rename_layers(ds: X, valid_layers: List[str]) -> X:
+def rename_layers(ds: X, valid_layers: list[str]) -> X:
     """Rename layers in a dataset."""
     rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
     rename.update({"3DEPElevation:None": "elevation"})
@@ -118,7 +122,7 @@ class RESTful:
         A valid service layer.
     outfields : str or list, optional
         Target field name(s), default to "*" i.e., all the fields.
-    crs : str, optional
+    crs : str, int, or pyproj.CRS, optional
         Target spatial reference, default to EPSG:4326
     outformat : str, optional
         One of the output formats offered by the selected layer. If not correct
@@ -129,8 +133,8 @@ class RESTful:
         self,
         base_url: str,
         layer: int,
-        outfields: Union[str, List[str]] = "*",
-        crs: str = DEF_CRS,
+        outfields: str | list[str] = "*",
+        crs: CRSTYPE = 4326,
         outformat: str = "json",
     ) -> None:
         self.client = ArcGISRESTful(
@@ -143,8 +147,8 @@ class RESTful:
 
     def bygeom(
         self,
-        geom: Union[Polygon, List[Tuple[float, float]], Tuple[float, float, float, float]],
-        geo_crs: str = DEF_CRS,
+        geom: Polygon | list[tuple[float, float]] | tuple[float, float, float, float],
+        geo_crs: CRSTYPE = 4326,
     ) -> gpd.GeoDataFrame:
         """Get feature within a geometry that can be combined with a SQL where clause.
 
@@ -152,7 +156,7 @@ class RESTful:
         ----------
         geom : Polygon or tuple
             A geometry (Polygon) or bounding box (tuple of length 4).
-        geo_crs : str
+        geo_crs : str, int, or pyproj.CRS
             The spatial reference of the input geometry.
 
         Returns

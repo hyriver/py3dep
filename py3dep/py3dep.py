@@ -1,8 +1,10 @@
 """Get data from 3DEP database."""
+from __future__ import annotations
+
 import contextlib
 import itertools
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Sequence
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -11,13 +13,11 @@ import numpy as np
 import pandas as pd
 import pygeoutils as geoutils
 import pyproj
-import rioxarray  # noqa: F401
 import shapely.ops as ops
 import xarray as xr
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
-from pygeoutils.pygeoutils import Spline
 from rasterio import RasterioIOError
 from rasterio.enums import Resampling
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
@@ -25,8 +25,9 @@ from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 from . import utils
 from .exceptions import InputTypeError, InputValueError, ServiceUnavailableError
 
-DEF_CRS = "epsg:4326"
-EXPIRE = -1
+if TYPE_CHECKING:
+    from pygeoutils.pygeoutils import Spline
+
 LAYERS = [
     "DEM",
     "Hillshade Gray",
@@ -41,6 +42,7 @@ LAYERS = [
     "Contour 25",
     "Contour Smoothed 25",
 ]
+CRSTYPE = int | str | pyproj.CRS
 __all__ = [
     "get_map",
     "elevation_bygrid",
@@ -52,12 +54,12 @@ __all__ = [
 
 
 def get_map(
-    layers: Union[str, Sequence[str]],
-    geometry: Union[Polygon, MultiPolygon, Tuple[float, float, float, float]],
+    layers: str | Sequence[str],
+    geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: float,
-    geo_crs: Union[str, pyproj.CRS] = DEF_CRS,
-    crs: Union[str, pyproj.CRS] = DEF_CRS,
-) -> Union[xr.Dataset, xr.DataArray]:
+    geo_crs: CRSTYPE = 4326,
+    crs: CRSTYPE = 4326,
+) -> xr.Dataset | xr.DataArray:
     """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
 
     The 3DEP service has multi-resolution sources, so depending on the user
@@ -86,9 +88,9 @@ def get_map(
     resolution : float
         The target resolution in meters. The width and height of the output are computed in
         pixels based on the geometry bounds and the given resolution.
-    geo_crs : str, optional
+    geo_crs : str, int, or pyproj.CRS, optional
         The spatial reference system of the input geometry, defaults to ``EPSG:4326``.
-    crs : str, optional
+    crs : str, int, or pyproj.CRS, optional
         The spatial reference system to be used for requesting the data, defaults to
         ``EPSG:4326``. Valid values are ``EPSG:4326``, ``EPSG:3576``, ``EPSG:3571``,
         ``EPSG:3575``, ``EPSG:3857``, ``EPSG:3572``, ``CRS:84``, ``EPSG:3573``,
@@ -129,7 +131,6 @@ def get_map(
             ds = geoutils.gtiff2xarray(r_dict)
     except RasterioIOError as ex:
         raise ServiceUnavailableError(wms_url) from ex
-
     valid_layers = wms.get_validlayers()
     return utils.rename_layers(ds, list(valid_layers))  # type: ignore
 
@@ -137,7 +138,7 @@ def get_map(
 def elevation_bygrid(
     xcoords: Sequence[float],
     ycoords: Sequence[float],
-    crs: Union[str, pyproj.CRS],
+    crs: CRSTYPE,
     resolution: float,
     depression_filling: bool = False,
 ) -> xr.DataArray:
@@ -151,7 +152,7 @@ def elevation_bygrid(
         List of x-coordinates of a grid.
     ycoords : list
         List of y-coordinates of a grid.
-    crs : str or pyproj.CRS
+    crs : str, int, or pyproj.CRS or pyproj.CRS
         The spatial reference system of the input grid, defaults to ``EPSG:4326``.
     resolution : float
         The accuracy of the output, defaults to 10 m which is the highest
@@ -196,7 +197,7 @@ class ElevationByCoords:
 
     Parameters
     ----------
-    crs : str, optional
+    crs : str, int, or pyproj.CRS, optional
         Coordinate reference system of the input coordinates, defaults to ``EPSG:4326``.
     coords : list of tuple
         List of coordinates.
@@ -205,8 +206,8 @@ class ElevationByCoords:
         and ``airmap``.
     """
 
-    coords: List[Tuple[float, float]]
-    crs: Union[str, pyproj.CRS] = DEF_CRS
+    coords: list[tuple[float, float]]
+    crs: CRSTYPE = 4326
     source: str = "tep"
 
     def __post_init__(self) -> None:
@@ -216,9 +217,9 @@ class ElevationByCoords:
         if self.source not in valid_sources:
             raise InputValueError("source", valid_sources)
 
-    def airmap(self) -> List[float]:
+    def airmap(self) -> list[float]:
         """Return list of elevations in meters."""
-        pts = self.coords.to_crs(DEF_CRS)  # type: ignore
+        pts = self.coords.to_crs(4326)  # type: ignore
         coords_chunks = tlz.partition_all(100, zip(pts.x, pts.y))
         headers = {"Content-Type": "application/json", "charset": "utf-8"}
         urls, kwds = zip(
@@ -236,9 +237,9 @@ class ElevationByCoords:
         elevations = list(tlz.pluck("data", ar.retrieve_json(urls, kwds)))
         return list(tlz.concat(elevations))
 
-    def tnm(self) -> List[float]:
+    def tnm(self) -> list[float]:
         """Return list of elevations in meters."""
-        pts = self.coords.to_crs(DEF_CRS)  # type: ignore
+        pts = self.coords.to_crs(4326)  # type: ignore
         kwds = [
             {"params": {"units": "Meters", "output": "json", "x": f"{x:.5f}", "y": f"{y:.5f}"}}
             for x, y in zip(pts.x, pts.y)
@@ -248,7 +249,7 @@ class ElevationByCoords:
             r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
         ]
 
-    def tep(self) -> List[float]:
+    def tep(self) -> list[float]:
         """Get elevation from 3DEP."""
         wms_3dep = WMS(
             ServiceURL().wms.nm_3dep,
@@ -262,7 +263,7 @@ class ElevationByCoords:
         points_proj = self.coords.to_crs(wms_3dep.crs)  # type: ignore
         bounds = points_proj.buffer(30, cap_style=3)
         try:
-            da_list: List[xr.DataArray] = [
+            da_list: list[xr.DataArray] = [
                 geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds  # type: ignore
             ]
         except RasterioIOError as ex:
@@ -277,15 +278,15 @@ class ElevationByCoords:
 
 
 def elevation_bycoords(
-    coords: List[Tuple[float, float]], crs: Union[str, pyproj.CRS] = DEF_CRS, source: str = "tep"
-) -> List[float]:
+    coords: list[tuple[float, float]], crs: CRSTYPE = 4326, source: str = "tep"
+) -> list[float]:
     """Get elevation for a list of coordinates.
 
     Parameters
     ----------
     coords : list of tuple
         Coordinates of target location as list of tuples ``[(x, y), ...]``.
-    crs : str or pyproj.CRS, optional
+    crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
         Data source to be used, default to ``airmap``. Supported sources are
@@ -307,7 +308,7 @@ def elevation_bycoords(
     return service.__getattribute__(source)()  # type: ignore
 
 
-def __get_spline(line: LineString, ns_pts: int, crs: Union[str, pyproj.CRS]) -> Spline:
+def __get_spline(line: LineString, ns_pts: int, crs: CRSTYPE) -> Spline:
     """Get a B-spline from a line."""
     x, y = line.xy
     pts = gpd.GeoSeries(gpd.points_from_xy(x, y, crs=crs))
@@ -322,8 +323,8 @@ def __get_idx(d_sp: np.ndarray, distance: float) -> np.ndarray:  # type: ignore
 
 
 def __get_spline_params(
-    line: LineString, n_seg: int, distance: float, crs: Union[str, pyproj.CRS]
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:  # type: ignore[type-arg]
+    line: LineString, n_seg: int, distance: float, crs: CRSTYPE
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # type: ignore[type-arg]
     """Get perpendiculars to a line."""
     _n_seg = n_seg
     spline = __get_spline(line, _n_seg, crs)
@@ -336,10 +337,10 @@ def __get_spline_params(
 
 
 def elevation_profile(
-    lines: Union[LineString, MultiLineString],
+    lines: LineString | MultiLineString,
     spacing: float,
     dem_res: float = 10,
-    crs: Union[str, pyproj.CRS] = DEF_CRS,
+    crs: CRSTYPE = 4326,
 ) -> xr.DataArray:
     """Get the elevation profile along a line at a given uniform spacing.
 
@@ -356,7 +357,7 @@ def elevation_profile(
         Spacing between the sample points along the line in meters.
     dem_res : float, optional
         Resolution of the DEM source to use in meter, defaults to 10.
-    crs : str or pyproj.CRS, optional
+    crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of ``lines``, defaults to ``EPSG:4326``.
 
     Returns
@@ -393,8 +394,8 @@ def elevation_profile(
 
 
 def check_3dep_availability(
-    bbox: Tuple[float, float, float, float], crs: Union[str, pyproj.CRS] = DEF_CRS
-) -> Dict[str, bool]:
+    bbox: tuple[float, float, float, float], crs: CRSTYPE = 4326
+) -> dict[str, bool]:
     """Query 3DEP's resolution availability within a bounding box.
 
     This function checks availability of 3DEP's at the following resolutions:
@@ -404,7 +405,7 @@ def check_3dep_availability(
     ----------
     bbox : tuple
         Bounding box as tuple of ``(min_x, min_y, max_x, max_y)``.
-    crs : str or pyproj.CRS, optional
+    crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of bbox, defaults to ``EPSG:4326``.
 
     Returns
@@ -432,7 +433,7 @@ def check_3dep_availability(
         "60m": 23,
         "topobathy": 30,
     }
-    _bbox = ogc_utils.match_crs(bbox, crs, DEF_CRS)
+    _bbox = ogc_utils.match_crs(bbox, crs, 4326)
     url = ServiceURL().restful.nm_3dep_index
 
     def _check(lyr: int) -> bool:
@@ -445,9 +446,9 @@ def check_3dep_availability(
 
 
 def query_3dep_sources(
-    bbox: Tuple[float, float, float, float],
-    crs: Union[str, pyproj.CRS] = DEF_CRS,
-    res: Optional[str] = None,
+    bbox: tuple[float, float, float, float],
+    crs: CRSTYPE = 4326,
+    res: str | None = None,
 ) -> gpd.GeoDataFrame:
     """Query 3DEP's data sources within a bounding box.
 
@@ -459,7 +460,7 @@ def query_3dep_sources(
     ----------
     bbox : tuple
         Bounding box as tuple of ``(min_x, min_y, max_x, max_y)``.
-    crs : str or pyproj.CRS, optional
+    crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of bbox, defaults to ``EPSG:4326``.
     res : str, optional
         Resolution to query, defaults to ``None``, i.e., all resolutions.
@@ -497,15 +498,15 @@ def query_3dep_sources(
 
     layers = {res: res_layers[res]} if res is not None else res_layers
 
-    _bbox = ogc_utils.match_crs(bbox, crs, DEF_CRS)
+    _bbox = ogc_utils.match_crs(bbox, crs, 4326)
     url = ServiceURL().restful.nm_3dep_index
 
-    def _check(lyr: int) -> Optional[gpd.GeoDataFrame]:
+    def _check(lyr: int) -> gpd.GeoDataFrame | None:
         wms = utils.RESTful(url, lyr)
         with contextlib.suppress(ZeroMatchedError):
             return wms.bygeom(_bbox)
         return None
 
     src = pd.concat({res: _check(lyr) for res, lyr in layers.items()})
-    src = gpd.GeoDataFrame(src.reset_index(level=1, drop=True), crs=DEF_CRS)
+    src = gpd.GeoDataFrame(src.reset_index(level=1, drop=True), crs=4326)
     return src.reset_index().rename(columns={"index": "dem_res"})

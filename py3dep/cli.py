@@ -1,6 +1,7 @@
 """Command-line interface for Py3DEP."""
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Union
 
 import click
 import geopandas as gpd
@@ -8,12 +9,12 @@ import pandas as pd
 
 from . import py3dep
 from .exceptions import InputTypeError, MissingColumnError, MissingCRSError
-from .py3dep import DEF_CRS, LAYERS
+from .py3dep import LAYERS
 
 
 def get_target_df(
-    tdf: Union[pd.DataFrame, gpd.GeoDataFrame], req_cols: List[str]
-) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
+    tdf: pd.DataFrame | gpd.GeoDataFrame, req_cols: list[str]
+) -> pd.DataFrame | gpd.GeoDataFrame:
     """Check if all required columns exists in the dataframe.
 
     It also re-orders the columns based on ``req_cols`` order.
@@ -56,7 +57,7 @@ def cli() -> None:
 def coords(
     fpath: Path,
     query_source: str = "airmap",
-    save_dir: Union[str, Path] = "topo_3dep",
+    save_dir: str | Path = "topo_3dep",
 ) -> None:
     """Retrieve topographic data for a list of coordinates.
 
@@ -97,8 +98,8 @@ def coords(
 @save_arg
 def geometry(
     fpath: Path,
-    layers: Union[str, List[str]] = "DEM",
-    save_dir: Union[str, Path] = "topo_3dep",
+    layers: str | list[str] = "DEM",
+    save_dir: str | Path = "topo_3dep",
 ) -> None:
     """Retrieve topographic data within geometries.
 
@@ -133,5 +134,5 @@ def geometry(
         args_list, label="Getting topographic data from 3DEP", length=len(target_df)
     ) as bar:
         for geo, res, f in bar:
-            py3dep.get_map(layers, geo, res, geo_crs=crs, crs=DEF_CRS).to_netcdf(f)
+            py3dep.get_map(layers, geo, res, geo_crs=crs, crs=4326).to_netcdf(f)
     click.echo("Done.")

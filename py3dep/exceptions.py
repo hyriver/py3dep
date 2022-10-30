@@ -1,5 +1,5 @@
 """Customized Py3DEP exceptions."""
-from typing import List
+from __future__ import annotations
 
 import async_retriever as ar
 import pygeoogc as ogc
@@ -40,7 +40,7 @@ class MissingColumnError(Exception):
         List of missing columns.
     """
 
-    def __init__(self, missing: List[str]) -> None:
+    def __init__(self, missing: list[str]) -> None:
         self.message = "The following columns are missing:\n" + f"{', '.join(missing)}"
         super().__init__(self.message)
 
