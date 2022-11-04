@@ -27,13 +27,13 @@ gh_deps = {
 nox.options.sessions = (
     "pre-commit",
     "tests",
-    "typeguard",
+    # "typeguard",
 )
 
 
 def install_deps(session, extra):
     """Install package dependencies."""
-    deps = [f".[{extra}]"] + [f"git+https://github.com/cheginit/{p}.git" for p in gh_deps[package]]
+    deps = [f".[{extra}]"] + [f"git+https://github.com/hyriver/{p}.git" for p in gh_deps[package]]
     session.install(*deps)
     dirs = [".pytest_cache", "build", "dist", ".eggs"]
     for d in dirs:
@@ -109,7 +109,7 @@ def pre_commit(session) -> None:
 @nox.session(python=python_versions)
 def tests(session):
     """Run the test suite."""
-    install_deps(session, "test")
+    install_deps(session, "test,dem")
 
     session.run("pytest", "--doctest-modules", *session.posargs)
     session.run("coverage", "report")
