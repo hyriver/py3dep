@@ -2,13 +2,15 @@
 History
 =======
 
-0.13.7 (unreleased)
+0.13.7 (2022-11-04)
 -------------------
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Use ``pyupgrade`` package to update the type hinting annotations
   to Python 3.10 style.
+- Bump the minimum required version of HyRiver dependencies to the
+  latest versions.
 
 0.13.6 (2022-08-30)
 -------------------
