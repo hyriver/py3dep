@@ -24,6 +24,7 @@ filterwarnings =[
 [tool.mypy]
 strict = true
 check_untyped_defs = true
+allow_untyped_calls = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
