@@ -1,7 +1,7 @@
 """Utilities for Py3DEP."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from typing import TYPE_CHECKING, Sequence, TypeVar, Union
 
 import geopandas as gpd
 import numpy as np
@@ -22,7 +22,7 @@ from .exceptions import DependencyError
 
 __all__ = ["deg2mpm", "fill_depressions"]
 X = TypeVar("X", xr.DataArray, xr.Dataset)
-CRSTYPE = int | str | pyproj.CRS
+CRSTYPE = Union[int, str, pyproj.CRS]
 
 
 def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
@@ -47,7 +47,7 @@ def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
         raise DependencyError
 
     nodata = -9999
-    with xr.set_options(keep_attrs=True):  # type: ignore
+    with xr.set_options(keep_attrs=True):
         dem = dem.fillna(nodata)
         rda = rd.rdarray(dem, no_data=nodata)
         rda.projection = dem.rio.crs
@@ -71,7 +71,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
         Slope in meter/meter. The name is set to ``slope`` and the ``units`` attribute
         is set to ``m/m``.
     """
-    with xr.set_options(keep_attrs=True):  # type: ignore
+    with xr.set_options(keep_attrs=True):
         if hasattr(slope, "_FillValue"):
             nodata = slope.attrs["_FillValue"]
         elif hasattr(slope, "nodatavals"):
