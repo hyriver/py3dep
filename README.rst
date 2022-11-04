@@ -37,25 +37,31 @@
     :target: https://github.com/hyriver/async-retriever/actions/workflows/test.yml
     :alt: Github Actions
 
-=============== ==================================================================== ============
-Package         Description                                                          Status
-=============== ==================================================================== ============
-PyNHD_          Navigate and subset NHDPlus (MR and HR) using web services           |pynhd|
-Py3DEP_         Access topographic data through National Map's 3DEP web service      |py3dep|
-PyGeoHydro_     Access NWIS, NID, WQP, HCDN 2009, NLCD, CAMELS, and SSEBop databases |pygeohydro|
-PyDaymet_       Access daily, monthly, and annual climate data via Daymet            |pydaymet|
-AsyncRetriever_ High-level API for asynchronous requests with persistent caching     |async|
-PyGeoOGC_       Send queries to any ArcGIS RESTful-, WMS-, and WFS-based services    |pygeoogc|
-PyGeoUtils_     Utilities for manipulating geospatial, (Geo)JSON, and (Geo)TIFF data |pygeoutils|
-=============== ==================================================================== ============
+.. |signatures| image:: https://github.com/hyriver/hydrosignatures/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/hyriver/hydrosignatures/actions/workflows/test.yml
+    :alt: Github Actions
+
+================ ==================================================================== ============
+Package          Description                                                          Status
+================ ==================================================================== ============
+PyNHD_           Navigate and subset NHDPlus (MR and HR) using web services           |pynhd|
+Py3DEP_          Access topographic data through National Map's 3DEP web service      |py3dep|
+PyGeoHydro_      Access NWIS, NID, WQP, HCDN 2009, NLCD, CAMELS, and SSEBop databases |pygeohydro|
+PyDaymet_        Access daily, monthly, and annual climate data via Daymet            |pydaymet|
+HydroSignatures_ A collection of tools for computing hydrological signatures          |signatures|
+AsyncRetriever_  High-level API for asynchronous requests with persistent caching     |async|
+PyGeoOGC_        Send queries to any ArcGIS RESTful-, WMS-, and WFS-based services    |pygeoogc|
+PyGeoUtils_      Utilities for manipulating geospatial, (Geo)JSON, and (Geo)TIFF data |pygeoutils|
+================ ==================================================================== ============
 
 .. _PyGeoHydro: https://github.com/hyriver/pygeohydro
 .. _AsyncRetriever: https://github.com/hyriver/async-retriever
 .. _PyGeoOGC: https://github.com/hyriver/pygeoogc
 .. _PyGeoUtils: https://github.com/hyriver/pygeoutils
-.. _PyNHD: https://github.com/hyriver/pynhd
+.. _PyNHD : https://github.com/hyriver/pynhd
 .. _Py3DEP: https://github.com/hyriver/py3dep
 .. _PyDaymet: https://github.com/hyriver/pydaymet
+.. _HydroSignatures: https://github.com/hyriver/hydrosignatures
 
 Py3DEP: Topographic data through 3DEP
 -------------------------------------
