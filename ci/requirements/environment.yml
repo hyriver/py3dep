@@ -43,7 +43,7 @@ dependencies:
   - shapely >=1.8
   - ujson
   - xarray >=2022.03.0
-  
+
   # py3dep
   # - async-retriever >=0.3.6
   - click >=0.7
