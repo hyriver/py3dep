@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from shapely.geometry import Polygon
 
@@ -9,12 +11,8 @@ GEOM = Polygon(
     [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
 )
 
-try:
-    import typeguard  # noqa: F401
-except ImportError:
-    has_typeguard = False
-else:
-    has_typeguard = True
+
+has_typeguard = True if sys.modules.get("typeguard") else False
 
 
 @pytest.mark.skipif(has_typeguard, reason="Broken if Typeguard is enabled")
