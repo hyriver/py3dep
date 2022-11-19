@@ -20,7 +20,7 @@ def get_target_df(
     It also re-orders the columns based on ``req_cols`` order.
     """
     missing = [c for c in req_cols if c not in tdf]
-    if len(missing) > 0:
+    if missing:
         raise MissingColumnError(missing)
     return tdf[req_cols]
 

@@ -103,7 +103,7 @@ def get_map(
     """
     _layers = list(layers) if isinstance(layers, (list, tuple)) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
-    if len(invalid) > 0:
+    if invalid:
         raise InputValueError(f"layers ({invalid})", LAYERS)
 
     if "DEM" in _layers:
