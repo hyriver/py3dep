@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import io
 import itertools
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Sequence, Union
@@ -13,6 +14,7 @@ import numpy as np
 import pandas as pd
 import pygeoutils as geoutils
 import pyproj
+import rioxarray as rxr
 import shapely.ops as ops
 import xarray as xr
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
@@ -20,6 +22,8 @@ from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
 from rasterio.enums import Resampling
+from rasterio.io import MemoryFile
+from rasterio.vrt import WarpedVRT
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 
 from . import utils
@@ -50,6 +54,7 @@ __all__ = [
     "elevation_profile",
     "check_3dep_availability",
     "query_3dep_sources",
+    "static_3dep_dem",
 ]
 
 
@@ -510,3 +515,60 @@ def query_3dep_sources(
     src = pd.concat({res: _check(lyr) for res, lyr in layers.items()})
     src = gpd.GeoDataFrame(src.reset_index(level=1, drop=True), crs=4326)
     return src.reset_index().rename(columns={"index": "dem_res"})
+
+
+def static_3dep_dem(
+    geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
+    crs: CRSTYPE,
+    resolution: int = 10,
+) -> xr.DataArray:
+    """Get DEM data at specific resolution from 3DEP.
+
+    Notes
+    -----
+    In contrast to ``get_map`` function, this function only gets DEM data at
+    specific resolution, namely 10 m, 30 m, and 60 m. However, this function
+    is faster. This function is intended for cases where only need DEM at a
+    specific resolution is required and for the other requests ``get_map``
+    should be used.
+
+    Parameters
+    ----------
+    geometry : Polygon, MultiPolygon, or tuple of length 4
+        Geometry to get DEM within. It can be a polygon or a boundong box
+        of form (xmin, ymin, xmax, ymax).
+    crs : int, str, of pyproj.CRS
+        CRS of the input geometry.
+    resolution : int, optional
+        Target DEM source resolution in meters, defaults to 10 m which is the highest
+        resolution available over the US. Available options are 10, 30, and 60.
+
+    Returns
+    -------
+    xarray.DataArray
+        The request DEM at the specified resolution.
+    """
+    base_url = "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation"
+    url = {
+        10: f"{base_url}/13/TIFF/USGS_Seamless_DEM_13.vrt",
+        30: f"{base_url}/1/TIFF/USGS_Seamless_DEM_1.vrt",
+        60: f"{base_url}/2/TIFF/USGS_Seamless_DEM_2.vrt",
+    }
+    if resolution not in url:
+        raise InputValueError("resolution", list(url))
+
+    resp = io.BytesIO(ar.retrieve_binary([url[resolution]])[0])
+    with MemoryFile(resp) as memfile, memfile.open() as src, WarpedVRT(src) as vrt:
+        dem = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore[attr-defined]
+        if "band" in dem.dims:
+            dem = dem.squeeze("band", drop=True)
+        geometry = geoutils.geo2polygon(geometry, crs, vrt.crs)
+        dem = dem.rio.clip_box(*geometry.bounds)
+        dem = dem.rio.clip([geometry])
+        dem = dem.where(dem > dem.rio.nodata, drop=False)
+        dem = dem.rio.write_nodata(np.nan)
+        dem.attrs.update(
+            {"units": "meters", "vertical_datum": "NAVD88", "vertical_resolution": 0.001}
+        )
+        dem.name = "elevation"
+    return dem  # type: ignore

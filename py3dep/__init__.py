@@ -16,6 +16,7 @@ from .py3dep import (
     elevation_profile,
     get_map,
     query_3dep_sources,
+    static_3dep_dem,
 )
 from .utils import deg2mpm, fill_depressions
 
@@ -34,6 +35,7 @@ __all__ = [
     "elevation_bycoords",
     "elevation_bygrid",
     "elevation_profile",
+    "static_3dep_dem",
     "show_versions",
     # Exceptions
     "MissingColumnError",
