@@ -562,9 +562,10 @@ def static_3dep_dem(
         dem = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore[attr-defined]
         if "band" in dem.dims:
             dem = dem.squeeze("band", drop=True)
-        geometry = geoutils.geo2polygon(geometry, crs, vrt.crs)
-        dem = dem.rio.clip_box(*geometry.bounds)
-        dem = dem.rio.clip([geometry])
+        poly = geoutils.geo2polygon(geometry, crs, vrt.crs)
+        dem = dem.rio.clip_box(*poly.bounds)
+        if isinstance(geometry, (Polygon, MultiPolygon)):
+            dem = dem.rio.clip([poly])
         dem = dem.where(dem > dem.rio.nodata, drop=False)
         dem = dem.rio.write_nodata(np.nan)
         dem.attrs.update(
