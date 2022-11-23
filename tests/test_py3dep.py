@@ -31,14 +31,16 @@ LYR = "Slope Degrees"
 SMALL = 1e-3
 
 
+def assert_close(a: float, b: float, rtol: float = 1e-3) -> bool:
+    assert np.isclose(a, b, rtol=rtol).all()
+
+
 def test_profile():
     ep = py3dep.elevation_profile(LINE, 10)
     epm = py3dep.elevation_profile(ops.linemerge(LINE), 10)
     expected = 281.295
-    assert (
-        abs(ep.mean().compute().item() - expected) < SMALL
-        and abs(epm.mean().compute().item() - expected) < SMALL
-    )
+    assert_close(ep.mean().compute().item(), expected)
+    assert_close(epm.mean().compute().item(), expected)
 
 
 def test_getmap():
@@ -49,18 +51,21 @@ def test_getmap():
     fpath = Path("dem_10.tif")
     dem_10.rio.to_raster(fpath)
     dem_10 = rxr.open_rasterio(fpath)
-    assert (
-        sorted(ds.keys()) == ["elevation", "slope_degrees"]
-        and abs(dem_10.mean().compute().item() - dem_1e3.mean().compute().item()) < 0.5
-    )
+    assert sorted(ds.keys()) == ["elevation", "slope_degrees"]
+    assert_close(dem_10.mean().compute().item(), dem_1e3.mean().compute().item(), 0.5)
     dem_10.close()
     fpath.unlink()
+
+
+def test_static():
+    ds = py3dep.static_3dep_dem(GEOM, 4326, 10)
+    assert_close(ds.mean().compute().item(), 295.686)
 
 
 def test_fill_depressions():
     ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
-    assert abs(ds.mean().compute().item() - 295.862) < SMALL
+    assert_close(ds.mean().compute().item(), 295.862)
 
 
 @pytest.mark.parametrize(
@@ -70,17 +75,19 @@ def test_fill_depressions():
 def test_bycoords(source, expected):
     coords = [(-7766049.664788851, 5691929.739021257)]
     dem = py3dep.elevation_bycoords(coords * 101, pyproj.CRS(ALT_CRS), source=source)
-    assert abs(sum(set(dem)) - expected) < SMALL
+    assert_close(sum(set(dem)), expected)
 
 
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1e3)
     slope = py3dep.deg2mpm(slope)
-    assert abs(slope.mean().compute().item() - 0.050) < SMALL
+    assert_close(slope.mean().compute().item(), 0.0505)
 
 
 def test_grid():
-    crs = "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
+    crs = (
+        "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m"
+    )
     geom = utils.match_crs(GEOM, DEF_CRS, crs)
     xmin, ymin, xmax, ymax = geom.bounds
     res = 1e3
@@ -88,7 +95,7 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
-    assert ((elev_fill - elev).sum().compute().item() - 2710.839) < SMALL
+    assert_close((elev_fill - elev).sum().compute().item(), 1538.4422)
 
 
 def test_check_3dep_availability():
