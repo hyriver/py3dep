@@ -5,6 +5,14 @@ History
 0.13.8 (unreleased)
 -------------------
 
+New Features
+~~~~~~~~~~~~
+- Add a new function called ``static_3dep_dem`` for getting only DEM
+  data at 10 m, 30, or 60 m resolution. This is useful for cases where
+  only DEM data (i.e., not slope, aspect, or other terrain attributes that
+  the Dynamic 3DEP service provides) is needed. This function is faster
+  than ``get_map`` but is less flexible.
+
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Modify the codebase based on `Refurb <https://github.com/dosisod/refurb>`__
