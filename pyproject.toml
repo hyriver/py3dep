@@ -22,18 +22,6 @@ filterwarnings =[
     "ignore:.*--rsyncdir command line argument.*",
 ]
 
-[tool.mypy]
-strict = true
-check_untyped_defs = true
-allow_untyped_calls = true
-warn_unreachable = true
-warn_unused_configs = true
-warn_unused_ignores = true
-pretty = true
-show_column_numbers = true
-show_error_codes = true
-show_error_context = true
-
 [tool.isort]
 profile = "black"
 default_section = "THIRDPARTY"
@@ -57,3 +45,13 @@ target-version = ["py310"]
 [tool.refurb]
 quiet = true
 python_version = "3.10"
+
+[tool.pyright]
+include = ["py3dep"]
+exclude = [
+    ".nox/",
+    "**/__pycache__",
+    "tests/",
+]
+venvPath = "/Users/tchegini/.local/apps/mambaforge/envs"
+venv = "hyriver-dev"
