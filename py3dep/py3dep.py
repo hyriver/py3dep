@@ -5,7 +5,7 @@ import contextlib
 import io
 import itertools
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Sequence, Union
+from typing import TYPE_CHECKING, Sequence, cast
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -46,7 +46,7 @@ LAYERS = [
     "Contour 25",
     "Contour Smoothed 25",
 ]
-CRSTYPE = Union[int, str, pyproj.CRS]
+CRSTYPE = int | str | pyproj.CRS
 __all__ = [
     "get_map",
     "elevation_bygrid",
@@ -217,14 +217,14 @@ class ElevationByCoords:
 
     def __post_init__(self) -> None:
         self.crs = ogc_utils.validate_crs(self.crs)
-        self.coords = gpd.GeoSeries(gpd.points_from_xy(*zip(*self.coords)), crs=self.crs)
+        self.coords_gs = gpd.GeoSeries(gpd.points_from_xy(*zip(*self.coords)), crs=self.crs)
         valid_sources = ["tnm", "airmap", "tep"]
         if self.source not in valid_sources:
             raise InputValueError("source", valid_sources)
 
     def airmap(self) -> list[float]:
         """Return list of elevations in meters."""
-        pts = self.coords.to_crs(4326)  # type: ignore
+        pts = self.coords_gs.to_crs(4326)
         coords_chunks = tlz.partition_all(100, zip(pts.x, pts.y))
         headers = {"Content-Type": "application/json", "charset": "utf-8"}
         urls, kwds = zip(
@@ -239,12 +239,12 @@ class ElevationByCoords:
                 for chunk in coords_chunks
             )
         )
-        elevations = list(tlz.pluck("data", ar.retrieve_json(urls, kwds)))
+        elevations = list(tlz.pluck("data", ar.retrieve_json(urls, kwds)))  # type: ignore
         return list(tlz.concat(elevations))
 
     def tnm(self) -> list[float]:
         """Return list of elevations in meters."""
-        pts = self.coords.to_crs(4326)  # type: ignore
+        pts = self.coords_gs.to_crs(4326)
         kwds = [
             {"params": {"units": "Meters", "output": "json", "x": f"{x:.5f}", "y": f"{y:.5f}"}}
             for x, y in zip(pts.x, pts.y)
@@ -265,12 +265,12 @@ class ElevationByCoords:
         )
         get_dem = tlz.partial(wms_3dep.getmap_bybox, resolution=10, box_crs=wms_3dep.crs)
 
-        points_proj = self.coords.to_crs(wms_3dep.crs)  # type: ignore
+        points_proj = self.coords_gs.to_crs(wms_3dep.crs)
         bounds = points_proj.buffer(30, cap_style=3)
         try:
-            da_list: list[xr.DataArray] = [
-                geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds  # type: ignore
-            ]
+            da_list = cast(
+                "list[xr.DataArray]", [geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds]
+            )
         except RasterioIOError as ex:
             raise ServiceUnavailableError(ServiceURL().wms.nm_3dep) from ex
 
@@ -559,7 +559,7 @@ def static_3dep_dem(
 
     resp = io.BytesIO(ar.retrieve_binary([url[resolution]])[0])
     with MemoryFile(resp) as memfile, memfile.open() as src, WarpedVRT(src) as vrt:
-        dem = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore[attr-defined]
+        dem: xr.DataArray = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore[attr-defined]
         if "band" in dem.dims:
             dem = dem.squeeze("band", drop=True)
         poly = geoutils.geo2polygon(geometry, crs, vrt.crs)
