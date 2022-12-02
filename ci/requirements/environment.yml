@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  # async_retriever deps
+  # async-retriever deps
   - aiodns
   - aiosqlite
   - aiohttp >=3.8.1
@@ -69,6 +69,6 @@ dependencies:
 
   - pip
   - pip:
-    - git+https://github.com/hyriver/async_retriever.git
+    - git+https://github.com/hyriver/async-retriever.git
     - git+https://github.com/hyriver/pygeoogc.git
     - git+https://github.com/hyriver/pygeoutils.git
