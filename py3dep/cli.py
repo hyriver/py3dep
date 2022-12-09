@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import click
 import geopandas as gpd
 import pandas as pd
+import rich_click as click
 
 from . import py3dep
 from .exceptions import InputTypeError, MissingColumnError, MissingCRSError
