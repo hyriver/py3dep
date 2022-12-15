@@ -5,7 +5,7 @@ import contextlib
 import io
 import itertools
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Sequence, cast
+from typing import TYPE_CHECKING, Sequence, Union, cast
 
 import async_retriever as ar
 import cytoolz as tlz
@@ -32,6 +32,7 @@ from .exceptions import InputTypeError, InputValueError, ServiceUnavailableError
 if TYPE_CHECKING:
     from pygeoutils.pygeoutils import Spline
 
+CRSTYPE = Union[int, str, pyproj.CRS]
 LAYERS = [
     "DEM",
     "Hillshade Gray",
@@ -46,7 +47,6 @@ LAYERS = [
     "Contour 25",
     "Contour Smoothed 25",
 ]
-CRSTYPE = int | str | pyproj.CRS
 __all__ = [
     "get_map",
     "elevation_bygrid",

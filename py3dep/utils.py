@@ -1,7 +1,7 @@
 """Utilities for Py3DEP."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeVar
+from typing import TYPE_CHECKING, Sequence, TypeVar, Union
 
 import geopandas as gpd
 import numpy as np
@@ -22,7 +22,7 @@ from .exceptions import DependencyError
 
 __all__ = ["deg2mpm", "fill_depressions"]
 X = TypeVar("X", xr.DataArray, xr.Dataset)
-CRSTYPE = int | str | pyproj.CRS
+CRSTYPE = Union[int, str, pyproj.CRS]
 
 
 def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
