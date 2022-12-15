@@ -2,6 +2,14 @@
 History
 =======
 
+0.13.9 (2022-12-15)
+-------------------
+
+Bug Fixes
+~~~~~~~~~
+- Add the missing annotation import to the `cache_keys` to ensure
+  Python 3.8 and 3.9 work with Python 3.10 style type hinting.
+
 0.13.8 (2022-12-09)
 -------------------
 
