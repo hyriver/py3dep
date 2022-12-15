@@ -13,7 +13,7 @@ def get_package_name():
     return config.get("metadata", "name")
 
 
-python_versions = ["3.10"]
+python_versions = ["3.9"]
 package = get_package_name()
 gh_deps = {
     "async-retriever": [],
