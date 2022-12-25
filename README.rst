@@ -68,6 +68,7 @@ PyGeoUtils_      Utilities for manipulating geospatial, (Geo)JSON, and (Geo)TIFF
 .. _PyDaymet: https://github.com/hyriver/pydaymet
 .. _PyNLDAS2: https://github.com/hyriver/pynldas2
 .. _HydroSignatures: https://github.com/hyriver/hydrosignatures
+
 Py3DEP: Topographic data through 3DEP
 -------------------------------------
 
