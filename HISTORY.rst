@@ -7,7 +7,7 @@ History
 
 New Features
 ~~~~~~~~~~~~
-- Refactor the ``show_versions`` function now to improve performance and
+- Refactor the ``show_versions`` function to improve performance and
   print the output in a nicer table-like format.
 
 Bug Fixes
