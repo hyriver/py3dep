@@ -51,7 +51,15 @@ include = ["py3dep"]
 exclude = [
     ".nox/",
     "**/__pycache__",
+    "**/__init__.py",
     "tests/",
 ]
-venvPath = "/Users/tchegini/.local/apps/mambaforge/envs"
-venv = "hyriver-dev"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownParameterType = false
+reportUnnecessaryIsInstance = false
+reportUntypedFunctionDecorator = false
