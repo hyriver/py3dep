@@ -32,7 +32,8 @@ from .exceptions import InputTypeError, InputValueError, ServiceUnavailableError
 if TYPE_CHECKING:
     from pygeoutils.pygeoutils import Spline
 
-CRSTYPE = Union[int, str, pyproj.CRS]
+    CRSTYPE = Union[int, str, pyproj.CRS]
+
 LAYERS = [
     "DEM",
     "Hillshade Gray",
@@ -382,7 +383,7 @@ def elevation_profile(
     else:
         path = lines
 
-    crs_prj = "epsg:5070"
+    crs_prj = 5070
     geom = gpd.GeoSeries([path], crs=crs).to_crs(crs_prj)
     geom_buff = geom.buffer(5 * dem_res).unary_union.bounds
     dem = get_map("DEM", geom_buff, dem_res, crs_prj)
@@ -391,7 +392,7 @@ def elevation_profile(
     x, y, distance = __get_spline_params(geom.geometry[0], n_seg, spacing, crs_prj)
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, dem.rio.crs))
 
-    elevation = dem.interp(x=("z", list(xp)), y=("z", list(yp)))
+    elevation = dem.astype("f8").interp(x=("z", list(xp)), y=("z", list(yp)))
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
     elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
     elevation["distance"] = ("z", distance)
@@ -482,10 +483,10 @@ def query_3dep_sources(
     >>> bbox = (-69.77, 45.07, -69.31, 45.45)
     >>> src = py3dep.query_3dep_sources(bbox)
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    {'10m': 8, '1m': 4, '30m': 8}
+    {'10m': 8, '1m': 3, '30m': 8}
     >>> src = py3dep.query_3dep_sources(bbox, res="1m")
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    {'1m': 4}
+    {'1m': 3}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
         raise InputTypeError("bbox", "a tuple of length 4")
@@ -559,7 +560,8 @@ def static_3dep_dem(
 
     resp = io.BytesIO(ar.retrieve_binary([url[resolution]])[0])
     with MemoryFile(resp) as memfile, memfile.open() as src, WarpedVRT(src) as vrt:
-        dem: xr.DataArray = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore[attr-defined]
+        dem = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore
+        dem = cast("xr.DataArray", dem)
         if "band" in dem.dims:
             dem = dem.squeeze("band", drop=True)
         poly = geoutils.geo2polygon(geometry, crs, vrt.crs)
@@ -572,4 +574,4 @@ def static_3dep_dem(
             {"units": "meters", "vertical_datum": "NAVD88", "vertical_resolution": 0.001}
         )
         dem.name = "elevation"
-    return dem  # type: ignore
+    return dem
