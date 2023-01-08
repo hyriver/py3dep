@@ -18,11 +18,12 @@ except ImportError:
 if TYPE_CHECKING:
     from shapely.geometry import Polygon
 
+    X = TypeVar("X", xr.DataArray, xr.Dataset)
+    CRSTYPE = Union[int, str, pyproj.CRS]
+
 from .exceptions import DependencyError
 
 __all__ = ["deg2mpm", "fill_depressions"]
-X = TypeVar("X", xr.DataArray, xr.Dataset)
-CRSTYPE = Union[int, str, pyproj.CRS]
 
 
 def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
