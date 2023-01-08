@@ -2,6 +2,19 @@
 History
 =======
 
+0.13.10 (unreleased)
+--------------------
+
+New Features
+~~~~~~~~~~~~
+- Refactor the ``show_versions`` function now to improve performance and
+  print the output in a nicer table-like format.
+
+Bug Fixes
+~~~~~~~~~
+- Fix a compatibility issue with the new ``scipy`` version in
+  ``elevation_profile`` where led to failure of interpolation.
+
 0.13.9 (2022-12-15)
 -------------------
 
