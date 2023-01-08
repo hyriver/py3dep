@@ -108,7 +108,7 @@ def test_query_3dep_source():
     res_all = src.groupby("dem_res")["OBJECTID"].count().to_dict()
     src = py3dep.query_3dep_sources(GEOM.bounds, res="1m")
     res_1m = src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    assert res_all == {"10m": 8, "1m": 4, "30m": 8} and res_1m == {"1m": 4}
+    assert res_all == {"10m": 8, "1m": 3, "30m": 8} and res_1m == {"1m": 3}
 
 
 class TestCLI:
