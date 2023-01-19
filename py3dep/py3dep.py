@@ -26,8 +26,8 @@ from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 
-from . import utils
-from .exceptions import InputTypeError, InputValueError, ServiceUnavailableError
+from py3dep import utils
+from py3dep.exceptions import InputTypeError, InputValueError, ServiceUnavailableError
 
 if TYPE_CHECKING:
     from pygeoutils.pygeoutils import Spline

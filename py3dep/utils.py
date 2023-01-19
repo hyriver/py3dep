@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     X = TypeVar("X", xr.DataArray, xr.Dataset)
     CRSTYPE = Union[int, str, pyproj.CRS]
 
-from .exceptions import DependencyError
+from py3dep.exceptions import DependencyError
 
 __all__ = ["deg2mpm", "fill_depressions"]
 

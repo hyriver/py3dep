@@ -7,9 +7,9 @@ import click
 import geopandas as gpd
 import pandas as pd
 
-from . import py3dep
-from .exceptions import InputTypeError, MissingColumnError, MissingCRSError
-from .py3dep import LAYERS
+from py3dep import py3dep
+from py3dep.exceptions import InputTypeError, MissingColumnError, MissingCRSError
+from py3dep.py3dep import LAYERS
 
 
 def get_target_df(

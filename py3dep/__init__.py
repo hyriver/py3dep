@@ -8,15 +8,15 @@ if Version(version("shapely")) > Version("1.9"):
 
     os.environ["USE_PYGEOS"] = "0"
 
-from .exceptions import (
+from py3dep.exceptions import (
     DependencyError,
     InputTypeError,
     InputValueError,
     MissingColumnError,
     MissingCRSError,
 )
-from .print_versions import show_versions
-from .py3dep import (
+from py3dep.print_versions import show_versions
+from py3dep.py3dep import (
     check_3dep_availability,
     elevation_bycoords,
     elevation_bygrid,
@@ -25,7 +25,7 @@ from .py3dep import (
     query_3dep_sources,
     static_3dep_dem,
 )
-from .utils import deg2mpm, fill_depressions
+from py3dep.utils import deg2mpm, fill_depressions
 
 try:
     __version__ = version("py3dep")
