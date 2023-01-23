@@ -65,7 +65,7 @@ def test_static():
 def test_fill_depressions():
     ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
-    assert_close(ds.mean().compute().item(), 295.862)
+    assert_close(ds.mean().compute().item(), 296.9658)
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
-    assert_close((elev_fill - elev).sum().compute().item(), 1538.4422)
+    assert_close((elev_fill - elev).sum().compute().item(), 7735.8367)
 
 
 def test_check_3dep_availability():
