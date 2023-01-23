@@ -1,6 +1,0 @@
-[run]
-omit =
-    setup.py
-    tests/*
-    py3dep/__init__.py
-    py3dep/print_versions.py
