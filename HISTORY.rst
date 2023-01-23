@@ -5,6 +5,12 @@ History
 0.13.12 (unreleased)
 --------------------
 
+New Features
+~~~~~~~~~~~~
+- Use `pyflwdir <https://github.com/Deltares/pyflwdir>`__ package for
+  depression filling operation instead of ``richdem`` since it appears
+  to be maintained. ``pyflwdir`` is an optional dependency.
+
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Fully migrate ``setup.cfg`` and ``setup.py`` to ``pyproject.toml``.
