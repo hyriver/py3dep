@@ -11,9 +11,9 @@ import xarray as xr
 from pygeoogc import ArcGISRESTful
 
 try:
-    import richdem as rd
+    import pyflwdir
 except ImportError:
-    rd = None
+    pyflwdir = None
 
 if TYPE_CHECKING:
     from shapely.geometry import Polygon
@@ -26,7 +26,7 @@ from py3dep.exceptions import DependencyError
 __all__ = ["deg2mpm", "fill_depressions"]
 
 
-def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
+def fill_depressions(dem: xr.DataArray) -> xr.DataArray:
     """Fill depressions and adjust flat areas in a DEM using `RichDEM <https://richdem.readthedocs.io>`__.
 
     Parameters
@@ -43,19 +43,15 @@ def fill_depressions(dem_da: xr.DataArray) -> xr.DataArray:
         `flat area resolution <https://richdem.readthedocs.io/en/latest/flat_resolution.html>`__
         operations.
     """
-    dem = dem_da.copy()
-    if rd is None:
+    dem = dem.astype("f8")
+    if pyflwdir is None:
         raise DependencyError
-
-    nodata = -9999
-    with xr.set_options(keep_attrs=True):
-        dem = dem.fillna(nodata)
-        rda = rd.rdarray(dem, no_data=nodata)
-        rda.projection = dem.rio.crs
-        rda.geotransform = geoutils.transform2tuple(dem.rio.transform())
-        rda = rd.FillDepressions(rda, epsilon=False)
-        dem.data = rd.ResolveFlats(rda)
-        return dem.where(dem > nodata, dem.attrs["nodatavals"][0])
+    attrs = dem.attrs
+    filled, _ = pyflwdir.dem.fill_depressions(dem.values, outlets="min", nodata=np.nan)
+    dem = dem.copy(data=filled)
+    dem.attrs = attrs
+    dem = dem.rio.write_nodata(np.nan)
+    return dem
 
 
 def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
