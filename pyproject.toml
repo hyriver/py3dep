@@ -2,11 +2,36 @@
 build-backend = "setuptools.build_meta"
 requires = [
   "setuptools>=42",
-  "setuptools-scm>=7"
+  "setuptools-scm>=7",
 ]
 
 [project]
+name = "py3dep"
+description = "Access topography data at any resolution via 3DEP web service of USGS."
+[project.readme]
+content-type = "text/x-rst"
+file = "README.rst"
+
+license = {text = "MIT"}
 authors = [{name = "Taher Chegini", email = "cheginit@gmail.com"}]
+requires-python = ">=3.8"
+dependencies = [
+  "async-retriever>=0.3.10",
+  "click>=0.7",
+  "cytoolz",
+  "geopandas>=0.10",
+  "numpy>=1.17",
+  "pygeoogc>=0.13.10",
+  "pygeoutils>=0.13.11",
+  "rasterio>=1.2",
+  "rioxarray>=0.11",
+  "scipy",
+  "shapely>=1.8",
+  "xarray>=2022.03",
+]
+dynamic = [
+  "version",
+]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
@@ -24,53 +49,32 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Hydrology",
   "Typing :: Typed"
 ]
-dependencies = [
-  "async-retriever>=0.3.10",
-  "click>=0.7",
-  "cytoolz",
-  "geopandas>=0.10",
-  "numpy>=1.17",
-  "pygeoogc>=0.13.10",
-  "pygeoutils>=0.13.11",
-  "rasterio>=1.2",
-  "rioxarray>=0.11",
-  "scipy",
-  "shapely>=1.8",
-  "xarray>=2022.03.0"
-]
-description = "Access topography data at any resolution via 3DEP web service of USGS."
-dynamic = ["version"]
-license = {text = "MIT"}
-name = "py3dep"
-requires-python = ">=3.8"
-
 [project.optional-dependencies]
-dem = ["pyflwdir>=0.5.6"]
+dem = [
+  "pyflwdir>=0.5.6",
+]
 test = [
   "coverage[toml]",
   "pytest-cov",
-  "pytest-xdist[psutil]"
+  "pytest-xdist[psutil]",
 ]
 typeguard = [
   "coverage[toml]",
   "pygments",
   "pytest-cov",
   "pytest-xdist[psutil]",
-  "typeguard"
+  "typeguard",
 ]
-
-[project.readme]
-content-type = "text/x-rst"
-file = "README.rst"
-
-[project.scripts]
-py3dep = "py3dep.cli:cli"
 
 [project.urls]
 CI = "https://github.com/hyriver/py3dep/actions"
 Changelog = "https://docs.hyriver.io/changelogs/py3dep.html"
 Homepage = "https://docs.hyriver.io/readme/py3dep.html"
 Issues = "https://github.com/hyriver/py3dep/issues"
+
+[project.scripts]
+py3dep = "py3dep.cli:cli"
+
 
 [tool.bandit]
 targets = [
