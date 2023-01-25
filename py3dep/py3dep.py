@@ -131,10 +131,7 @@ def get_map(
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px=10000000)
 
     try:
-        if isinstance(geometry, (Polygon, MultiPolygon)):
-            ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
-        else:
-            ds = geoutils.gtiff2xarray(r_dict)
+        ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
     except RasterioIOError as ex:
         raise ServiceUnavailableError(wms_url) from ex
     valid_layers = wms.get_validlayers()
