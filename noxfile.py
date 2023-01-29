@@ -3,7 +3,11 @@ import textwrap
 from pathlib import Path
 
 import nox
-import tomli
+
+try:
+    import tomllib as tomli
+except ImportError:
+    import tomli
 
 
 def get_package_name() -> str:
@@ -12,7 +16,7 @@ def get_package_name() -> str:
         return tomli.load(f)["project"]["name"]
 
 
-python_versions = ["3.10"]
+python_versions = ["3.11"]
 package = get_package_name()
 gh_deps = {
     "async_retriever": [],
@@ -109,10 +113,10 @@ def pre_commit(session: nox.Session) -> None:
         activate_virtualenv_in_precommit_hooks(session)
 
 
-@nox.session(name="type-check", python="3.10")
+@nox.session(name="type-check", python="3.11")
 def type_check(session: nox.Session) -> None:
     "Run Pyright."
-    install_deps(session, "dem")
+    install_deps(session, "nhdplus")
     session.install("pyright")
     session.run("pyright")
 
@@ -120,7 +124,7 @@ def type_check(session: nox.Session) -> None:
 @nox.session(python=python_versions)
 def tests(session: nox.Session) -> None:
     """Run the test suite."""
-    install_deps(session, "test,dem")
+    install_deps(session, "test")
 
     session.run("pytest", "--doctest-modules", *session.posargs)
     session.run("coverage", "report")
