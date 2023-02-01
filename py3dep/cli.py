@@ -49,14 +49,14 @@ def cli() -> None:
 @click.option(
     "-q",
     "--query_source",
-    default="airmap",
+    default="tep",
     type=click.Choice(["airmap", "tnm", "tep"], case_sensitive=False),
-    help="Source of the elevation data.",
+    help="Source of the elevation data: AirMap, The National Map, or 3DEP.",
 )
 @save_arg
 def coords(
     fpath: Path,
-    query_source: str = "airmap",
+    query_source: str = "tep",
     save_dir: str | Path = "topo_3dep",
 ) -> None:
     """Retrieve topographic data for a list of coordinates.
@@ -69,7 +69,7 @@ def coords(
         $ cat coords.csv
         lon,lat
         -122.2493328,37.8122894
-        $ py3dep coords coords.csv -q airmap -s topo_dir
+        $ py3dep coords coords.csv -q tep -s topo_dir
     """  # noqa: D301
     fpath = Path(fpath)
     elev = get_target_df(pd.read_csv(fpath), ["lon", "lat"])
