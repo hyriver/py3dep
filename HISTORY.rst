@@ -10,9 +10,16 @@ New Features
 - Use `pyflwdir <https://github.com/Deltares/pyflwdir>`__ package for
   depression filling operation instead of ``richdem`` since it appears
   to be maintained. ``pyflwdir`` is an optional dependency.
+- Add a new function called ``get_dem`` for obtaining DEM that is a wrapper of
+  ``static_3dep_dem`` and ``get_map`` functions. Since ``static_3dep_dem``
+  is faster, if the requested resolution is 10 m, 30 m, or 60 m,
+  ``static_3dep_dem`` will be used. Otherwise, ``get_map`` will be used.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Significantly improve the performance of ``elevation_bycoords`` when
+  ``tep`` is used as the source by using the static DEM data instead of
+  the dynamic DEM.
 - Fully migrate ``setup.cfg`` and ``setup.py`` to ``pyproject.toml``.
 - Convert relative imports to absolute with ``absolufy-imports``.
 
