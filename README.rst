@@ -141,14 +141,15 @@ The following functionalities are currently available:
     - Height Ellipsoidal
     - Contour 25
     - Contour Smoothed 25
-- ``get_dem``: Get DEM data from either the dynamic or static 3DEP service. Considering
-  that the static service is much faster, if the target DEM resolution is 10 m, 30 m, or
-  60 m, then the static service is used. Otherwise, the dynamic service is used.
 - ``static_3dep_dem``: Get DEM data at 10 m, 30 m, or 60 m resolution from the staged 3DEP
   data. Since this function only returns DEM, for computing other terrain attributes you
   can use `xarray-spatial <https://xarray-spatial.org/>`__. Just note that you should
   reproject the output ``DataArray`` to a projected CRS like 5070 before passing it to
   ``xarray-spatial`` like so: ``dem = dem.rio.reproject(5070)``.
+- ``get_dem``: Get DEM data from either the dynamic or static 3DEP service. Considering
+  that the static service is much faster, if the target DEM resolution is 10 m, 30 m, or
+  60 m, then the static service is used (``static_3dep_dem``). Otherwise, the dynamic
+  service is used (``get_map`` using ``DEM`` layer).
 - ``elevation_bygrid``: For retrieving elevations of all the grid points in a 2D grid.
 - ``elevation_bycoords``: For retrieving elevation of a list of ``x`` and ``y`` coordinates.
 - ``elevation_profile``: For retrieving elevation profile along a line at a given spacing.
