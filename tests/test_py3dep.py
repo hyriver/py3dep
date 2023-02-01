@@ -57,9 +57,12 @@ def test_getmap():
     fpath.unlink()
 
 
-def test_static():
-    ds = py3dep.static_3dep_dem(GEOM, 4326, 10)
-    assert_close(ds.mean().compute().item(), 295.686)
+def test_dem():
+    expected = 295.686
+    ds = py3dep.get_dem(GEOM, 10)
+    assert_close(ds.mean().compute().item(), expected)
+    ds = py3dep.get_dem(GEOM, 15)
+    assert_close(ds.mean().compute().item(), expected)
 
 
 def test_fill_depressions():
