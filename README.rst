@@ -141,6 +141,9 @@ The following functionalities are currently available:
     - Height Ellipsoidal
     - Contour 25
     - Contour Smoothed 25
+- ``get_dem``: Get DEM data from either the dynamic or static 3DEP service. Considering
+  that the static service is much faster, if the target DEM resolution is 10 m, 30 m, or
+  60 m, then the static service is used. Otherwise, the dynamic service is used.
 - ``static_3dep_dem``: Get DEM data at 10 m, 30 m, or 60 m resolution from the staged 3DEP
   data. Since this function only returns DEM, for computing other terrain attributes you
   can use `xarray-spatial <https://xarray-spatial.org/>`__. Just note that you should
@@ -342,13 +345,13 @@ these spatial references.
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
 
-We can also use ``static_3dep_dem`` function to get the same DEM:
+We can also use ``static_dem`` function to get the same DEM:
 
 .. code-block:: python
 
     import xrspatial
 
-    dem = py3dep.static_3dep_dem(geom, 4326, 30)
+    dem = py3dep.get_dem(geom, 30)
     slope = xrspatial.slope(dem.rio.reproject(5070))
     slope = py3dep.deg2mpm(slope)
 
