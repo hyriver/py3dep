@@ -56,6 +56,7 @@ __all__ = [
     "check_3dep_availability",
     "query_3dep_sources",
     "static_3dep_dem",
+    "get_dem",
 ]
 
 
@@ -254,30 +255,17 @@ class ElevationByCoords:
 
     def tep(self) -> list[float]:
         """Get elevation from 3DEP."""
-        wms_3dep = WMS(
-            ServiceURL().wms.nm_3dep,
-            layers="3DEPElevation:None",
-            outformat="image/tiff",
-            crs="EPSG:3857",
-            validation=False,
-        )
-        get_dem = tlz.partial(wms_3dep.getmap_bybox, resolution=10, box_crs=wms_3dep.crs)
-
-        points_proj = self.coords_gs.to_crs(wms_3dep.crs)
-        bounds = points_proj.buffer(30, cap_style=3)
-        try:
-            da_list = cast(
-                "list[xr.DataArray]", [geoutils.gtiff2xarray(get_dem(b.bounds)) for b in bounds]
+        points_proj = self.coords_gs.to_crs(4326)
+        url = "/".join(
+            (
+                "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation",
+                "13/TIFF/USGS_Seamless_DEM_13.vrt",
             )
-        except RasterioIOError as ex:
-            raise ServiceUnavailableError(ServiceURL().wms.nm_3dep) from ex
-
-        def get_value(da: xr.DataArray, x: float, y: float) -> float:
-            nodata = da.attrs["nodatavals"][0]
-            value = da.fillna(nodata).interp(x=[x], y=[y])
-            return float(value.values[0, 0])
-
-        return [get_value(da, p.x, p.y) for da, p in zip(da_list, points_proj)]
+        )
+        resp = io.BytesIO(ar.retrieve_binary([url])[0])
+        with MemoryFile(resp) as memfile, memfile.open() as src:
+            elev = np.array(list(src.sample(zip(points_proj.x, points_proj.y)))).ravel()
+        return elev.tolist()
 
 
 def elevation_bycoords(
@@ -571,4 +559,43 @@ def static_3dep_dem(
             {"units": "meters", "vertical_datum": "NAVD88", "vertical_resolution": 0.001}
         )
         dem.name = "elevation"
+    return dem
+
+
+def get_dem(
+    geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
+    resolution: int,
+    crs: CRSTYPE = 4326,
+) -> xr.DataArray:
+    """Get DEM data at any resolution from 3DEP.
+
+    Notes
+    -----
+    This function is a wrapper of ``static_3dep_dem`` and ``get_map`` functions.
+    Since ``static_3dep_dem`` is much faster, if the requested resolution is 10 m,
+    30 m, or 60 m, ``static_3dep_dem`` will be used. Otherwise, ``get_map``
+    will be used.
+
+    Parameters
+    ----------
+    geometry : Polygon, MultiPolygon, or tuple of length 4
+        Geometry to get DEM within. It can be a polygon or a boundong box
+        of form (xmin, ymin, xmax, ymax).
+    resolution : int
+        Target DEM source resolution in meters.
+    crs : str, int, or pyproj.CRS, optional
+        The spatial reference system of the input geometry, defaults to ``EPSG:4326``.
+
+    Returns
+    -------
+    xarray.DataArray
+        DEM at the specified resolution in meters and 4326 CRS.
+    """
+    if np.isclose(resolution, (10, 30, 60)).any():
+        dem = static_3dep_dem(geometry, crs, resolution)
+    else:
+        dem = cast("xr.DataArray", get_map("DEM", geometry, resolution, crs))
+    dem = dem.astype("f8")
+    dem.attrs.update({"units": "meters", "vertical_datum": "NAVD88"})
+    dem.name = "elevation"
     return dem

@@ -1,9 +1,7 @@
 """Top-level package for Py3DEP."""
 from importlib.metadata import PackageNotFoundError, version
 
-from packaging.version import Version
-
-if Version(version("shapely")) > Version("1.9"):
+if int(version("shapely").split(".")[0]) > 1:
     import os
 
     os.environ["USE_PYGEOS"] = "0"
@@ -21,6 +19,7 @@ from py3dep.py3dep import (
     elevation_bycoords,
     elevation_bygrid,
     elevation_profile,
+    get_dem,
     get_map,
     query_3dep_sources,
     static_3dep_dem,
@@ -43,6 +42,7 @@ __all__ = [
     "elevation_bygrid",
     "elevation_profile",
     "static_3dep_dem",
+    "get_dem",
     "show_versions",
     # Exceptions
     "MissingColumnError",
