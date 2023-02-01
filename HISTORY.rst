@@ -11,7 +11,7 @@ New Features
   depression filling operation instead of ``richdem`` since it appears
   to be unmaintained. Note that ``pyflwdir`` is an optional dependency.
   Also, ``pyflwdir`` depends on ``numba`` which is not available for
-  Python 3.11 yet. You can follow the progress of ``numba``'s' support
+  Python 3.11 yet. You can follow the progress of ``numba``'s support
   for Python 3.11 `here <https://github.com/numba/numba/issues/8304>`__.
 - Add a new function called ``get_dem`` for obtaining DEM that is a wrapper of
   ``static_3dep_dem`` and ``get_map`` functions. Since ``static_3dep_dem``
