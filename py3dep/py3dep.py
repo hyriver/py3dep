@@ -5,16 +5,17 @@ import contextlib
 import io
 import itertools
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
 
 import async_retriever as ar
 import cytoolz.curried as tlz
 import geopandas as gpd
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pygeoutils as geoutils
 import pyproj
-import rioxarray as rxr
+import rioxarray._io as rxr
 import shapely.ops as ops
 import xarray as xr
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
@@ -60,8 +61,30 @@ __all__ = [
 ]
 
 
+@overload
 def get_map(
-    layers: str | Sequence[str],
+    layers: str,
+    geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
+    resolution: float,
+    geo_crs: CRSTYPE = 4326,
+    crs: CRSTYPE = 4326,
+) -> xr.DataArray:
+    ...
+
+
+@overload
+def get_map(
+    layers: list[str],
+    geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
+    resolution: float,
+    geo_crs: CRSTYPE = 4326,
+    crs: CRSTYPE = 4326,
+) -> xr.Dataset:
+    ...
+
+
+def get_map(
+    layers: str | list[str],
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: float,
     geo_crs: CRSTYPE = 4326,
@@ -136,7 +159,7 @@ def get_map(
     except RasterioIOError as ex:
         raise ServiceUnavailableError(wms_url) from ex
     valid_layers = wms.get_validlayers()
-    return utils.rename_layers(ds, list(valid_layers))  # type: ignore
+    return utils.rename_layers(ds, list(valid_layers))
 
 
 def elevation_bygrid(
@@ -180,7 +203,7 @@ def elevation_bygrid(
     points = points.to_crs(crs=wms_crs).buffer(2 * resolution)
     bbox = tuple(points.total_bounds)
 
-    dem: xr.DataArray = get_map("DEM", bbox, resolution, wms_crs, wms_crs)  # type: ignore
+    dem = get_map("DEM", bbox, resolution, wms_crs, wms_crs)
 
     attrs = dem.attrs
     attrs["crs"] = pts_crs
@@ -238,7 +261,9 @@ class ElevationByCoords:
                 for chunk in coords_chunks
             )
         )
-        elevations = list(tlz.pluck("data", ar.retrieve_json(urls, kwds)))  # type: ignore
+        urls = cast("tuple[str, ...]", urls)
+        kwds = cast("tuple[dict[str, Any], ...]", kwds)
+        elevations = tlz.pluck("data", ar.retrieve_json(urls, kwds))
         return list(tlz.concat(elevations))
 
     def tnm(self) -> list[float]:
@@ -296,7 +321,7 @@ def elevation_bycoords(
     """
     _crs = crs.to_string() if isinstance(crs, pyproj.CRS) else crs
     service = ElevationByCoords(crs=_crs, coords=coords, source=source)
-    return service.__getattribute__(source)()  # type: ignore
+    return service.__getattribute__(source)()
 
 
 def __get_spline(line: LineString, ns_pts: int, crs: CRSTYPE) -> Spline:
@@ -306,16 +331,16 @@ def __get_spline(line: LineString, ns_pts: int, crs: CRSTYPE) -> Spline:
     return GeoBSpline(pts, ns_pts).spline
 
 
-def __get_idx(d_sp: np.ndarray, distance: float) -> np.ndarray:  # type: ignore
+def __get_idx(d_sp: npt.NDArray[np.float64], distance: float) -> npt.NDArray[np.float64]:
     """Get the index of the closest point to a given distance."""
     dis = pd.DataFrame(d_sp, columns=["distance"]).reset_index()
     grouper = pd.cut(dis.distance, np.arange(0, dis.distance.max() + distance, distance))
-    return dis.groupby(grouper).last()["index"].to_numpy()  # type: ignore
+    return dis.groupby(grouper).last()["index"].to_numpy()
 
 
 def __get_spline_params(
     line: LineString, n_seg: int, distance: float, crs: CRSTYPE
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:  # type: ignore[type-arg]
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """Get perpendiculars to a line."""
     _n_seg = n_seg
     spline = __get_spline(line, _n_seg, crs)
@@ -381,7 +406,7 @@ def elevation_profile(
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
     elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
     elevation["distance"] = ("z", distance)
-    return elevation  # type: ignore
+    return elevation
 
 
 def check_3dep_availability(
@@ -594,7 +619,7 @@ def get_dem(
     if np.isclose(resolution, (10, 30, 60)).any():
         dem = static_3dep_dem(geometry, crs, resolution)
     else:
-        dem = cast("xr.DataArray", get_map("DEM", geometry, resolution, crs))
+        dem = get_map("DEM", geometry, resolution, crs)
     dem = dem.astype("f8")
     dem.attrs.update({"units": "meters", "vertical_datum": "NAVD88"})
     dem.name = "elevation"

@@ -1,7 +1,7 @@
 """Utilities for Py3DEP."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeVar, Union
+from typing import TYPE_CHECKING, Sequence, Union, overload
 
 import geopandas as gpd
 import numpy as np
@@ -18,7 +18,6 @@ except ImportError:
 if TYPE_CHECKING:
     from shapely.geometry import Polygon
 
-    X = TypeVar("X", xr.DataArray, xr.Dataset)
     CRSTYPE = Union[int, str, pyproj.CRS]
 
 from py3dep.exceptions import DependencyError
@@ -46,6 +45,7 @@ def fill_depressions(dem: xr.DataArray) -> xr.DataArray:
     dem = dem.astype("f8")
     if pyflwdir is None:
         raise DependencyError
+
     attrs = dem.attrs
     filled, _ = pyflwdir.dem.fill_depressions(dem.values, outlets="min", nodata=np.nan)
     dem = dem.copy(data=filled)
@@ -80,7 +80,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
 
         def to_mpm(da: xr.DataArray) -> xr.DataArray:
             """Convert slope from degrees to meter/meter."""
-            return xr.apply_ufunc(  # type: ignore
+            return xr.apply_ufunc(
                 lambda x: np.tan(np.deg2rad(x)),
                 da,
                 dask="parallelized",
@@ -95,7 +95,19 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
     return slope
 
 
-def rename_layers(ds: X, valid_layers: list[str]) -> X:
+@overload
+def rename_layers(ds: xr.DataArray, valid_layers: list[str]) -> xr.DataArray:
+    ...
+
+
+@overload
+def rename_layers(ds: xr.Dataset, valid_layers: list[str]) -> xr.Dataset:
+    ...
+
+
+def rename_layers(
+    ds: xr.DataArray | xr.Dataset, valid_layers: list[str]
+) -> xr.DataArray | xr.Dataset:
     """Rename layers in a dataset."""
     rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
     rename.update({"3DEPElevation:None": "elevation"})
