@@ -274,6 +274,7 @@ class ElevationByCoords:
             for x, y in zip(pts.x, pts.y)
         ]
         resp = ar.retrieve_json([ServiceURL().restful.nm_pqs] * len(kwds), kwds, max_workers=5)
+        resp = cast("list[dict[str, Any]]", resp)
         return [
             r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
         ]
