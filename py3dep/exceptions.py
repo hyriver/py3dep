@@ -60,10 +60,10 @@ class DependencyError(ImportError):
 
 
 class MissingCRSError(Exception):
-    """Exception raised when input GeoDataFrame is missing CRS."""
+    """Exception raised when input is missing CRS."""
 
     def __init__(self) -> None:
-        self.message = "The input GeoDataFrame is missing CRS."
+        self.message = "The input is missing CRS."
         super().__init__(self.message)
 
     def __str__(self) -> str:

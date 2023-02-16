@@ -15,6 +15,7 @@ from py3dep.exceptions import (
 )
 from py3dep.print_versions import show_versions
 from py3dep.py3dep import (
+    add_elevation,
     check_3dep_availability,
     elevation_bycoords,
     elevation_bygrid,
@@ -43,6 +44,7 @@ __all__ = [
     "elevation_profile",
     "static_3dep_dem",
     "get_dem",
+    "add_elevation",
     "show_versions",
     # Exceptions
     "MissingColumnError",
