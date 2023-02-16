@@ -8,6 +8,7 @@ import pandas as pd
 import pyproj
 import pytest
 import rioxarray as rxr
+import xarray as xr
 from pygeoogc import utils
 from shapely import ops
 from shapely.geometry import MultiLineString, Polygon
@@ -98,7 +99,22 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
-    assert_close((elev_fill - elev).sum().compute().item(), 7735.8367)
+    assert_close((elev_fill - elev).sum().compute().item(), 9096.3853)
+
+
+def test_add_elev():
+    crs = (
+        "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +units=m"
+    )
+    geom = utils.match_crs(GEOM, DEF_CRS, crs)
+    xmin, ymin, xmax, ymax = geom.bounds
+    res = 10e3
+    gx = np.arange(xmin, xmax, res)
+    gy = np.arange(ymin, ymax, res)
+    da = xr.DataArray(dims=["x", "y"], coords={"x": gx, "y": gy})
+    da = da.rio.write_crs(crs)
+    ds = py3dep.add_elevation(da)
+    assert_close(ds["elevation"].mean().item(), 302.6101)
 
 
 def test_check_3dep_availability():
