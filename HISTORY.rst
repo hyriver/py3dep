@@ -2,6 +2,15 @@
 History
 =======
 
+0.13.13 (unreleased)
+--------------------
+
+New Features
+~~~~~~~~~~~~
+- Add a new function called ``add_elevation`` for adding elevation
+  data as a new variable to an input ``xarray.DataArray`` or
+  ``xarray.Dataset``.
+
 0.13.12 (2023-02-01)
 --------------------
 
