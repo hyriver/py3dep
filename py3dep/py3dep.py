@@ -4,7 +4,6 @@ from __future__ import annotations
 import contextlib
 import io
 import itertools
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
 
 import async_retriever as ar
@@ -386,7 +385,6 @@ def elevation_bygrid(
     return dem.interp(x=list(xcoords), y=list(ycoords))
 
 
-@dataclass
 class ElevationByCoords:
     """Elevation model class.
 
@@ -401,16 +399,28 @@ class ElevationByCoords:
         and ``airmap``.
     """
 
-    coords: list[tuple[float, float]]
-    crs: CRSTYPE = 4326
-    source: str = "tep"
-
-    def __post_init__(self) -> None:
-        self.crs = ogc_utils.validate_crs(self.crs)
+    def __init__(
+        self,
+        coords: list[tuple[float, float]] | tuple[float, float],
+        crs: CRSTYPE = 4326,
+        source: str = "tep",
+    ) -> None:
+        self.coords = geoutils.coords_list(coords)
+        self.crs = ogc_utils.validate_crs(crs)
         self.coords_gs = gpd.GeoSeries(gpd.points_from_xy(*zip(*self.coords)), crs=self.crs)
-        valid_sources = ["tnm", "airmap", "tep"]
+        valid_sources = ("tnm", "airmap", "tep")
+        self.source = source
         if self.source not in valid_sources:
             raise InputValueError("source", valid_sources)
+
+    @property
+    def values(self) -> list[float]:
+        """Return list of elevations in meters."""
+        if self.source == "tep":
+            return self.tep()
+        if self.source == "tnm":
+            return self.tnm()
+        return self.airmap()
 
     def airmap(self) -> list[float]:
         """Return list of elevations in meters."""
@@ -462,15 +472,29 @@ class ElevationByCoords:
         return elev.tolist()
 
 
+@overload
+def elevation_bycoords(coords: tuple[float, float], crs: CRSTYPE = ..., source: str = ...) -> float:
+    ...
+
+
+@overload
 def elevation_bycoords(
-    coords: list[tuple[float, float]], crs: CRSTYPE = 4326, source: str = "tep"
+    coords: list[tuple[float, float]], crs: CRSTYPE = ..., source: str = ...
 ) -> list[float]:
+    ...
+
+
+def elevation_bycoords(
+    coords: tuple[float, float] | list[tuple[float, float]],
+    crs: CRSTYPE = 4326,
+    source: str = "tep",
+) -> float | list[float]:
     """Get elevation for a list of coordinates.
 
     Parameters
     ----------
-    coords : list of tuple
-        Coordinates of target location as list of tuples ``[(x, y), ...]``.
+    coords : tuple or list of tuple
+        Coordinates of target location(s), e.g., ``[(x, y), ...]``.
     crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
@@ -485,12 +509,14 @@ def elevation_bycoords(
 
     Returns
     -------
-    list of float
+    float or list of float
         Elevation in meter.
     """
     _crs = crs.to_string() if isinstance(crs, pyproj.CRS) else crs
     service = ElevationByCoords(crs=_crs, coords=coords, source=source)
-    return service.__getattribute__(source)()
+    if len(service.coords) == 1:
+        return service.values[0]
+    return service.values
 
 
 def __get_spline(line: LineString, ns_pts: int, crs: CRSTYPE) -> Spline:
