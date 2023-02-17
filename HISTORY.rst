@@ -10,6 +10,9 @@ New Features
 - Add a new function called ``add_elevation`` for adding elevation
   data as a new variable to an input ``xarray.DataArray`` or
   ``xarray.Dataset``.
+- The ``elevation_bycoords`` function now accepts a single coordinate
+  and returns a float in addition to a list of coordinates that returned
+  a list of elevations.
 
 0.13.12 (2023-02-01)
 --------------------
