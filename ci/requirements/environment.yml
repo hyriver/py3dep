@@ -3,7 +3,7 @@ channels:
 - conda-forge
 - nodefaults
 dependencies:
-  # async-retriever deps
+# async-retriever deps
 - aiodns
 - aiosqlite
 - aiohttp >=3.8.3
@@ -12,10 +12,9 @@ dependencies:
 - nest-asyncio
 - aiohttp-client-cache >=0.8.1
 - ujson
-- cytoolz
 
-  # pygeoogc deps
-  # - async-retriever >=0.3.5
+# pygeoogc deps
+# - async-retriever >=0.3.5
 - cytoolz
 - defusedxml
 - owslib >=0.27.2
@@ -26,12 +25,12 @@ dependencies:
 - shapely >=2.0
 - urllib3
 
-  # pygeoutils deps
+# pygeoutils deps
 - cytoolz
 - dask-core
 - geopandas >=0.7
 - netcdf4
-- numpy >=1.17
+- numpy >=1.21
 - pyproj >=2.2
 - rasterio >=1.2
 - rioxarray >=0.11
@@ -41,24 +40,24 @@ dependencies:
 - xarray >=2022.03.0
 
   # py3dep
-  # - async-retriever >=0.3.6
+# - async-retriever >=0.3.6
 - click >=0.7
 - cytoolz
-- numpy >=1.17
-  # - pygeoogc >=0.13.7
-  # - pygeoutils >=0.13.7
+- numpy >=1.21
+# - pygeoogc >=0.13.7
+# - pygeoutils >=0.13.7
 - rasterio >=1.2
 - rioxarray >=0.11
 - scipy
 - shapely >=2.0
 - xarray >=2022.03.0
-  # optional dep
-- richdem>=0.3.4
+# optional dep
+- pyflwdir >=0.5.6
 
-  # optional deps to speed up xarray
+# optional deps to speed up xarray
 - bottleneck
 
-  # test deps
+# test deps
 - psutil
 - pytest
 - pytest-cov
