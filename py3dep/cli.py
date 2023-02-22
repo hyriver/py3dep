@@ -78,7 +78,7 @@ def coords(
     click.echo(f"Found coordinates of {count} in {fpath.resolve()}. Retrieving ... ")
 
     coords_list = list(elev.itertuples(index=False, name=None))
-    elev["elevation"] = py3dep.elevation_bycoords(coords_list, "epsg:4326", query_source)
+    elev["elevation"] = py3dep.elevation_bycoords(coords_list, 4326, query_source)
 
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     elev.astype("f4").to_csv(Path(save_dir, f"{fpath.stem}_elevation.csv"))

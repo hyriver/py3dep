@@ -16,7 +16,7 @@ from shapely.geometry import MultiLineString, Polygon
 import py3dep
 from py3dep.cli import cli
 
-DEF_CRS = "epsg:4326"
+DEF_CRS = 4326
 ALT_CRS = "epsg:3857"
 GEOM = Polygon(
     [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
