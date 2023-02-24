@@ -1,11 +1,6 @@
 """Top-level package for Py3DEP."""
 from importlib.metadata import PackageNotFoundError, version
 
-if int(version("shapely").split(".")[0]) > 1:
-    import os
-
-    os.environ["USE_PYGEOS"] = "0"
-
 from py3dep.exceptions import (
     DependencyError,
     InputTypeError,
