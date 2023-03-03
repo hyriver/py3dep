@@ -23,7 +23,7 @@ from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
 from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
-from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
+from shapely import LineString, MultiLineString, MultiPolygon, Polygon
 
 from py3dep import utils
 from py3dep.exceptions import (
@@ -34,7 +34,7 @@ from py3dep.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from pygeoutils.pygeoutils import Spline
+    from pygeoutils.geotools import Spline
 
     CRSTYPE = Union[int, str, pyproj.CRS]
 
@@ -448,14 +448,12 @@ class ElevationByCoords:
         """Return list of elevations in meters."""
         pts = self.coords_gs.to_crs(4326)
         kwds = [
-            {"params": {"units": "Meters", "output": "json", "x": f"{x:.5f}", "y": f"{y:.5f}"}}
+            {"params": {"units": "Meters", "x": f"{x:.6f}", "y": f"{y:.6f}"}}
             for x, y in zip(pts.x, pts.y)
         ]
         resp = ar.retrieve_json([ServiceURL().restful.nm_pqs] * len(kwds), kwds, max_workers=5)
         resp = cast("list[dict[str, Any]]", resp)
-        return [
-            r["USGS_Elevation_Point_Query_Service"]["Elevation_Query"]["Elevation"] for r in resp
-        ]
+        return [r["value"] for r in resp]
 
     def tep(self) -> list[float]:
         """Get elevation from 3DEP."""
@@ -630,7 +628,7 @@ def check_3dep_availability(
     >>> import py3dep
     >>> bbox = (-69.77, 45.07, -69.31, 45.45)
     >>> py3dep.check_3dep_availability(bbox)
-    {'1m': True, '3m': False, '5m': False, '10m': True, '30m': True, '60m': False, 'topobathy': False}
+    {'1m': True, '3m': False, '5m': False, '10m': True, '30m': False, '60m': False, 'topobathy': False}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
         raise InputTypeError("bbox", "a tuple of length 4")
@@ -688,7 +686,7 @@ def query_3dep_sources(
     >>> bbox = (-69.77, 45.07, -69.31, 45.45)
     >>> src = py3dep.query_3dep_sources(bbox)
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    {'10m': 8, '1m': 3, '30m': 8}
+    {'10m': 1, '1m': 3}
     >>> src = py3dep.query_3dep_sources(bbox, res="1m")
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
     {'1m': 3}
