@@ -120,6 +120,7 @@ def test_check_3dep_availability():
     avail = py3dep.check_3dep_availability(GEOM.bounds)
     assert avail["1m"] and avail["10m"]
 
+
 def test_query_3dep_source():
     src = py3dep.query_3dep_sources(GEOM.bounds)
     res_all = src.groupby("dem_res")["OBJECTID"].count().to_dict()
