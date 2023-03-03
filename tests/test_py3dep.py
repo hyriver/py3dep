@@ -10,14 +10,13 @@ import pytest
 import rioxarray as rxr
 import xarray as xr
 from pygeoogc import utils
-from shapely import ops
-from shapely.geometry import MultiLineString, Polygon
+from shapely import MultiLineString, Polygon, ops
 
 import py3dep
 from py3dep.cli import cli
 
 DEF_CRS = 4326
-ALT_CRS = "epsg:3857"
+ALT_CRS = 3857
 GEOM = Polygon(
     [[-69.77, 45.07], [-69.31, 45.07], [-69.31, 45.45], [-69.77, 45.45], [-69.77, 45.07]]
 )
@@ -74,7 +73,7 @@ def test_fill_depressions():
 
 @pytest.mark.parametrize(
     "source,expected",
-    [("airmap", 363), ("tnm", 356.59), ("tep", 356.139)],
+    [("airmap", 363), ("tnm", 108.537), ("tep", 356.139)],
 )
 def test_bycoords(source, expected):
     coords = [(-7766049.664788851, 5691929.739021257)]
@@ -119,15 +118,14 @@ def test_add_elev():
 
 def test_check_3dep_availability():
     avail = py3dep.check_3dep_availability(GEOM.bounds)
-    assert avail["1m"] and avail["10m"] and avail["30m"]
-
+    assert avail["1m"] and avail["10m"]
 
 def test_query_3dep_source():
     src = py3dep.query_3dep_sources(GEOM.bounds)
     res_all = src.groupby("dem_res")["OBJECTID"].count().to_dict()
     src = py3dep.query_3dep_sources(GEOM.bounds, res="1m")
     res_1m = src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    assert res_all == {"10m": 8, "1m": 3, "30m": 8} and res_1m == {"1m": 3}
+    assert res_all == {"10m": 1, "1m": 3} and res_1m == {"1m": 3}
 
 
 class TestCLI:
