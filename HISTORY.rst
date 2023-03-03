@@ -2,8 +2,8 @@
 History
 =======
 
-0.13.13 (unreleased)
---------------------
+0.14.0 (unreleased)
+-------------------
 
 New Features
 ~~~~~~~~~~~~
@@ -13,6 +13,18 @@ New Features
 - The ``elevation_bycoords`` function now accepts a single coordinate
   and returns a float in addition to a list of coordinates that returned
   a list of elevations.
+- Modify the ``elevation_bycoords`` function to use the new elevation
+  point query service (EPQS) web service. This only affects the
+  ``source="tnm"`` option.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- Bump the minimum required version of ``shapely`` to 2.0,
+  and use its new API.
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Sync all minor versions of HyRiver packages to 0.14.0.
 
 0.13.12 (2023-02-01)
 --------------------
