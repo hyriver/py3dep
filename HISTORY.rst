@@ -2,6 +2,14 @@
 History
 =======
 
+0.14.1 (unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- In ``static_3dep_dem`` use ``rioxarray`` directly instead of
+  ``rasterio`` since it can handle VRT files.
+
 0.14.0 (2023-03-05)
 -------------------
 
