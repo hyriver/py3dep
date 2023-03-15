@@ -22,7 +22,6 @@ from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
 from rasterio.io import MemoryFile
-from rasterio.vrt import WarpedVRT
 from shapely import LineString, MultiLineString, MultiPolygon, Polygon
 
 from py3dep import utils
@@ -277,22 +276,17 @@ def static_3dep_dem(
     if resolution not in url:
         raise InputValueError("resolution", list(url))
 
-    resp = io.BytesIO(ar.retrieve_binary([url[resolution]])[0])
-    with MemoryFile(resp) as memfile, memfile.open() as src, WarpedVRT(src) as vrt:
-        dem = rxr.open_rasterio(vrt, chunks="auto")  # type: ignore
-        dem = cast("xr.DataArray", dem)
-        if "band" in dem.dims:
-            dem = dem.squeeze("band", drop=True)
-        poly = geoutils.geo2polygon(geometry, crs, vrt.crs)
-        dem = dem.rio.clip_box(*poly.bounds)
-        if isinstance(geometry, (Polygon, MultiPolygon)):
-            dem = dem.rio.clip([poly])
-        dem = dem.where(dem > dem.rio.nodata, drop=False)
-        dem = dem.rio.write_nodata(np.nan)
-        dem.attrs.update(
-            {"units": "meters", "vertical_datum": "NAVD88", "vertical_resolution": 0.001}
-        )
-        dem.name = "elevation"
+    dem = rxr.open_rasterio(url[resolution], chunks="auto")  # type: ignore
+    dem = cast("xr.DataArray", dem)
+    dem = dem.squeeze()
+    poly = geoutils.geo2polygon(geometry, crs, dem.rio.crs)
+    dem = dem.rio.clip_box(*poly.bounds)
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        dem = dem.rio.clip([poly])
+    dem = dem.where(dem > dem.rio.nodata, drop=False)
+    dem = dem.rio.write_nodata(np.nan)
+    dem.attrs.update({"units": "meters", "vertical_datum": "NAVD88", "vertical_resolution": 0.001})
+    dem.name = "elevation"
     return dem
 
 
@@ -453,7 +447,7 @@ class ElevationByCoords:
         ]
         resp = ar.retrieve_json([ServiceURL().restful.nm_pqs] * len(kwds), kwds, max_workers=5)
         resp = cast("list[dict[str, Any]]", resp)
-        return [r["value"] for r in resp]
+        return [float(r["value"]) for r in resp]
 
     def tep(self) -> list[float]:
         """Get elevation from 3DEP."""
@@ -628,7 +622,7 @@ def check_3dep_availability(
     >>> import py3dep
     >>> bbox = (-69.77, 45.07, -69.31, 45.45)
     >>> py3dep.check_3dep_availability(bbox)
-    {'1m': True, '3m': False, '5m': False, '10m': True, '30m': False, '60m': False, 'topobathy': False}
+    {'1m': True, '3m': False, '5m': False, '10m': True, '30m': True, '60m': False, 'topobathy': False}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
         raise InputTypeError("bbox", "a tuple of length 4")
@@ -686,7 +680,7 @@ def query_3dep_sources(
     >>> bbox = (-69.77, 45.07, -69.31, 45.45)
     >>> src = py3dep.query_3dep_sources(bbox)
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    {'10m': 1, '1m': 3}
+    {'10m': 8, '1m': 3, '30m': 8}
     >>> src = py3dep.query_3dep_sources(bbox, res="1m")
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
     {'1m': 3}
