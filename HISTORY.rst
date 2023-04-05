@@ -9,6 +9,9 @@ New Features
 ~~~~~~~~~~~~
 - In ``static_3dep_dem`` use ``rioxarray`` directly instead of
   ``rasterio`` since it can handle VRT files.
+- Improve performance and accuracy of ``add_elevation`` by using
+  the dynamic 3DEP service and setting the resolution based on the
+  input ``xarray.DataArray`` or ``xarray.Dataset``.
 
 0.14.0 (2023-03-05)
 -------------------
