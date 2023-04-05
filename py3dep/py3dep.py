@@ -15,7 +15,7 @@ import pandas as pd
 import pygeoutils as geoutils
 import pyproj
 import rioxarray._io as rxr
-import shapely.ops as ops
+import shapely
 import xarray as xr
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
@@ -190,11 +190,16 @@ def add_elevation(
     ds : xarray.DataArray or xarray.Dataset
         The dataset to add elevation data to. It must contain
         CRS information.
+    ds_dims : tuple of str, optional
+        The vertical and horizontal dimension names, e.g., ``("y", "x")``.
+        If not provided, it will be inferred from the dataset. Note that
+        order matters, the first element is the vertical dimension and
+        the second is the horizontal dimension.
 
     Returns
     -------
     xarray.Dataset
-        The dataset with ``elevation``.
+        The dataset with ``elevation`` variable added.
     """
     if not isinstance(ds, (xr.DataArray, xr.Dataset)):
         raise InputTypeError("ds", "xarray.DataArray or xarray.Dataset")
@@ -214,23 +219,18 @@ def add_elevation(
         msg = "Could not find valid dimension names in dataset. Please pass ds_dims"
         raise ValueError(msg)
 
-    url = "/".join(
-        (
-            "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation",
-            "13/TIFF/USGS_Seamless_DEM_13.vrt",
-        )
-    )
-    resp = io.BytesIO(ar.retrieve_binary([url])[0])
-    x, y = ds[ds_dims[1]].values, ds[ds_dims[0]].values
-    with MemoryFile(resp) as memfile, memfile.open() as src:
-        crs_3dep = pyproj.CRS(src.crs)
-        if ds_crs != pyproj.CRS(crs_3dep):
-            coords = ogc_utils.match_crs(list(itertools.product(x, y)), ds_crs, crs_3dep)
-        else:
-            coords = itertools.product(x, y)
-        elev_arr = np.array(list(src.sample(coords))).ravel().reshape(len(y), len(x))
-    elev = xr.DataArray(elev_arr, dims=ds_dims, coords={ds_dims[0]: y, ds_dims[1]: x})
-    elev.attrs["long_name"] = "Elevation extracted from 3DEP at 10-m resolution"
+    bounds = gpd.GeoSeries([shapely.box(*ds.rio.bounds())], crs=ds.rio.crs)
+    bounds = bounds.to_crs(5070)
+    xmin, _, xmax, _ = bounds.bounds.iloc[0].values
+    res = abs(xmax - xmin) / ds.sizes[ds_dims[1]]
+    bounds = bounds.buffer(3 * res, join_style=2, cap_style=2).to_crs(4326)
+
+    elev = get_map("DEM", bounds.iloc[0].bounds, resolution=ds.rio.resolution()[0])
+    elev = elev.rio.reproject(ds.rio.crs)
+    elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds.rio.crs)
+    elev = elev.rio.reproject_match(ds)
+    elev = geoutils.xd_write_crs(elev, ds.rio.crs, ds.rio.grid_mapping)
+    elev.attrs["long_name"] = "Elevation"
     elev.attrs["units"] = "m"
     ds["elevation"] = elev
     return ds
@@ -574,7 +574,7 @@ def elevation_profile(
         raise InputTypeError("lines", "LineString or MultiLineString")
 
     if isinstance(lines, MultiLineString):
-        path = ops.linemerge(lines)
+        path = shapely.line_merge(lines)
         if not isinstance(path, LineString):
             raise InputTypeError("lines", "mergeable to a single line")
     else:
