@@ -214,7 +214,7 @@ def add_elevation(
     else:
         ds = ds.copy()
 
-    ds_dims = get_dim_names(ds)
+    ds_dims = ds_dims or get_dim_names(ds)
     if ds_dims is None:
         msg = "Could not find valid dimension names in dataset. Please pass ds_dims"
         raise ValueError(msg)
