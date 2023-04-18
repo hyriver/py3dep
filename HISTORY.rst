@@ -12,6 +12,9 @@ New Features
 - Improve performance and accuracy of ``add_elevation`` by using
   the dynamic 3DEP service and setting the resolution based on the
   input ``xarray.DataArray`` or ``xarray.Dataset``.
+- Improve the performance of ``elevation_profile`` by using the
+  static 3DEP service when the input resolution is 10 m (which is
+  the default for this function).
 
 0.14.0 (2023-03-05)
 -------------------
