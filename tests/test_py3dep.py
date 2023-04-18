@@ -37,7 +37,7 @@ def assert_close(a: float, b: float, rtol: float = 1e-3) -> bool:
 
 def test_profile():
     ep = py3dep.elevation_profile(LINE, 10)
-    epm = py3dep.elevation_profile(ops.linemerge(LINE), 10)
+    epm = py3dep.elevation_profile(ops.linemerge(LINE), 10, 15)
     expected = 281.295
     assert_close(ep.mean().compute().item(), expected)
     assert_close(epm.mean().compute().item(), expected)

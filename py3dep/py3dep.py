@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import contextlib
-import io
 import itertools
 from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
 
@@ -14,6 +13,7 @@ import numpy.typing as npt
 import pandas as pd
 import pygeoutils as geoutils
 import pyproj
+import rasterio
 import rioxarray._io as rxr
 import shapely
 import xarray as xr
@@ -21,7 +21,6 @@ from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
-from rasterio.io import MemoryFile
 from shapely import LineString, MultiLineString, MultiPolygon, Polygon
 
 from py3dep import utils
@@ -450,16 +449,15 @@ class ElevationByCoords:
         return [float(r["value"]) for r in resp]
 
     def tep(self) -> list[float]:
-        """Get elevation from 3DEP."""
-        points_proj = self.coords_gs.to_crs(4326)
+        """Get elevation from 10-m resolution 3DEP."""
         url = "/".join(
             (
                 "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation",
                 "13/TIFF/USGS_Seamless_DEM_13.vrt",
             )
         )
-        resp = io.BytesIO(ar.retrieve_binary([url])[0])
-        with MemoryFile(resp) as memfile, memfile.open() as src:
+        with rasterio.open(url) as src:
+            points_proj = self.coords_gs.to_crs(src.crs)
             elev = np.array(list(src.sample(zip(points_proj.x, points_proj.y)))).ravel()
         return elev.tolist()
 
@@ -582,11 +580,18 @@ def elevation_profile(
 
     crs_prj = 5070
     geom = gpd.GeoSeries([path], crs=crs).to_crs(crs_prj)
-    geom_buff = geom.buffer(5 * dem_res).unary_union.bounds
-    dem = get_dem(geom_buff, dem_res, crs_prj)
-
     n_seg = int(np.ceil(geom.length.sum() / spacing)) * 100
     x, y, distance = __get_spline_params(geom.geometry[0], n_seg, spacing, crs_prj)
+    if dem_res == 10:
+        elev_list = elevation_bycoords(list(zip(x, y)), crs=crs_prj, source="tep")
+        elevation = xr.DataArray(elev_list, dims="z", coords={"z": range(len(elev_list))})
+        x, y = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
+        elevation["x"], elevation["y"] = ("z", list(x)), ("z", list(y))
+        elevation["distance"] = ("z", distance)
+        return elevation
+
+    geom_buff = geom.buffer(5 * dem_res).unary_union.bounds
+    dem = get_dem(geom_buff, dem_res, crs_prj)
     xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, dem.rio.crs))
 
     elevation = dem.astype("f8").interp(x=("z", list(xp)), y=("z", list(yp)))
