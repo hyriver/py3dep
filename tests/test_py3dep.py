@@ -10,7 +10,8 @@ import pytest
 import rioxarray as rxr
 import xarray as xr
 from pygeoogc import utils
-from shapely import MultiLineString, Polygon, ops
+from shapely import ops
+from shapely.geometry import MultiLineString, Polygon
 
 import py3dep
 from py3dep.cli import cli

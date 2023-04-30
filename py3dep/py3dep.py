@@ -21,7 +21,9 @@ from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
-from shapely import LineString, MultiLineString, MultiPolygon, Polygon
+from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
+from shapely.geometry import box as shapely_box
+from shapely import ops
 
 from py3dep import utils
 from py3dep.exceptions import (
@@ -218,7 +220,7 @@ def add_elevation(
         msg = "Could not find valid dimension names in dataset. Please pass ds_dims"
         raise ValueError(msg)
 
-    bounds = gpd.GeoSeries([shapely.box(*ds.rio.bounds())], crs=ds.rio.crs)
+    bounds = gpd.GeoSeries([shapely_box(*ds.rio.bounds())], crs=ds.rio.crs)
     bounds = bounds.to_crs(5070)
     xmin, _, xmax, _ = bounds.bounds.iloc[0].values
     res = abs(xmax - xmin) / ds.sizes[ds_dims[1]]
@@ -572,7 +574,7 @@ def elevation_profile(
         raise InputTypeError("lines", "LineString or MultiLineString")
 
     if isinstance(lines, MultiLineString):
-        path = shapely.line_merge(lines)
+        path = ops.linemerge(lines)
         if not isinstance(path, LineString):
             raise InputTypeError("lines", "mergeable to a single line")
     else:

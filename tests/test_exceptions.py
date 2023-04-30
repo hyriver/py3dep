@@ -1,7 +1,7 @@
 import sys
 
 import pytest
-from shapely import Polygon
+from shapely.geometry import Polygon
 
 import py3dep
 from py3dep import InputTypeError, InputValueError

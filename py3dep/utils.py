@@ -16,7 +16,7 @@ except ImportError:
     pyflwdir = None
 
 if TYPE_CHECKING:
-    from shapely import Polygon
+    from shapely.geometry import Polygon
 
     CRSTYPE = Union[int, str, pyproj.CRS]
 
