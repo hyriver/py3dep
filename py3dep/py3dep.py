@@ -15,15 +15,14 @@ import pygeoutils as geoutils
 import pyproj
 import rasterio
 import rioxarray._io as rxr
-import shapely
 import xarray as xr
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
+from shapely import ops
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 from shapely.geometry import box as shapely_box
-from shapely import ops
 
 from py3dep import utils
 from py3dep.exceptions import (
@@ -220,13 +219,14 @@ def add_elevation(
         msg = "Could not find valid dimension names in dataset. Please pass ds_dims"
         raise ValueError(msg)
 
-    bounds = gpd.GeoSeries([shapely_box(*ds.rio.bounds())], crs=ds.rio.crs)
-    bounds = bounds.to_crs(5070)
-    xmin, _, xmax, _ = bounds.bounds.iloc[0].values
-    res = abs(xmax - xmin) / ds.sizes[ds_dims[1]]
-    bounds = bounds.buffer(3 * res, join_style=2, cap_style=2).to_crs(4326)
+    ds = ds.transpose(*ds_dims)
+    ds_proj = ds.rio.reproject(5070)
+    ds_bounds = ds_proj.rio.bounds()
+    resolution = abs(ds_proj.rio.resolution()[0])
+    bounds = gpd.GeoSeries([shapely_box(*ds_bounds)], crs=5070)
+    bounds = bounds.buffer(3 * resolution, join_style=2, cap_style=2).to_crs(4326)
 
-    elev = get_map("DEM", bounds.iloc[0].bounds, resolution=ds.rio.resolution()[0])
+    elev = get_map("DEM", bounds.iloc[0].bounds, resolution=resolution)
     elev = elev.rio.reproject(ds.rio.crs)
     elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds.rio.crs)
     elev = elev.rio.reproject_match(ds)
