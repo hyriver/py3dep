@@ -165,24 +165,7 @@ def get_map(
     return utils.rename_layers(ds, list(valid_layers))
 
 
-def get_dim_names(ds: xr.DataArray | xr.Dataset) -> tuple[str, str] | None:
-    """Get vertical and horizontal dimension names."""
-    y_dims = {"y", "Y", "lat", "Lat", "latitude", "Latitude"}
-    x_dims = {"x", "X", "lon", "Lon", "longitude", "Longitude"}
-    try:
-        y_dim = list(set(ds.coords).intersection(y_dims))[0]
-        y_dim = cast("str", y_dim)
-        x_dim = list(set(ds.coords).intersection(x_dims))[0]
-        x_dim = cast("str", x_dim)
-    except IndexError:
-        return None
-    else:
-        return (y_dim, x_dim)
-
-
-def add_elevation(
-    ds: xr.DataArray | xr.Dataset, ds_dims: tuple[str, str] | None = None
-) -> xr.Dataset:
+def add_elevation(ds: xr.DataArray | xr.Dataset) -> xr.Dataset:
     """Add elevation data to a dataset  as a new variable.
 
     Parameters
@@ -190,11 +173,6 @@ def add_elevation(
     ds : xarray.DataArray or xarray.Dataset
         The dataset to add elevation data to. It must contain
         CRS information.
-    ds_dims : tuple of str, optional
-        The vertical and horizontal dimension names, e.g., ``("y", "x")``.
-        If not provided, it will be inferred from the dataset. Note that
-        order matters, the first element is the vertical dimension and
-        the second is the horizontal dimension.
 
     Returns
     -------
@@ -214,12 +192,6 @@ def add_elevation(
     else:
         ds = ds.copy()
 
-    ds_dims = ds_dims or get_dim_names(ds)
-    if ds_dims is None:
-        msg = "Could not find valid dimension names in dataset. Please pass ds_dims"
-        raise ValueError(msg)
-
-    ds = ds.transpose(*ds_dims)
     ds_proj = ds.rio.reproject(5070)
     ds_bounds = ds_proj.rio.bounds()
     resolution = abs(ds_proj.rio.resolution()[0])
