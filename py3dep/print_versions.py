@@ -25,7 +25,7 @@ def netcdf_and_hdf5_versions() -> list[tuple[str, str | None]]:
     libnetcdf_version = None
 
     if importlib.util.find_spec("netCDF4"):
-        import netCDF4  # type: ignore
+        import netCDF4
 
         libhdf5_version = netCDF4.__hdf5libversion__
         libnetcdf_version = netCDF4.__netcdf4libversion__
@@ -60,7 +60,7 @@ def get_sys_info() -> list[tuple[str, str | None]]:
         env["LANGUAGE"] = "C"
         env["LANG"] = "C"
         env["LC_ALL"] = "C"
-        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)
+        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, env=env)  # noqa: S603
         return out
 
     commit = None
