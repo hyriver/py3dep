@@ -111,7 +111,7 @@ def test_add_elev():
     res = 10e3
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
-    da = xr.DataArray(dims=["x", "y"], coords={"x": gx, "y": gy})
+    da = xr.DataArray(dims=["y", "x"], coords={"y": gy, "x": gx})
     da = da.rio.write_crs(crs)
     ds = py3dep.add_elevation(da)
     assert_close(ds["elevation"].mean().item(), 272.6234)
