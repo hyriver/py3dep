@@ -2,8 +2,14 @@
 History
 =======
 
-0.14.1 (unreleased)
+0.15.0 (unreleased)
 -------------------
+From release 0.15 onward, all minor versions of HyRiver packages
+will be pinned. This ensures that previous minor versions of HyRiver
+packages cannot be installed with later minor releases. For example,
+if you have ``py3dep==0.14.x`` installed, you cannot install
+``pydaymet==0.15.x``. This is to ensure that the API is
+consistent across all minor versions.
 
 New Features
 ~~~~~~~~~~~~
@@ -15,6 +21,14 @@ New Features
 - Improve the performance of ``elevation_profile`` by using the
   static 3DEP service when the input resolution is 10 m (which is
   the default for this function).
+- For now, retain compatibility with ``shapely<2`` while supporting
+  ``shapley>=2``.
+
+Bug Fixes
+~~~~~~~~~
+- In ``add_elevation``, ensure that the resolution is in meters
+  by reprojecting the input dataset to 5070 before extracting
+  resolution and bound attributes.
 
 0.14.0 (2023-03-05)
 -------------------
