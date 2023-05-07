@@ -95,7 +95,7 @@ repos:
     - tomli
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.3.2
+  rev: v3.4.0
   hooks:
   - id: pyupgrade
     name: Upgrade sytnax to python 3.8+ with pyupgrade
