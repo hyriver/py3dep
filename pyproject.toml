@@ -32,13 +32,13 @@ dynamic = [
   "version",
 ]
 dependencies = [
-  "async-retriever>=0.14",
+  "async-retriever==0.15",
   "click>=0.7",
   "cytoolz",
   "geopandas>=0.10",
   "numpy>=1.17",
-  "pygeoogc>=0.14",
-  "pygeoutils>=0.14",
+  "pygeoogc==0.15",
+  "pygeoutils==0.15",
   "rasterio>=1.2",
   "rioxarray>=0.11",
   "scipy",
