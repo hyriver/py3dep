@@ -15,19 +15,19 @@ repos:
     args: [--fix=lf]
 
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: 0.11.1
+  rev: 0.11.0
   hooks:
   - id: pyproject-fmt
     name: Apply a consistent format to pyproject.toml
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.8.0
+  rev: v2.10.0
   hooks:
   - id: pretty-format-yaml
     args: [--autofix, --indent, '2']
 
 - repo: https://github.com/hadialqattan/pycln
-  rev: v2.1.3
+  rev: v2.2.1
   hooks:
   - id: pycln
     name: Find and remove unused import statements with pycln
@@ -52,13 +52,13 @@ repos:
     name: Sort imports with isort
 
 - repo: https://github.com/psf/black
-  rev: 23.3.0
+  rev: 23.7.0
   hooks:
   - id: black
     name: Autoformat with black
 
 - repo: https://github.com/asottile/blacken-docs
-  rev: 1.13.0
+  rev: 1.15.0
   hooks:
   - id: blacken-docs
     name: Autoformat codes in docstrings with blacken-docs
@@ -66,7 +66,7 @@ repos:
     args: [-t, py38, -l, '100']
 
 - repo: https://github.com/guilatrova/tryceratops
-  rev: v2.0.0
+  rev: v2.3.2
   hooks:
   - id: tryceratops
     name: Check try-exceptions blocks with tryceratops
@@ -87,7 +87,7 @@ repos:
     args: [--max-line-length, '100']
 
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.4
+  rev: v2.2.5
   hooks:
   - id: codespell
     name: Check common misspellings in text files with codespell.
@@ -95,14 +95,14 @@ repos:
     - tomli
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.4.0
+  rev: v3.10.1
   hooks:
   - id: pyupgrade
     name: Upgrade sytnax to python 3.8+ with pyupgrade
     args: [--py38-plus]
 
 - repo: https://github.com/PyCQA/flake8
-  rev: 6.0.0
+  rev: 6.1.0
   hooks:
   - id: flake8
     name: Linting with flake8
@@ -119,7 +119,7 @@ repos:
     - pep8-naming
 
 - repo: https://github.com/dosisod/refurb
-  rev: v1.16.0
+  rev: v1.19.0
   hooks:
   - id: refurb
     name: Modernizing Python codebases using Refurb
