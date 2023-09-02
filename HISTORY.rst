@@ -2,6 +2,14 @@
 History
 =======
 
+0.15.1 (2023-09-02)
+-------------------
+
+Bug Fixes
+~~~~~~~~~
+- Fix HyRiver libraries requirements by specifying a range instead
+  of exact version so ``conda-forge`` can resolve the dependencies.
+
 0.15.0 (2023-05-07)
 -------------------
 From release 0.15 onward, all minor versions of HyRiver packages
