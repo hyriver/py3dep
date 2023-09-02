@@ -36,7 +36,7 @@ dependencies:
 - scipy
 - shapely >=2.0
 - ujson
-- xarray >=2022.03.0
+- xarray >=2023.04.0
 
   # py3dep
 # - async-retriever >=0.3.6
@@ -49,7 +49,7 @@ dependencies:
 - rioxarray >=0.11
 - scipy
 - shapely >=2.0
-- xarray >=2022.03.0
+- xarray >=2023.04.0
 # optional dep
 - pyflwdir >=0.5.6
 
