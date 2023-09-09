@@ -249,7 +249,7 @@ def static_3dep_dem(
     if resolution not in url:
         raise InputValueError("resolution", list(url))
 
-    dem = rxr.open_rasterio(url[resolution], chunks="auto")  # type: ignore
+    dem = rxr.open_rasterio(url[resolution])
     dem = cast("xr.DataArray", dem)
     dem = dem.squeeze()
     poly = geoutils.geo2polygon(geometry, crs, dem.rio.crs)

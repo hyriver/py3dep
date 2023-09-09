@@ -83,7 +83,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
             return xr.apply_ufunc(
                 lambda x: np.tan(np.deg2rad(x)),
                 da,
-                dask="parallelized",
+                vectorize=True,
             )
 
         slope = to_mpm(slope).compute()
