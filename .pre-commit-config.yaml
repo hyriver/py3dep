@@ -52,7 +52,7 @@ repos:
     name: Sort imports with isort
 
 - repo: https://github.com/psf/black
-  rev: 23.7.0
+  rev: 23.9.0
   hooks:
   - id: black
     name: Autoformat with black
@@ -119,7 +119,7 @@ repos:
     - pep8-naming
 
 - repo: https://github.com/dosisod/refurb
-  rev: v1.20.0
+  rev: v1.21.0
   hooks:
   - id: refurb
     name: Modernizing Python codebases using Refurb
