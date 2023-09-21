@@ -26,8 +26,7 @@ dependencies:
 
 # pygeoutils deps
 - cytoolz
-- dask-core
-- geopandas >=0.7
+- geopandas-base >=0.7
 - netcdf4
 - numpy >=1.21
 - pyproj >=2.2
