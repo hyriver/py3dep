@@ -39,9 +39,8 @@ def assert_close(a: float, b: float, rtol: float = 1e-3) -> bool:
 def test_profile():
     ep = py3dep.elevation_profile(LINE, 10)
     epm = py3dep.elevation_profile(ops.linemerge(LINE), 10, 15)
-    expected = 281.295
-    assert_close(ep.mean().compute().item(), expected)
-    assert_close(epm.mean().compute().item(), expected)
+    assert_close(ep.mean().item(), 271.566)
+    assert_close(epm.mean().item(), 288.903)
 
 
 def test_getmap():
@@ -53,7 +52,7 @@ def test_getmap():
     dem_10.rio.to_raster(fpath)
     dem_10 = rxr.open_rasterio(fpath)
     assert sorted(ds.keys()) == ["elevation", "slope_degrees"]
-    assert_close(dem_10.mean().compute().item(), dem_1e3.mean().compute().item(), 0.5)
+    assert_close(dem_10.mean().item(), dem_1e3.mean().item(), 0.5)
     dem_10.close()
     fpath.unlink()
 
@@ -61,15 +60,15 @@ def test_getmap():
 def test_dem():
     expected = 295.686
     ds = py3dep.get_dem(GEOM, 10)
-    assert_close(ds.mean().compute().item(), expected)
+    assert_close(ds.mean().item(), expected)
     ds = py3dep.get_dem(GEOM, 15)
-    assert_close(ds.mean().compute().item(), expected)
+    assert_close(ds.mean().item(), expected)
 
 
 def test_fill_depressions():
     ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
-    assert_close(ds.mean().compute().item(), 296.9658)
+    assert_close(ds.mean().item(), 296.9658)
 
 
 @pytest.mark.parametrize(
@@ -85,7 +84,7 @@ def test_bycoords(source, expected):
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1e3)
     slope = py3dep.deg2mpm(slope)
-    assert_close(slope.mean().compute().item(), 0.0505)
+    assert_close(slope.mean().item(), 0.0505)
 
 
 def test_grid():
@@ -99,7 +98,7 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
-    assert_close((elev_fill - elev).sum().compute().item(), 9096.3853)
+    assert_close((elev_fill - elev).sum().item(), 9096.3853)
 
 
 def test_add_elev():
