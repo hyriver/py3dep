@@ -494,7 +494,7 @@ def __get_idx(d_sp: npt.NDArray[np.float64], distance: float) -> npt.NDArray[np.
     """Get the index of the closest point to a given distance."""
     dis = pd.DataFrame(d_sp, columns=["distance"]).reset_index()
     grouper = pd.cut(dis.distance, np.arange(0, dis.distance.max() + distance, distance))
-    return dis.groupby(grouper).last()["index"].to_numpy()
+    return dis.groupby(grouper, observed=True).last()["index"].to_numpy()
 
 
 def __get_spline_params(
