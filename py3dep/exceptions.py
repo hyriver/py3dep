@@ -78,3 +78,22 @@ class ServiceUnavailableError(ogc.ServiceUnavailableError):
     url : str
         The server url
     """
+
+
+class InputRangeError(Exception):
+    """Exception raised when input is out of range.
+
+    Parameters
+    ----------
+    inp : str
+        Name of the input parameter
+    valid_range : str
+        The valid range of the input
+    """
+
+    def __init__(self, inp: str, valid_range: str) -> None:
+        self.message = f"{inp} is out of range. Valid range is {valid_range}"
+        super().__init__(self.message)
+
+    def __str__(self) -> str:
+        return self.message
