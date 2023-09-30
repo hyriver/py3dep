@@ -26,6 +26,7 @@ from shapely.geometry import box as shapely_box
 
 from py3dep import utils
 from py3dep.exceptions import (
+    InputRangeError,
     InputTypeError,
     InputValueError,
     MissingCRSError,
@@ -145,6 +146,7 @@ def get_map(
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
     wms_url = ServiceURL().wms.nm_3dep
+
     valid_crs = ogc_utils.valid_wms_crs(wms_url)
 
     if len(valid_crs) == 0:
@@ -154,6 +156,20 @@ def get_map(
         raise InputValueError("crs", valid_crs)
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
+
+    # Check if the geometry is within the service bounds
+    url = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer"
+    resp = ar.retrieve_json([url], [{"params": {"f": "json"}}])
+    extent = resp[0]["extent"]
+    service_bounds = shapely_box(extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"])
+    bounds_crs = extent["spatialReference"]["wkid"]
+    service_bounds = geoutils.geometry_reproject(service_bounds, bounds_crs, crs)
+    if not _geometry.intersects(service_bounds):
+        service_bounds = geoutils.geometry_reproject(service_bounds, crs, 4326)
+        raise InputRangeError(
+            "geometry", f"{', '.join(str(round(b, 6)) for b in service_bounds.bounds)}"
+        )
+
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px=10000000)
 
