@@ -2,7 +2,16 @@
 History
 =======
 
-0.15.2 (2023-0X-XX)
+0.15.3 (2023-0X-XX)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- In the ``get_map`` function, check if the input geometry is
+  within the bounds of the 3DEP's WMS service and if not, raise
+  an exception.
+
+0.15.2 (2023-09-22)
 -------------------
 
 Internal Changes
