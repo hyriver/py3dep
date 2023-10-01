@@ -1,7 +1,7 @@
 """Utilities for Py3DEP."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, Union, overload
+from typing import TYPE_CHECKING, Sequence, Union, overload, Literal
 
 import geopandas as gpd
 import numpy as np
@@ -9,11 +9,6 @@ import pygeoutils as geoutils
 import pyproj
 import xarray as xr
 from pygeoogc import ArcGISRESTful
-
-try:
-    import pyflwdir
-except ImportError:
-    pyflwdir = None
 
 if TYPE_CHECKING:
     from shapely.geometry import Polygon
@@ -25,29 +20,34 @@ from py3dep.exceptions import DependencyError
 __all__ = ["deg2mpm", "fill_depressions"]
 
 
-def fill_depressions(dem: xr.DataArray) -> xr.DataArray:
-    """Fill depressions and adjust flat areas in a DEM using `RichDEM <https://richdem.readthedocs.io>`__.
+def fill_depressions(dem: xr.DataArray, outlets: Literal["min", "edge"] = "min") -> xr.DataArray:
+    """Hydrocondition the DEM.
+
+    This function uses `pyflwdir <https://deltares.github.io/pyflwdir/latest/>`__.
+    It can be installed using ``pip install pyflwdir`` or
+    ``conda install -c conda-forge pyflwdir``.
 
     Parameters
     ----------
     dem_da : xarray.DataArray or numpy.ndarray
         Digital Elevation Model.
+    outlets : str, optional
+        Initial basin outlet(s) at the edge of all cells
+        (``edge``) or only the minimum elevation edge cell (``min``; default).
 
     Returns
     -------
     xarray.DataArray
-        Conditioned DEM after applying
-        `depression filling <https://richdem.readthedocs.io/en/latest/depression_filling.html>`__
-        and
-        `flat area resolution <https://richdem.readthedocs.io/en/latest/flat_resolution.html>`__
-        operations.
+        Conditioned DEM after applying ``fill_depressions`` function from
+        `pyflwdir <https://deltares.github.io/pyflwdir/latest/>`__.
     """
-    dem = dem.astype("f8")
-    if pyflwdir is None:
+    try:
+        import pyflwdir
+    except ImportError:
         raise DependencyError
-
+    dem = dem.astype("f8")
     attrs = dem.attrs
-    filled, _ = pyflwdir.dem.fill_depressions(dem.values, outlets="min", nodata=np.nan)
+    filled, _ = pyflwdir.dem.fill_depressions(dem.values, outlets=outlets, nodata=np.nan)
     dem = dem.copy(data=filled)
     dem.attrs = attrs
     dem = dem.rio.write_nodata(np.nan)
