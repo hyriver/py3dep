@@ -10,6 +10,16 @@ New Features
 - In the ``get_map`` function, check if the input geometry is
   within the bounds of the 3DEP's WMS service and if not, raise
   an exception.
+- In the ``fill_depressions`` function add a new argument called
+  ``outlets`` for specifying outlet detection method: At the edge
+  of all cells (``edge``) or only the minimum elevation edge cell
+  (``min``; default).
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Improve initial load time by moving ``import pyflwdir`` to the
+  ``fill_depressions`` function.
+
 
 0.15.2 (2023-09-22)
 -------------------
