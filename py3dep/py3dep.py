@@ -167,7 +167,7 @@ def get_map(
     if not _geometry.intersects(service_bounds):
         service_bounds = geoutils.geometry_reproject(service_bounds, crs, 4326)
         raise InputRangeError(
-            "geometry", f"{', '.join(str(round(b, 6)) for b in service_bounds.bounds)}"
+            "geometry", f"({', '.join(str(round(b, 6)) for b in service_bounds.bounds)})"
         )
 
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
