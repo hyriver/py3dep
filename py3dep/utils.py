@@ -1,7 +1,7 @@
 """Utilities for Py3DEP."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, Union, overload, Literal
+from typing import TYPE_CHECKING, Literal, Sequence, Union, overload
 
 import geopandas as gpd
 import numpy as np
