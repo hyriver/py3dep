@@ -34,6 +34,7 @@ dynamic = [
 ]
 dependencies = [
   "async-retriever<0.16,>=0.15.2",
+  "click>=0.7",
   "cytoolz",
   "geopandas>=0.10",
   "numpy>=1.17",
@@ -46,9 +47,6 @@ dependencies = [
   "xarray>=2023.01",
 ]
 [project.optional-dependencies]
-cli = [
-  "click>=0.7",
-]
 dem = [
   "pyflwdir>=0.5.6",
 ]
