@@ -81,15 +81,122 @@ fallback_version = "999"
 [tool.black]
 line-length = 100
 
-[tool.isort]
-default_section = "THIRDPARTY"
-force_grid_wrap = 0
-include_trailing_comma = true
-known_first_party = "py3dep"
-line_length = 100
-multi_line_output = 3
-profile = "black"
-use_parentheses = true
+[tool.ruff]
+target-version = "py38"
+select = [
+    # flake8-bugbear
+    "B",
+    # flake8-comprehensions
+    "C4",
+    # pydocstyle
+    "D",
+    # Error
+    "E",
+    # pyflakes
+    "F",
+    # isort
+    "I",
+    # flake8-implicit-str-concat
+    "ISC",
+    # pep8-naming
+    "N",
+    # pygrep-hooks
+    "PGH",
+    # flake8-use-pathlib
+    "PTH",
+    # flake8-quotes
+    "Q",
+    # bandit
+    "S",
+    # flake8-simplify
+    "SIM",
+    # tryceratops
+    "TRY",
+    # pyupgrade
+    "UP",
+    # Warning
+    "W",
+    # flake8-2020
+    "YTT",
+    # flake8-debugger
+    "T10",
+    # flake8-gettext
+    "INT",
+    # pylint
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    # misc lints
+    "PIE",
+    # flake8-pyi
+    "PYI",
+    # tidy imports
+    "TID",
+    # type-checking imports
+    "TCH",
+    # Ruff-specific rules
+    "RUF",
+]
+
+exclude = [
+    "__pycache__",
+    ".nox",
+]
+
+ignore = [
+    "D103",
+    "D105",
+    "E501",
+    "PLR2004",
+    "PLR0913",
+]
+line-length = 100
+
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = [
+    "chr",
+    "typer.Argument",
+    "typer.Option",
+]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.per-file-ignores]
+"tests/*.py" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+    # use of "assert"
+    "S101",
+    # use of "exec"
+    "S102",
+    # possible hardcoded password
+    "S106",
+    # use of "eval"
+    "PGH001",
+    # Mutable class attributes
+    "RUF012",
+]
+
+[tool.ruff.isort]
+known-first-party = [
+  "async_retriever",
+  "pygeoogc",
+  "pygeoutils",
+  "pynhd",
+  "py3dep",
+  "hydrosignatures",
+  "pygeohydro",
+  "pydaymet",
+  "pynldas2",
+]
 
 [tool.pytest.ini_options]
 addopts = "--ignore=noxfile.py -n=auto -v --cov=py3dep --cov-report xml --durations=5"
@@ -121,13 +228,12 @@ omit = [
 parallel = true
 source = ['py3dep']
 
-[tool.bandit]
-targets = [
-  "py3dep"
-]
+[tool.fixit]
+formatter = "ufmt"
 
 [tool.codespell]
-skip = "__pycache__,_build,.mypy_cache,.git,./htmlcov,.nox"
+skip = "__pycache__,_build,.mypy_cache,.git,./htmlcov,.nox,**/us_abbrs.py,cache"
+ignore-words-list = "gage,paramss,trough"
 
 [tool.pycln]
 all = true

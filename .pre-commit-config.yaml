@@ -1,31 +1,4 @@
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.4.0
-  hooks:
-  - id: trailing-whitespace
-  - id: requirements-txt-fixer
-  - id: check-added-large-files
-    args: [--maxkb=50000]
-  - id: end-of-file-fixer
-  - id: check-merge-conflict
-  - id: check-toml
-  - id: check-yaml
-  - id: debug-statements
-  - id: mixed-line-ending
-    args: [--fix=lf]
-
-- repo: https://github.com/tox-dev/pyproject-fmt
-  rev: 1.2.0
-  hooks:
-  - id: pyproject-fmt
-    name: Apply a consistent format to pyproject.toml
-
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.10.0
-  hooks:
-  - id: pretty-format-yaml
-    args: [--autofix, --indent, '2']
-
 - repo: https://github.com/hadialqattan/pycln
   rev: v2.2.2
   hooks:
@@ -45,11 +18,10 @@ repos:
   - id: absolufy-imports
     name: Convert relative imports to absolute with absolufy-imports
 
-- repo: https://github.com/PyCQA/isort
-  rev: 5.12.0
+- repo: https://github.com/Instagram/Fixit
+  rev: v2.0.0.post1
   hooks:
-  - id: isort
-    name: Sort imports with isort
+  - id: fixit-fix
 
 - repo: https://github.com/psf/black
   rev: 23.9.1
@@ -65,19 +37,12 @@ repos:
     additional_dependencies: [black]
     args: [-t, py38, -l, '100']
 
-- repo: https://github.com/guilatrova/tryceratops
-  rev: v2.3.2
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: v0.0.292
   hooks:
-  - id: tryceratops
-    name: Check try-exceptions blocks with tryceratops
-
-- repo: https://github.com/pre-commit/pygrep-hooks
-  rev: v1.10.0
-  hooks:
-  - id: rst-backticks
-    name: Check backsticks in rst files
-  - id: rst-directive-colons
-    name: Check directives in rst files
+  - id: ruff
+    name: Linting with Ruff
+    args: [--fix, --exit-non-zero-on-fix]
 
 - repo: https://github.com/PyCQA/doc8
   rev: v1.1.1
@@ -87,36 +52,12 @@ repos:
     args: [--max-line-length, '100']
 
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.5
+  rev: v2.2.6
   hooks:
   - id: codespell
     name: Check common misspellings in text files with codespell.
     additional_dependencies:
     - tomli
-
-- repo: https://github.com/asottile/pyupgrade
-  rev: v3.13.0
-  hooks:
-  - id: pyupgrade
-    name: Upgrade sytnax to python 3.8+ with pyupgrade
-    args: [--py38-plus]
-
-- repo: https://github.com/PyCQA/flake8
-  rev: 6.1.0
-  hooks:
-  - id: flake8
-    name: Linting with flake8
-    additional_dependencies:
-    - flake8-comprehensions
-    - flake8-builtins
-    - flake8-blind-except
-    - flake8-bugbear
-    - flake8-use-fstring
-    - flake8-docstrings
-    - flake8-type-checking
-    - flake8-simplify
-    - flake8-print
-    - pep8-naming
 
 - repo: https://github.com/dosisod/refurb
   rev: v1.21.0
@@ -126,10 +67,56 @@ repos:
     additional_dependencies:
     - numpy
 
-- repo: https://github.com/PyCQA/bandit
-  rev: 1.7.5
+- repo: https://github.com/tox-dev/pyproject-fmt
+  rev: 1.2.0
   hooks:
-  - id: bandit
-    name: Check for security issues with bandit
-    args: [-lll]
-    files: .py$
+  - id: pyproject-fmt
+    name: Apply a consistent format to pyproject.toml
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+  - id: check-added-large-files
+    args: [--maxkb=50000]
+  - id: mixed-line-ending
+    args: [--fix=lf]
+  - id: check-ast
+  - id: check-builtin-literals
+  - id: check-case-conflict
+  - id: check-docstring-first
+  - id: check-shebang-scripts-are-executable
+  - id: check-merge-conflict
+  - id: check-json
+  - id: check-toml
+  - id: check-xml
+  - id: check-yaml
+  - id: debug-statements
+  - id: destroyed-symlinks
+  - id: detect-private-key
+  - id: end-of-file-fixer
+    exclude: ^LICENSE|\.(html|csv|txt|svg|py)$
+  - id: pretty-format-json
+    args: [--autofix, --no-ensure-ascii, --no-sort-keys]
+  - id: trailing-whitespace
+    args: [--markdown-linebreak-ext=md]
+    exclude: \.(html|svg)$
+
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.10.0
+  hooks:
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
+
+- repo: local
+  hooks:
+  - id: future-annotations
+    name: import annotations from __future__
+    entry: from __future__ import annotations
+    language: pygrep
+    args: [--negate]
+    files: ^pygeohydro/
+    types: [python]
+    exclude: |
+      (?x)
+      /(__init__\.py)|(conftest\.py)$
+      |/tests/
