@@ -32,9 +32,11 @@ save_arg = click.option(
     "--save_dir",
     default="topo_3dep",
     type=click.Path(exists=False),
-    help=(
-        "Path to a directory to save the requested files. "
-        + "Extension for the outputs is either `.nc` for geometry or `.csv` for coords."
+    help=" ".join(
+        (
+            "Path to a directory to save the requested files.",
+            "Extension for the outputs is either `.nc` for geometry or `.csv` for coords.",
+        )
     ),
 )
 

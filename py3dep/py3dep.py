@@ -1,29 +1,27 @@
 """Get data from 3DEP database."""
+# pyright: reportGeneralTypeIssues=false
 from __future__ import annotations
 
 import contextlib
 import itertools
 from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
 
-import async_retriever as ar
 import cytoolz.curried as tlz
 import geopandas as gpd
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import pygeoutils as geoutils
 import pyproj
 import rasterio
 import rioxarray._io as rxr
 import xarray as xr
-from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
-from pygeoogc import utils as ogc_utils
-from pygeoutils import GeoBSpline
 from rasterio import RasterioIOError
 from shapely import ops
 from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
 from shapely.geometry import box as shapely_box
 
+import async_retriever as ar
+import pygeoutils as geoutils
 from py3dep import utils
 from py3dep.exceptions import (
     InputRangeError,
@@ -32,6 +30,9 @@ from py3dep.exceptions import (
     MissingCRSError,
     ServiceUnavailableError,
 )
+from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
+from pygeoogc import utils as ogc_utils
+from pygeoutils import GeoBSpline
 
 if TYPE_CHECKING:
     from pygeoutils.geotools import Spline
@@ -138,7 +139,7 @@ def get_map(
     _layers = list(layers) if isinstance(layers, (list, tuple)) else [layers]
     invalid = [lyr for lyr in _layers if lyr not in LAYERS]
     if invalid:
-        raise InputValueError(f"layers ({invalid})", LAYERS)
+        raise InputValueError("layers", LAYERS, ", ".join(invalid))
 
     if "DEM" in _layers:
         _layers[_layers.index("DEM")] = "None"
@@ -637,7 +638,7 @@ def check_3dep_availability(
     def _check(lyr: int) -> bool:
         wms = ArcGISRESTful(url, lyr)
         with contextlib.suppress(ZeroMatchedError):
-            return len(list(wms.oids_bygeom(_bbox))[0]) > 0
+            return len(next(iter(wms.oids_bygeom(_bbox)))) > 0
         return False
 
     return {res: _check(lyr) for res, lyr in res_layers.items()}

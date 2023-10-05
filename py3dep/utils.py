@@ -3,14 +3,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, Sequence, Union, overload
 
-import geopandas as gpd
 import numpy as np
-import pygeoutils as geoutils
-import pyproj
 import xarray as xr
+
+import pygeoutils as geoutils
 from pygeoogc import ArcGISRESTful
 
 if TYPE_CHECKING:
+    import geopandas as gpd
+    import pyproj
     from shapely.geometry import Polygon
 
     CRSTYPE = Union[int, str, pyproj.CRS]
@@ -43,8 +44,8 @@ def fill_depressions(dem: xr.DataArray, outlets: Literal["min", "edge"] = "min")
     """
     try:
         import pyflwdir
-    except ImportError:
-        raise DependencyError
+    except ImportError as ex:
+        raise DependencyError from ex
     dem = dem.astype("f8")
     attrs = dem.attrs
     filled, _ = pyflwdir.dem.fill_depressions(dem.values, outlets=outlets, nodata=np.nan)
