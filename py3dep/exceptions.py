@@ -28,6 +28,8 @@ class InputValueError(ar.InputValueError):
         Name of the input parameter
     valid_inputs : tuple
         List of valid inputs
+    given : str, optional
+        The given input, defaults to None.
     """
 
 
@@ -49,10 +51,17 @@ class MissingColumnError(Exception):
 
 
 class DependencyError(ImportError):
-    """Exception raised when RichDEM is not installed."""
+    """Exception raised when pyflwdir is not installed."""
 
     def __init__(self) -> None:
-        self.message = "Depression filling operation uses richdem package which is not installed."
+        self.message = "\n".join(
+            (
+                "Depression filling requires ``pyflwdir`` which can be installed by:",
+                "pip install pyflwdir",
+                "or",
+                "conda install -c conda-forge pyflwdir",
+            )
+        )
         super().__init__(self.message)
 
     def __str__(self) -> str:
