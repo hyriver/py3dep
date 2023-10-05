@@ -12,10 +12,6 @@ GEOM = Polygon(
 )
 
 
-has_typeguard = True if sys.modules.get("typeguard") else False
-
-
-@pytest.mark.skipif(has_typeguard, reason="Broken if Typeguard is enabled")
 def test_wrong_bbox():
     with pytest.raises(InputTypeError) as ex:
         _ = py3dep.check_3dep_availability((1, 2, 3))

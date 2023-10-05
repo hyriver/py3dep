@@ -9,12 +9,12 @@ import pyproj
 import pytest
 import rioxarray as rxr
 import xarray as xr
-from pygeoogc import utils
 from shapely import ops
 from shapely.geometry import MultiLineString, Polygon
 
 import py3dep
 from py3dep.cli import cli
+from pygeoogc import utils
 
 DEF_CRS = 4326
 ALT_CRS = 3857
