@@ -43,7 +43,7 @@ dependencies = [
   "rasterio>=1.2",
   "rioxarray>=0.11",
   "scipy",
-  "shapely>=1.8.5",
+  "shapely>=2.0.0",
   "xarray>=2023.01",
 ]
 [project.optional-dependencies]
@@ -51,7 +51,6 @@ dem = [
   "pyflwdir>=0.5.6",
 ]
 test = [
-  "coverage[toml]",
   "pytest-cov",
   "pytest-xdist[psutil]",
 ]
@@ -206,6 +205,8 @@ filterwarnings = [
   "ignore:.*--rsyncdir command line argument.*",
   "ignore:.*numpy.ndarray size changed.*",
   "ignore:.*'cgi' is deprecated.*",
+  "ignore:.*Calling float on a single element.*",
+  "ignore:.*Shapely GEOS version.*",
 ]
 testpaths = [
   "tests",
