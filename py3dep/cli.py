@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING, TypeVar, cast
 
 import click
 import geopandas as gpd
@@ -11,10 +12,11 @@ from py3dep import py3dep
 from py3dep.exceptions import InputTypeError, MissingColumnError, MissingCRSError
 from py3dep.py3dep import LAYERS
 
+if TYPE_CHECKING:
+    DFType = TypeVar("DFType", pd.DataFrame, gpd.GeoDataFrame)
 
-def get_target_df(
-    tdf: pd.DataFrame | gpd.GeoDataFrame, req_cols: list[str]
-) -> pd.DataFrame | gpd.GeoDataFrame:
+
+def get_target_df(tdf: DFType, req_cols: list[str]) -> DFType:
     """Check if all required columns exists in the dataframe.
 
     It also re-orders the columns based on ``req_cols`` order.
@@ -22,7 +24,7 @@ def get_target_df(
     missing = [c for c in req_cols if c not in tdf]
     if missing:
         raise MissingColumnError(missing)
-    return tdf[req_cols]
+    return tdf[req_cols]  # pyright: ignore[reportGeneralTypeIssues]
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -80,6 +82,7 @@ def coords(
     click.echo(f"Found coordinates of {count} in {fpath.resolve()}. Retrieving ... ")
 
     coords_list = list(elev.itertuples(index=False, name=None))
+    coords_list = cast("list[tuple[float, float]]", coords_list)
     elev["elevation"] = py3dep.elevation_bycoords(coords_list, 4326, query_source)
 
     Path(save_dir).mkdir(parents=True, exist_ok=True)

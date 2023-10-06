@@ -12,7 +12,7 @@ from pygeoogc import ArcGISRESTful
 if TYPE_CHECKING:
     import geopandas as gpd
     import pyproj
-    from shapely.geometry import Polygon
+    from shapely import Polygon
 
     CRSTYPE = Union[int, str, pyproj.CRS]
 

@@ -16,9 +16,8 @@ import rasterio
 import rioxarray._io as rxr
 import xarray as xr
 from rasterio import RasterioIOError
-from shapely import ops
-from shapely.geometry import LineString, MultiLineString, MultiPolygon, Polygon
-from shapely.geometry import box as shapely_box
+from shapely import LineString, MultiLineString, MultiPolygon, Polygon, ops
+from shapely import box as shapely_box
 
 import async_retriever as ar
 import pygeoutils as geoutils
@@ -576,17 +575,17 @@ def elevation_profile(
     if dem_res == 10:
         elev_list = elevation_bycoords(list(zip(x, y)), crs=crs_prj, source="tep")
         elevation = xr.DataArray(elev_list, dims="z", coords={"z": range(len(elev_list))})
-        x, y = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
+        x, y = zip(*geoutils.geometry_reproject(list(zip(x, y)), crs_prj, crs))
         elevation["x"], elevation["y"] = ("z", list(x)), ("z", list(y))
         elevation["distance"] = ("z", distance)
         return elevation
 
     geom_buff = geom.buffer(5 * dem_res).unary_union.bounds
     dem = get_dem(geom_buff, dem_res, crs_prj)
-    xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, dem.rio.crs))
+    xp, yp = zip(*geoutils.geometry_reproject(list(zip(x, y)), crs_prj, dem.rio.crs))
 
     elevation = dem.astype("f8").interp(x=("z", list(xp)), y=("z", list(yp)))
-    xp, yp = zip(*ogc_utils.match_crs(list(zip(x, y)), crs_prj, crs))
+    xp, yp = zip(*geoutils.geometry_reproject(list(zip(x, y)), crs_prj, crs))
     elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
     elevation["distance"] = ("z", distance)
     return elevation
@@ -632,7 +631,7 @@ def check_3dep_availability(
         "60m": 23,
         "topobathy": 30,
     }
-    _bbox = ogc_utils.match_crs(bbox, crs, 4326)
+    _bbox = geoutils.geometry_reproject(bbox, crs, 4326)
     url = ServiceURL().restful.nm_3dep_index
 
     def _check(lyr: int) -> bool:
@@ -697,7 +696,7 @@ def query_3dep_sources(
 
     layers = {res: res_layers[res]} if res is not None else res_layers
 
-    _bbox = ogc_utils.match_crs(bbox, crs, 4326)
+    _bbox = geoutils.geometry_reproject(bbox, crs, 4326)
     url = ServiceURL().restful.nm_3dep_index
 
     def _check(lyr: int) -> gpd.GeoDataFrame | None:

@@ -9,8 +9,7 @@ import pyproj
 import pytest
 import rioxarray as rxr
 import xarray as xr
-from shapely import ops
-from shapely.geometry import MultiLineString, Polygon
+from shapely import MultiLineString, Polygon, ops
 
 import py3dep
 from py3dep.cli import cli
