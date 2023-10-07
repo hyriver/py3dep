@@ -52,6 +52,7 @@ dem = [
 ]
 test = [
   "pytest-cov",
+  "pytest-sugar",
   "pytest-xdist[psutil]",
 ]
 [project.urls]
@@ -101,6 +102,8 @@ select = [
     "N",
     # pygrep-hooks
     "PGH",
+    # flake8-pytest-style
+    "PT",
     # flake8-use-pathlib
     "PTH",
     # flake8-quotes
@@ -109,6 +112,8 @@ select = [
     "S",
     # flake8-simplify
     "SIM",
+    # flake8-print
+    "T20",
     # tryceratops
     "TRY",
     # pyupgrade
