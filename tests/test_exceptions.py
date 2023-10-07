@@ -11,18 +11,18 @@ GEOM = Polygon(
 
 
 def test_wrong_bbox():
-    with pytest.raises(InputTypeError) as ex:
-        _ = py3dep.check_3dep_availability((1, 2, 3))
-        assert "tuple of length 4" in str(ex.value)
+    bbox = (1, 2, 3)
+    with pytest.raises(InputTypeError, match="tuple of length 4"):
+        _ = py3dep.check_3dep_availability(bbox)
 
 
 def test_wrong_layer():
-    with pytest.raises(InputValueError) as ex:
-        _ = py3dep.get_map("None", GEOM.bounds, 1e3)
-        assert "DEM" in str(ex.value)
+    geom = GEOM.bounds
+    with pytest.raises(InputValueError, match="DEM"):
+        _ = py3dep.get_map("None", geom, 1e3)
 
 
 def test_wrong_crs():
-    with pytest.raises(InputValueError) as ex:
-        _ = py3dep.get_map("None", GEOM.bounds, 1e3, DEF_CRS, "ESRI:102003")
-        assert "crs" in str(ex.value)
+    geom = GEOM.bounds
+    with pytest.raises(InputValueError, match="crs"):
+        _ = py3dep.get_map("None", geom, 1e3, DEF_CRS, "ESRI:102003")
