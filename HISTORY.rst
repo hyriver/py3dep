@@ -7,6 +7,12 @@ History
 
 New Features
 ~~~~~~~~~~~~
+- Add a new function called ``get_map_vrt`` for getting DEM
+  within a bounding box and saving it as a ``VRT`` file. This
+  function has low memory usage and is useful for cases where
+  the DEM is needed for a large area. Moreover, even for usual
+  use cases it can be much faster than ``get_dem`` since it
+  loads the data lazily, at the cost of higher disk usage.
 - In the ``get_map`` function, check if the input geometry is
   within the bounds of the 3DEP's WMS service and if not, raise
   an exception.
