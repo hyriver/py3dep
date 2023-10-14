@@ -64,6 +64,13 @@ def test_dem():
     assert_close(ds.mean().item(), expected)
 
 
+def test_dem_vrt():
+    expected = 295.686
+    py3dep.get_dem_vrt(GEOM.bounds, 10, "cache/dem.vrt")
+    ds = rxr.open_rasterio("cache/dem.vrt").squeeze(drop=True)
+    assert_close(ds.mean().item(), expected)
+
+
 def test_fill_depressions():
     ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)

@@ -25,4 +25,4 @@ def test_wrong_layer():
 def test_wrong_crs():
     geom = GEOM.bounds
     with pytest.raises(InputValueError, match="crs"):
-        _ = py3dep.get_map("None", geom, 1e3, DEF_CRS, "ESRI:102003")
+        _ = py3dep.get_map("DEM", geom, 1e3, DEF_CRS, "ESRI:102003")

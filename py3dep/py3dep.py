@@ -34,6 +34,8 @@ from pygeoogc import utils as ogc_utils
 from pygeoutils import GeoBSpline
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from pygeoutils.geotools import Spline
 
     CRSTYPE = Union[int, str, pyproj.CRS]
@@ -61,6 +63,7 @@ __all__ = [
     "query_3dep_sources",
     "static_3dep_dem",
     "get_dem",
+    "get_dem_vrt",
     "add_elevation",
 ]
 
@@ -70,8 +73,8 @@ def get_map(
     layers: str,
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
-    geo_crs: CRSTYPE = 4326,
-    crs: CRSTYPE = 4326,
+    geo_crs: CRSTYPE = ...,
+    crs: CRSTYPE = ...,
 ) -> xr.DataArray:
     ...
 
@@ -81,8 +84,8 @@ def get_map(
     layers: list[str],
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
-    geo_crs: CRSTYPE = 4326,
-    crs: CRSTYPE = 4326,
+    geo_crs: CRSTYPE = ...,
+    crs: CRSTYPE = ...,
 ) -> xr.Dataset:
     ...
 
@@ -316,6 +319,51 @@ def get_dem(
     dem.attrs.update({"units": "meters", "vertical_datum": "NAVD88"})
     dem.name = "elevation"
     return dem
+
+
+def get_dem_vrt(
+    bbox: tuple[float, float, float, float],
+    resolution: int,
+    vrt_path: Path | str,
+    tiff_dir: Path | str = "cache",
+    crs: CRSTYPE = 4326,
+) -> None:
+    """Get DEM data at any resolution from 3DEP and save it as a VRT file.
+
+    Parameters
+    ----------
+    bbox : tuple of length 4
+        The boundong box of form (xmin, ymin, xmax, ymax).
+    resolution : int
+        Target DEM source resolution in meters.
+    vrt_path : str or pathlib.Path
+        Path to the output VRT file.
+    tiff_dir : str or pathlib.Path, optional
+        Path to the directory to save the downloaded TIFF file, defaults
+        to ``./cache``.
+    crs : str, int, or pyproj.CRS, optional
+        The spatial reference system of ``bbox``, defaults to ``EPSG:4326``.
+    """
+    wms_url = ServiceURL().wms.nm_3dep
+    bounds = geoutils.geometry_reproject(bbox, crs, 4326)
+
+    # Check if the geometry is within the service bounds
+    url = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer"
+    resp = ar.retrieve_json([url], [{"params": {"f": "json"}}])
+    extent = resp[0]["extent"]
+    service_bounds = shapely_box(extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"])
+    bounds_crs = extent["spatialReference"]["wkid"]
+    service_bounds = geoutils.geometry_reproject(service_bounds, bounds_crs, 4326)
+    if not shapely_box(*bounds).intersects(service_bounds):
+        raise InputRangeError(
+            "bbox", f"({', '.join(str(round(b, 6)) for b in service_bounds.bounds)})"
+        )
+
+    wms = WMS(
+        wms_url, layers="3DEPElevation:None", outformat="image/tiff", crs=4326, validation=False
+    )
+    fname = wms.getmap_bybox(bounds, resolution, max_px=10000000, tiff_dir=tiff_dir)
+    return geoutils.gtiff2vrt(fname, vrt_path)
 
 
 def elevation_bygrid(

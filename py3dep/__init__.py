@@ -16,6 +16,7 @@ from py3dep.py3dep import (
     elevation_bygrid,
     elevation_profile,
     get_dem,
+    get_dem_vrt,
     get_map,
     query_3dep_sources,
     static_3dep_dem,
@@ -39,6 +40,7 @@ __all__ = [
     "elevation_profile",
     "static_3dep_dem",
     "get_dem",
+    "get_dem_vrt",
     "add_elevation",
     "show_versions",
     # Exceptions
