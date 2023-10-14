@@ -150,6 +150,11 @@ The following functionalities are currently available:
   that the static service is much faster, if the target DEM resolution is 10 m, 30 m, or
   60 m, then the static service is used (``static_3dep_dem``). Otherwise, the dynamic
   service is used (``get_map`` using ``DEM`` layer).
+- ``get_map_vrt``: Get DEM data and store it as a GDAL VRT file from the dynamic 3DEP
+  service. This function is mainly provided for large requests due to its low memory
+  footprint. Moreover, due to lazy loading of the data this function can be much
+  faster than ``get_map`` or ``get_dem``, even for small requests at the cost of
+  higher disk usage.
 - ``elevation_bygrid``: For retrieving elevations of all the grid points in a 2D grid.
 - ``add_elevation``: For adding elevation data as a new variable to an input
   ``xarray.DataArray`` or ``xarray.Dataset``.
