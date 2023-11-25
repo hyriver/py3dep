@@ -2,7 +2,7 @@
 History
 =======
 
-0.15.3 (2023-0X-XX)
+0.16.0 (2023-XX-XX)
 -------------------
 
 New Features
@@ -20,12 +20,26 @@ New Features
   ``outlets`` for specifying outlet detection method: At the edge
   of all cells (``edge``) or only the minimum elevation edge cell
   (``min``; default).
+- Significantly improve the performance of ``check_3dep_availability``
+  function by minimizng the number of requests to the service and
+  send all requests asynchronously. Also, the returned ``dict`` now
+  uses ``Failed`` for those resolutions where the service fails to
+  return a valid response. It will remove the failed responses from
+  the cache, so next time the function is called, it will try to
+  get only the failed resolutions.
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- In the ``elevation_profile`` function remove the ``res`` argument
+  and use 10-m resolution DEM from 3DEP. Also, add two new attributes
+  to the output ``xarray.Dataset``: ``source`` for the dataset to
+  state the data source used and ``units`` for the ``distance`` variable
+  to state the units of the distance, which is meters.
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Improve initial load time by moving ``import pyflwdir`` to the
   ``fill_depressions`` function.
-
 
 0.15.2 (2023-09-22)
 -------------------
