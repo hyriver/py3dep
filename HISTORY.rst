@@ -22,7 +22,7 @@ New Features
   (``min``; default).
 - Significantly improve the performance of ``check_3dep_availability``
   function by minimizng the number of requests to the service and
-  send all requests asynchronously. Also, the returned ``dict`` now
+  sending all requests asynchronously. Also, the returned ``dict`` now
   uses ``Failed`` for those resolutions where the service fails to
   return a valid response. It will remove the failed responses from
   the cache, so next time the function is called, it will try to
