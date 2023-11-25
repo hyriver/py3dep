@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
 import cytoolz.curried as tlz
 import geopandas as gpd
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import pyproj
 import rasterio
@@ -31,12 +30,9 @@ from py3dep.exceptions import (
 )
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
 from pygeoogc import utils as ogc_utils
-from pygeoutils import GeoBSpline
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    from pygeoutils.geotools import Spline
 
     CRSTYPE = Union[int, str, pyproj.CRS]
 
@@ -97,7 +93,7 @@ def get_map(
     geo_crs: CRSTYPE = 4326,
     crs: CRSTYPE = 4326,
 ) -> xr.Dataset | xr.DataArray:
-    """Access to `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__ service.
+    """Access dynamic layer of `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__.
 
     The 3DEP service has multi-resolution sources, so depending on the user
     provided resolution the data is resampled on server-side based
@@ -547,57 +543,28 @@ def elevation_bycoords(
     return service.values
 
 
-def __get_spline(line: LineString, ns_pts: int, crs: CRSTYPE) -> Spline:
-    """Get a B-spline from a line."""
-    x, y = line.xy
-    pts = gpd.GeoSeries(gpd.points_from_xy(x, y, crs=crs))
-    return GeoBSpline(pts, ns_pts).spline
-
-
-def __get_idx(d_sp: npt.NDArray[np.float64], distance: float) -> npt.NDArray[np.float64]:
-    """Get the index of the closest point to a given distance."""
-    dis = pd.DataFrame(d_sp, columns=["distance"]).reset_index()
-    grouper = pd.cut(dis.distance, np.arange(0, dis.distance.max() + distance, distance))
-    return dis.groupby(grouper, observed=True).last()["index"].to_numpy()
-
-
-def __get_spline_params(
-    line: LineString, n_seg: int, distance: float, crs: CRSTYPE
-) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-    """Get perpendiculars to a line."""
-    _n_seg = n_seg
-    spline = __get_spline(line, _n_seg, crs)
-    idx = __get_idx(spline.distance, distance)
-    while np.isnan(idx).any():
-        _n_seg *= 2
-        spline = __get_spline(line, _n_seg, crs)
-        idx = __get_idx(spline.distance, distance)
-    return spline.x[idx].flatten(), spline.y[idx].flatten(), spline.distance[idx].flatten()
-
-
 def elevation_profile(
     lines: LineString | MultiLineString,
     spacing: float,
-    dem_res: int = 10,
     crs: CRSTYPE = 4326,
 ) -> xr.DataArray:
     """Get the elevation profile along a line at a given uniform spacing.
 
-    This function converts the line to a B-spline and then calculates the elevation
-    along the spline at a given uniform spacing.
+    .. note::
+
+        This function converts the line to a spline and then calculates the elevation
+        along the spline at a given uniform spacing using 10-m resolution DEM from 3DEP.
 
     Parameters
     ----------
     lines : LineString or MultiLineString
         Line segment(s) to be profiled. If its type is ``MultiLineString``,
         it will be converted to a single ``LineString`` and if this operation
-        fails, a ``InputTypeError`` will be raised.
+        fails, an ``InputTypeError`` will be raised.
     spacing : float
         Spacing between the sample points along the line in meters.
-    dem_res : float, optional
-        Resolution of the DEM source to use in meter, defaults to 10.
-    crs : str, int, or pyproj.CRS or pyproj.CRS, optional
-        Spatial reference (CRS) of ``lines``, defaults to ``EPSG:4326``.
+    crs : str, int, or pyproj.CRS, optional
+        Spatial reference System (CRS) of ``lines``, defaults to ``EPSG:4326``.
 
     Returns
     -------
@@ -612,30 +579,28 @@ def elevation_profile(
     if isinstance(lines, MultiLineString):
         path = ops.linemerge(lines)
         if not isinstance(path, LineString):
-            raise InputTypeError("lines", "mergeable to a single line")
+            raise InputTypeError("lines", "MultiLineString that can be merged to LineString")
     else:
         path = lines
 
     crs_prj = 5070
-    geom = gpd.GeoSeries([path], crs=crs).to_crs(crs_prj)
-    n_seg = int(np.ceil(geom.length.sum() / spacing)) * 100
-    x, y, distance = __get_spline_params(geom.geometry[0], n_seg, spacing, crs_prj)
-    if dem_res == 10:
-        elev_list = elevation_bycoords(list(zip(x, y)), crs=crs_prj, source="tep")
-        elevation = xr.DataArray(elev_list, dims="z", coords={"z": range(len(elev_list))})
-        x, y = zip(*geoutils.geometry_reproject(list(zip(x, y)), crs_prj, crs))
-        elevation["x"], elevation["y"] = ("z", list(x)), ("z", list(y))
-        elevation["distance"] = ("z", distance)
-        return elevation
-
-    geom_buff = geom.buffer(5 * dem_res).unary_union.bounds
-    dem = get_dem(geom_buff, dem_res, crs_prj)
-    xp, yp = zip(*geoutils.geometry_reproject(list(zip(x, y)), crs_prj, dem.rio.crs))
-
-    elevation = dem.astype("f8").interp(x=("z", list(xp)), y=("z", list(yp)))
-    xp, yp = zip(*geoutils.geometry_reproject(list(zip(x, y)), crs_prj, crs))
-    elevation["x"], elevation["y"] = ("z", list(xp)), ("z", list(yp))
+    geom_proj = geoutils.geometry_reproject(path, crs, crs_prj)
+    npts = int(np.ceil(geom_proj.length / spacing))
+    geom_proj = geoutils.smooth_linestring(geom_proj, 0.1, npts)
+    elev_list = elevation_bycoords(list(zip(*geom_proj.xy)), crs=crs_prj, source="tep")
+    elevation = xr.DataArray(
+        elev_list,
+        dims="z",
+        coords={"z": range(len(elev_list))},
+        attrs={"source": "10-m DEM from 3DEP"},
+    )
+    geom = geoutils.geometry_reproject(geom_proj, crs_prj, crs)
+    x, y = geom.xy
+    elevation["x"], elevation["y"] = ("z", list(x)), ("z", list(y))
+    distance = np.hypot(np.diff(x), np.diff(y)).cumsum()
+    distance = np.insert(distance, 0, 0)
     elevation["distance"] = ("z", distance)
+    elevation["distance"].attrs = {"units": "m", "long_name": "Distance from start"}
     return elevation
 
 
@@ -652,13 +617,15 @@ def check_3dep_availability(
     bbox : tuple
         Bounding box as tuple of ``(min_x, min_y, max_x, max_y)``.
     crs : str, int, or pyproj.CRS or pyproj.CRS, optional
-        Spatial reference (CRS) of bbox, defaults to ``EPSG:4326``.
+        Spatial reference (CRS) of ``bbox``, defaults to ``EPSG:4326``.
 
     Returns
     -------
     dict
-        True if bbox intersects 3DEP elevation for each available resolution.
+        ``True`` if bbox intersects 3DEP elevation for each available resolution.
         Keys are the supported resolutions and values are their availability.
+        If the query fails due to any reason, the value will be ``Failed``.
+        If necessary, you can try again later until there is no ``Failed`` value.
 
     Examples
     --------
@@ -679,22 +646,42 @@ def check_3dep_availability(
         "60m": 23,
         "topobathy": 30,
     }
-    _bbox = geoutils.geometry_reproject(bbox, crs, 4326)
-    url = ServiceURL().restful.nm_3dep_index
+    base_url = ServiceURL().restful.nm_3dep_index
+    urls = [f"{base_url}/{lyr}/query" for lyr in res_layers.values()]
 
-    def _check(lyr: int) -> bool:
-        wms = ArcGISRESTful(url, lyr)
-        with contextlib.suppress(ZeroMatchedError):
-            return len(next(iter(wms.oids_bygeom(_bbox)))) > 0
-        return False
+    geom_query = ogc_utils.esri_query(bbox, crs, 4326)
+    payload = {
+        **geom_query,
+        "spatialRel": "esriSpatialRelIntersects",
+        "returnGeometry": "false",
+        "returnIdsOnly": "false",
+        "returnCountOnly": "true",
+        "f": "json",
+    }
 
-    return {res: _check(lyr) for res, lyr in res_layers.items()}
+    resps = ar.retrieve_json(
+        urls,
+        [{"params": payload}] * len(urls),
+        max_workers=len(urls),
+        raise_status=False,
+    )
+
+    avail = {
+        res: "Failed" if "error" in r else bool(r.get("count")) for res, r in zip(res_layers, resps)
+    }
+    failed = [res for res, r in avail.items() if r == "Failed"]
+    if failed:
+        [
+            ar.delete_url_cache(f"{base_url}/{res_layers[res]}/query", params=payload)
+            for res in failed
+        ]
+    return avail
 
 
 def query_3dep_sources(
     bbox: tuple[float, float, float, float],
     crs: CRSTYPE = 4326,
-    res: str | None = None,
+    res: str | list[str] | None = None,
 ) -> gpd.GeoDataFrame:
     """Query 3DEP's data sources within a bounding box.
 
@@ -708,8 +695,10 @@ def query_3dep_sources(
         Bounding box as tuple of ``(min_x, min_y, max_x, max_y)``.
     crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of bbox, defaults to ``EPSG:4326``.
-    res : str, optional
+    res : str, list of str, optional
         Resolution to query, defaults to ``None``, i.e., all resolutions.
+        Available resolutions are: ``1m``, ``3m``, ``5m``, ``10m``, ``30m``,
+        ``60m``, and ``topobathy``.
 
     Returns
     -------
@@ -730,6 +719,7 @@ def query_3dep_sources(
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
         raise InputTypeError("bbox", "a tuple of length 4")
+
     res_layers = {
         "1m": 18,
         "3m": 19,
@@ -739,18 +729,20 @@ def query_3dep_sources(
         "60m": 23,
         "topobathy": 30,
     }
-    if res is not None and res not in res_layers:
-        raise InputValueError("res", list(res_layers.keys()))
-
-    layers = {res: res_layers[res]} if res is not None else res_layers
-
-    _bbox = geoutils.geometry_reproject(bbox, crs, 4326)
-    url = ServiceURL().restful.nm_3dep_index
+    if res is None:
+        layers = res_layers
+    elif isinstance(res, str) and res in res_layers:
+        layers = {res: res_layers[res]}
+    elif isinstance(res, (list, tuple)) and all(r in res_layers for r in res):
+        layers = {r: res_layers[r] for r in res}
+    else:
+        raise InputValueError("res", list(res_layers))
 
     def _check(lyr: int) -> gpd.GeoDataFrame | None:
-        wms = utils.RESTful(url, lyr)
+        client = ArcGISRESTful(ServiceURL().restful.nm_3dep_index, lyr, outformat="json")
         with contextlib.suppress(ZeroMatchedError):
-            return wms.bygeom(_bbox)
+            oids = client.oids_bygeom(bbox, crs)
+            return geoutils.json2geodf(client.get_features(oids))
         return None
 
     src = pd.concat({res: _check(lyr) for res, lyr in layers.items()})
