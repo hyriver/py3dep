@@ -1,5 +1,6 @@
 import io
 import shutil
+import subprocess
 from pathlib import Path
 
 import geopandas as gpd
@@ -30,29 +31,32 @@ LINE = MultiLineString(
 LYR = "Slope Degrees"
 SMALL = 1e-3
 
+has_gdal = subprocess.getstatusoutput("gdalinfo --version")[0] == 0
+
 
 def assert_close(a: float, b: float, rtol: float = 1e-3) -> bool:
     assert np.isclose(a, b, rtol=rtol).all()
 
 
 def test_profile():
-    ep = py3dep.elevation_profile(LINE, 10)
-    epm = py3dep.elevation_profile(ops.linemerge(LINE), 10, 15)
-    assert_close(ep.mean().item(), 271.566)
-    assert_close(epm.mean().item(), 288.903)
+    ep = py3dep.elevation_profile(LINE, 1000)
+    epm = py3dep.elevation_profile(ops.linemerge(LINE), 1000)
+    expected = 264.6431
+    assert_close(ep.mean().item(), expected)
+    assert_close(epm.mean().item(), expected)
 
 
 def test_getmap():
     layers = ["DEM", LYR]
     ds = py3dep.get_map(layers, GEOM.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
-    dem_10 = py3dep.get_map(layers[0], GEOM, 10, geo_crs=DEF_CRS, crs=ALT_CRS)
+    dem_30 = py3dep.get_map(layers[0], GEOM, 30, geo_crs=DEF_CRS, crs=ALT_CRS)
     dem_1e3 = py3dep.get_map(layers[0], GEOM, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
-    fpath = Path("dem_10.tif")
-    dem_10.rio.to_raster(fpath)
-    dem_10 = rxr.open_rasterio(fpath)
+    fpath = Path("dem_30.tif")
+    dem_30.rio.to_raster(fpath)
+    dem_30 = rxr.open_rasterio(fpath)
     assert sorted(ds.keys()) == ["elevation", "slope_degrees"]
-    assert_close(dem_10.mean().item(), dem_1e3.mean().item(), 0.5)
-    dem_10.close()
+    assert_close(dem_30.mean().item(), dem_1e3.mean().item(), 0.5)
+    dem_30.close()
     fpath.unlink()
 
 
@@ -64,9 +68,10 @@ def test_dem():
     assert_close(ds.mean().item(), expected)
 
 
+@pytest.mark.skipif(not has_gdal, reason="GDAL is not installed")
 def test_dem_vrt():
-    expected = 295.686
-    py3dep.get_dem_vrt(GEOM.bounds, 10, "cache/dem.vrt")
+    expected = 295.6827
+    py3dep.get_dem_vrt(GEOM.bounds, 30, "cache/dem.vrt")
     ds = rxr.open_rasterio("cache/dem.vrt").squeeze(drop=True)
     assert_close(ds.mean().item(), expected)
 
@@ -126,6 +131,7 @@ def test_check_3dep_availability():
     avail = py3dep.check_3dep_availability(GEOM.bounds)
     assert avail["1m"]
     assert avail["10m"]
+    assert avail["30m"]
 
 
 def test_query_3dep_source():
