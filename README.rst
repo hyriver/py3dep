@@ -353,7 +353,7 @@ these spatial references.
     from pynhd import NLDI
 
     geom = NLDI().get_basins("01031500").geometry[0]
-    dem = py3dep.get_map("DEM", geom, resolution=30, geo_crs="epsg:4326", crs="epsg:3857")
+    dem = py3dep.get_map("DEM", geom, resolution=30, geo_crs=4326, crs=3857)
     slope = py3dep.get_map("Slope Degrees", geom, resolution=30)
     slope = py3dep.deg2mpm(slope)
 
@@ -406,7 +406,7 @@ and add elevation data for its nodes using ``elevation_bycoords`` function.
 
     G = ox.graph_from_place("Piedmont, California, USA", network_type="drive")
     x, y = nx.get_node_attributes(G, "x").values(), nx.get_node_attributes(G, "y").values()
-    elevation = py3dep.elevation_bycoords(zip(x, y), crs="epsg:4326")
+    elevation = py3dep.elevation_bycoords(zip(x, y), crs=4326)
     nx.set_node_attributes(G, dict(zip(G.nodes(), elevation)), "elevation")
 
 .. image:: https://raw.githubusercontent.com/hyriver/HyRiver-examples/main/notebooks/_static/street_elev.png
