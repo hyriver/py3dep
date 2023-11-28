@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import itertools
-from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
+from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload, Literal
 
 import cytoolz.curried as tlz
 import geopandas as gpd
@@ -155,20 +155,6 @@ def get_map(
         raise InputValueError("crs", valid_crs)
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
-
-    # Check if the geometry is within the service bounds
-    url = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer"
-    resp = ar.retrieve_json([url], [{"params": {"f": "json"}}])
-    extent = resp[0]["extent"]
-    service_bounds = shapely_box(extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"])
-    bounds_crs = extent["spatialReference"]["wkid"]
-    service_bounds = geoutils.geometry_reproject(service_bounds, bounds_crs, crs)
-    if not _geometry.intersects(service_bounds):
-        service_bounds = geoutils.geometry_reproject(service_bounds, crs, 4326)
-        raise InputRangeError(
-            "geometry", f"({', '.join(str(round(b, 6)) for b in service_bounds.bounds)})"
-        )
-
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
     r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px=10000000)
 
@@ -342,19 +328,6 @@ def get_dem_vrt(
     """
     wms_url = ServiceURL().wms.nm_3dep
     bounds = geoutils.geometry_reproject(bbox, crs, 4326)
-
-    # Check if the geometry is within the service bounds
-    url = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer"
-    resp = ar.retrieve_json([url], [{"params": {"f": "json"}}])
-    extent = resp[0]["extent"]
-    service_bounds = shapely_box(extent["xmin"], extent["ymin"], extent["xmax"], extent["ymax"])
-    bounds_crs = extent["spatialReference"]["wkid"]
-    service_bounds = geoutils.geometry_reproject(service_bounds, bounds_crs, 4326)
-    if not shapely_box(*bounds).intersects(service_bounds):
-        raise InputRangeError(
-            "bbox", f"({', '.join(str(round(b, 6)) for b in service_bounds.bounds)})"
-        )
-
     wms = WMS(
         wms_url, layers="3DEPElevation:None", outformat="image/tiff", crs=4326, validation=False
     )
@@ -511,7 +484,7 @@ def elevation_bycoords(
 def elevation_bycoords(
     coords: tuple[float, float] | list[tuple[float, float]],
     crs: CRSTYPE = 4326,
-    source: str = "tep",
+    source: Literal["tep", "tnm", "airmap"] = "tep",
 ) -> float | list[float]:
     """Get elevation for a list of coordinates.
 
@@ -524,12 +497,11 @@ def elevation_bycoords(
     source : str, optional
         Data source to be used, default to ``airmap``. Supported sources are
         ``airmap`` (30 m resolution), ``tnm`` (using The National Map's Bulk Point
-        Query Service with 10 m resolution) and ``tep`` (using 3DEP's WMS service
+        Query Service with 10 m resolution) and ``tep`` (using 3DEP's static DEM VRTs
         at 10 m resolution). The ``tnm`` and ``tep`` sources are more accurate since they
         use the 1/3 arc-second DEM layer from 3DEP service but it is limited to the US.
-        They both tend to be slower than the Airmap service. Note that ``tnm`` is bit unstable.
-        It's recommended to use ``tep`` unless 10-m resolution accuracy is not necessary which
-        in that case ``airmap`` is more appropriate.
+        Note that ``tnm`` is bit unstable. It's recommended to use ``tep`` unless 10-m
+        resolution accuracy is not necessary which in that case ``airmap`` is more appropriate.
 
     Returns
     -------
