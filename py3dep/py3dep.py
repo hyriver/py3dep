@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import itertools
-from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload, Literal
+from typing import TYPE_CHECKING, Any, Literal, Sequence, Union, cast, overload
 
 import cytoolz.curried as tlz
 import geopandas as gpd
@@ -22,7 +22,6 @@ import async_retriever as ar
 import pygeoutils as geoutils
 from py3dep import utils
 from py3dep.exceptions import (
-    InputRangeError,
     InputTypeError,
     InputValueError,
     MissingCRSError,
@@ -166,50 +165,6 @@ def get_map(
     return utils.rename_layers(ds, list(valid_layers))
 
 
-def add_elevation(ds: xr.DataArray | xr.Dataset) -> xr.Dataset:
-    """Add elevation data to a dataset  as a new variable.
-
-    Parameters
-    ----------
-    ds : xarray.DataArray or xarray.Dataset
-        The dataset to add elevation data to. It must contain
-        CRS information.
-
-    Returns
-    -------
-    xarray.Dataset
-        The dataset with ``elevation`` variable added.
-    """
-    if not isinstance(ds, (xr.DataArray, xr.Dataset)):
-        raise InputTypeError("ds", "xarray.DataArray or xarray.Dataset")
-
-    ds_crs = ds.rio.crs
-    if ds_crs is None:
-        raise MissingCRSError
-
-    if isinstance(ds, xr.DataArray):
-        name = ds.name or "data"
-        ds = ds.to_dataset(name=name, promote_attrs=True)
-    else:
-        ds = ds.copy()
-
-    ds_proj = ds.rio.reproject(5070)
-    ds_bounds = ds_proj.rio.bounds()
-    resolution = abs(ds_proj.rio.resolution()[0])
-    bounds = gpd.GeoSeries([shapely_box(*ds_bounds)], crs=5070)
-    bounds = bounds.buffer(3 * resolution, join_style=2, cap_style=2).to_crs(4326)
-
-    elev = get_map("DEM", bounds.iloc[0].bounds, resolution=resolution)
-    elev = elev.rio.reproject(ds.rio.crs)
-    elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds.rio.crs)
-    elev = elev.rio.reproject_match(ds)
-    elev = geoutils.xd_write_crs(elev, ds.rio.crs, ds.rio.grid_mapping)
-    elev.attrs["long_name"] = "Elevation"
-    elev.attrs["units"] = "m"
-    ds["elevation"] = elev
-    return ds
-
-
 def static_3dep_dem(
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     crs: CRSTYPE,
@@ -301,6 +256,59 @@ def get_dem(
     dem.attrs.update({"units": "meters", "vertical_datum": "NAVD88"})
     dem.name = "elevation"
     return dem
+
+
+def add_elevation(ds: xr.DataArray | xr.Dataset, mask: xr.DataArray | None = None) -> xr.Dataset:
+    """Add elevation data to a dataset as a new variable.
+
+    Parameters
+    ----------
+    ds : xarray.DataArray or xarray.Dataset
+        The dataset to add elevation data to. It must contain
+        CRS information.
+    mask : xarray.DataArray, optional
+        A mask to apply to the elevation data, defaults to ``None``.
+
+    Returns
+    -------
+    xarray.Dataset
+        The dataset with ``elevation`` variable added.
+    """
+    if not isinstance(ds, (xr.DataArray, xr.Dataset)):
+        raise InputTypeError("ds", "xarray.DataArray or xarray.Dataset")
+
+    ds_crs = ds.rio.crs
+    if ds_crs is None:
+        raise MissingCRSError
+
+    if isinstance(ds, xr.DataArray):
+        name = ds.name or "data"
+        ds = ds.to_dataset(name=name, promote_attrs=True)
+    else:
+        ds = ds.copy()
+
+    if ds_crs.is_projected:
+        ds_proj = ds
+        crs_proj = ds_crs
+    else:
+        ds_proj = ds.rio.reproject(5070)
+        crs_proj = 5070
+    ds_bounds = ds_proj.rio.bounds()
+    resolution = abs(ds_proj.rio.resolution()[0])
+    bounds = gpd.GeoSeries([shapely_box(*ds_bounds)], crs=crs_proj)
+    bounds = bounds.buffer(3 * resolution, join_style=2, cap_style=2).to_crs(4326)
+
+    elev = get_dem(bounds.iloc[0].bounds, resolution)
+    elev = elev.rio.reproject(ds_crs)
+    elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds_crs)
+    elev = elev.rio.reproject_match(ds)
+    elev = geoutils.xd_write_crs(elev, ds_crs, ds.rio.grid_mapping)
+    elev.attrs["long_name"] = "Elevation"
+    elev.attrs["units"] = "m"
+    ds["elevation"] = elev
+    if mask is not None:
+        ds["elevation"] = ds["elevation"].where(mask)
+    return ds
 
 
 def get_dem_vrt(
