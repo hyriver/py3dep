@@ -27,6 +27,10 @@ New Features
   return a valid response. It will remove the failed responses from
   the cache, so next time the function is called, it will try to
   get only the failed resolutions.
+- Add a new option to ``add_elevation`` for passing a mask. This
+  is useful for cases where the input ``xarray.DataArray`` or
+  ``xarray.Dataset`` has a mask and the user wants to use that
+  mask for the elevation data as well.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
