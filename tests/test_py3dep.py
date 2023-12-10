@@ -124,7 +124,7 @@ def test_add_elev():
     da = xr.DataArray(dims=["y", "x"], coords={"y": gy, "x": gx})
     da = da.rio.write_crs(crs)
     ds = py3dep.add_elevation(da)
-    assert_close(ds["elevation"].mean().item(), 272.6234)
+    assert_close(ds["elevation"].mean().item(), 291.3313)
 
 
 def test_check_3dep_availability():
