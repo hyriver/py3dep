@@ -27,10 +27,22 @@ New Features
   return a valid response. It will remove the failed responses from
   the cache, so next time the function is called, it will try to
   get only the failed resolutions.
-- Add a new option to ``add_elevation`` for passing a mask. This
-  is useful for cases where the input ``xarray.DataArray`` or
-  ``xarray.Dataset`` has a mask and the user wants to use that
-  mask for the elevation data as well.
+- Add four new options to ``add_elevation``: ``mask`` for passing a
+  mask and ``resolution`` for specifying the resolution of the source
+  DEM, and ``x_dim`` and ``y_dim`` for passing the names of spatial
+  dimensions in the input dataset. The ``mask`` option is useful for
+  cases where the input ``xarray.DataArray`` or ``xarray.Dataset`` has
+  a mask and the user wants to use that mask for the elevation data as well.
+  The ``resolution`` option is useful for cases where the user wants
+  to get the elevation data at a higher resolution that will be
+  downsampled by bilinear interpolation to the resolution of the input
+  ``xarray.DataArray`` or ``xarray.Dataset``. The default is
+  ``resolution=None`` which means the resolution of the input
+  ``xarray.DataArray`` or ``xarray.Dataset`` will be used. The ``x_dim``
+  and ``y_dim`` options are useful for cases where the input
+  ``xarray.DataArray`` or ``xarray.Dataset`` has different names for
+  spatial dimensions than ``x`` and ``y``. The default is ``x_dim="x"``
+  and ``y_dim="y"``.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
