@@ -206,6 +206,8 @@ def static_3dep_dem(
         raise InputValueError("resolution", list(url))
 
     dem = rxr.open_rasterio(url[resolution])
+    if "band" in dem.dims:
+        dem = dem.drop_vars("band")
     dem = cast("xr.DataArray", dem)
     dem = dem.squeeze()
     poly = geoutils.geo2polygon(geometry, crs, dem.rio.crs)
@@ -252,13 +254,19 @@ def get_dem(
         dem = static_3dep_dem(geometry, crs, resolution)
     else:
         dem = get_map("DEM", geometry, resolution, crs)
-    dem = dem.astype("f8")
-    dem.attrs.update({"units": "meters", "vertical_datum": "NAVD88"})
+    dem = dem.astype("f4")
+    dem.attrs.update({"units": "m", "vertical_datum": "NAVD88"})
     dem.name = "elevation"
     return dem
 
 
-def add_elevation(ds: xr.DataArray | xr.Dataset, mask: xr.DataArray | None = None) -> xr.Dataset:
+def add_elevation(
+    ds: xr.DataArray | xr.Dataset,
+    resolution: float | None = None,
+    x_dim: str = "x",
+    y_dim: str = "y",
+    mask: xr.DataArray | None = None,
+) -> xr.Dataset:
     """Add elevation data to a dataset as a new variable.
 
     Parameters
@@ -266,6 +274,13 @@ def add_elevation(ds: xr.DataArray | xr.Dataset, mask: xr.DataArray | None = Non
     ds : xarray.DataArray or xarray.Dataset
         The dataset to add elevation data to. It must contain
         CRS information.
+    resolution : float, optional
+        Target DEM source resolution in meters, defaults ``None``, i.e.,
+        the resolution of the input ``ds`` will be used.
+    x_dim : str, optional
+        Name of the x-coordinate dimension in ``ds``, defaults to ``x``.
+    y_dim : str, optional
+        Name of the y-coordinate dimension in ``ds``, defaults to ``y``.
     mask : xarray.DataArray, optional
         A mask to apply to the elevation data, defaults to ``None``.
 
@@ -286,7 +301,7 @@ def add_elevation(ds: xr.DataArray | xr.Dataset, mask: xr.DataArray | None = Non
         ds = ds.to_dataset(name=name, promote_attrs=True)
     else:
         ds = ds.copy()
-
+    ds = ds.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim)
     if ds_crs.is_projected:
         ds_proj = ds
         crs_proj = ds_crs
@@ -294,17 +309,17 @@ def add_elevation(ds: xr.DataArray | xr.Dataset, mask: xr.DataArray | None = Non
         ds_proj = ds.rio.reproject(5070)
         crs_proj = 5070
     ds_bounds = ds_proj.rio.bounds()
-    resolution = abs(ds_proj.rio.resolution()[0])
+    if resolution is None:
+        resolution = abs(ds_proj.rio.resolution()[0])
     bounds = gpd.GeoSeries([shapely_box(*ds_bounds)], crs=crs_proj)
     bounds = bounds.buffer(3 * resolution, join_style=2, cap_style=2).to_crs(4326)
 
     elev = get_dem(bounds.iloc[0].bounds, resolution)
     elev = elev.rio.reproject(ds_crs)
     elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds_crs)
-    elev = elev.rio.reproject_match(ds)
+    elev = elev.rio.reproject_match(ds, resampling=1)
     elev = geoutils.xd_write_crs(elev, ds_crs, ds.rio.grid_mapping)
-    elev.attrs["long_name"] = "Elevation"
-    elev.attrs["units"] = "m"
+    elev = elev.rename({"x": x_dim, "y": y_dim})
     ds["elevation"] = elev
     if mask is not None:
         ds["elevation"] = ds["elevation"].where(mask)
@@ -503,7 +518,7 @@ def elevation_bycoords(
     crs : str, int, or pyproj.CRS or pyproj.CRS, optional
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
-        Data source to be used, default to ``airmap``. Supported sources are
+        Data source to be used, default to ``tep``. Supported sources are
         ``airmap`` (30 m resolution), ``tnm`` (using The National Map's Bulk Point
         Query Service with 10 m resolution) and ``tep`` (using 3DEP's static DEM VRTs
         at 10 m resolution). The ``tnm`` and ``tep`` sources are more accurate since they
