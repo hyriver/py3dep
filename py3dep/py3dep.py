@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     CRSTYPE = Union[int, str, pyproj.CRS]
 
+MAX_PIXELS = 8000000
 LAYERS = [
     "DEM",
     "Hillshade Gray",
@@ -155,7 +156,7 @@ def get_map(
 
     _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
     wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
-    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px=10000000)
+    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px=MAX_PIXELS)
 
     try:
         ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
@@ -354,7 +355,7 @@ def get_dem_vrt(
     wms = WMS(
         wms_url, layers="3DEPElevation:None", outformat="image/tiff", crs=4326, validation=False
     )
-    fname = wms.getmap_bybox(bounds, resolution, max_px=10000000, tiff_dir=tiff_dir)
+    fname = wms.getmap_bybox(bounds, resolution, max_px=MAX_PIXELS, tiff_dir=tiff_dir)
     return geoutils.gtiff2vrt(fname, vrt_path)
 
 
