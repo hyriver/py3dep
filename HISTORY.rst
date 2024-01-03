@@ -57,6 +57,11 @@ Internal Changes
 - Improve initial load time by moving ``import pyflwdir`` to the
   ``fill_depressions`` function.
 
+Bug Fixes
+~~~~~~~~~
+- Decrease the number of pixels per request from 10e6 to 8e6 to reduce the
+  request load (:issue_3dep:`65`).
+
 0.15.2 (2023-09-22)
 -------------------
 
