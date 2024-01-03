@@ -208,9 +208,8 @@ def static_3dep_dem(
 
     dem = rxr.open_rasterio(url[resolution])
     if "band" in dem.dims:
-        dem = dem.drop_vars("band")
+        dem = dem.squeeze("band")
     dem = cast("xr.DataArray", dem)
-    dem = dem.squeeze()
     poly = geoutils.geo2polygon(geometry, crs, dem.rio.crs)
     dem = dem.rio.clip_box(*poly.bounds)
     if isinstance(geometry, (Polygon, MultiPolygon)):
@@ -312,16 +311,16 @@ def add_elevation(
     ds_bounds = ds_proj.rio.bounds()
     if resolution is None:
         resolution = abs(ds_proj.rio.resolution()[0])
-    bounds = gpd.GeoSeries([shapely_box(*ds_bounds)], crs=crs_proj)
-    bounds = bounds.buffer(3 * resolution, join_style=2, cap_style=2).to_crs(4326)
+    bounds = shapely_box(*ds_bounds).buffer(3 * resolution, join_style=2, cap_style=2)
+    bounds = geoutils.geometry_reproject(bounds, crs_proj, 4326)
 
-    elev = get_dem(bounds.iloc[0].bounds, resolution)
-    elev = elev.rio.reproject(ds_crs)
+    elev = get_dem(bounds.bounds, resolution)
+    if ds_crs != elev.rio.crs:
+        elev = elev.rio.reproject(ds_crs)
     elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds_crs)
     elev = elev.rio.reproject_match(ds, resampling=1)
     elev = geoutils.xd_write_crs(elev, ds_crs, ds.rio.grid_mapping)
-    elev = elev.rename({"x": x_dim, "y": y_dim})
-    ds["elevation"] = elev
+    ds["elevation"] = elev.rename({"x": x_dim, "y": y_dim})
     if mask is not None:
         ds["elevation"] = ds["elevation"].where(mask)
     return ds
@@ -352,10 +351,9 @@ def get_dem_vrt(
     """
     wms_url = ServiceURL().wms.nm_3dep
     bounds = geoutils.geometry_reproject(bbox, crs, 4326)
-    wms = WMS(
+    fname = WMS(
         wms_url, layers="3DEPElevation:None", outformat="image/tiff", crs=4326, validation=False
-    )
-    fname = wms.getmap_bybox(bounds, resolution, max_px=MAX_PIXELS, tiff_dir=tiff_dir)
+    ).getmap_bybox(bounds, resolution, max_px=MAX_PIXELS, tiff_dir=tiff_dir)
     return geoutils.gtiff2vrt(fname, vrt_path)
 
 
@@ -394,13 +392,14 @@ def elevation_bygrid(
         Elevations of the input coordinates as a ``xarray.DataArray``.
     """
     pts_crs = ogc_utils.validate_crs(crs)
-    points = gpd.GeoSeries(
-        gpd.points_from_xy(*zip(*itertools.product(xcoords, ycoords)), crs=pts_crs)
+    bbox = (
+        gpd.GeoSeries(gpd.points_from_xy(*zip(*itertools.product(xcoords, ycoords)), crs=pts_crs))
+        .to_crs(5070)
+        .buffer(2 * resolution)
+        .total_bounds
     )
-    points = points.to_crs(5070).buffer(2 * resolution)
-    bbox = tuple(points.total_bounds)
 
-    dem = get_dem(bbox, resolution, 5070)
+    dem = get_dem(tuple(bbox), resolution, 5070)
     dem = dem.rio.reproject(pts_crs)
 
     if depression_filling:
@@ -741,6 +740,13 @@ def query_3dep_sources(
             return geoutils.json2geodf(client.get_features(oids))
         return None
 
-    src = pd.concat({res: _check(lyr) for res, lyr in layers.items()})
-    src = gpd.GeoDataFrame(src.reset_index(level=1, drop=True), crs=4326)
-    return src.reset_index().rename(columns={"index": "dem_res"})
+    return (
+        gpd.GeoDataFrame(
+            pd.concat({res: _check(lyr) for res, lyr in layers.items()}).reset_index(
+                level=1, drop=True
+            ),
+            crs=4326,
+        )
+        .reset_index()
+        .rename(columns={"index": "dem_res"})
+    )
