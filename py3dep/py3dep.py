@@ -314,7 +314,7 @@ def add_elevation(
     bounds = shapely_box(*ds_bounds).buffer(3 * resolution, join_style=2, cap_style=2)
     bounds = geoutils.geometry_reproject(bounds, crs_proj, 4326)
 
-    dims_order = tuple(d for d in ds.dims if d in (y_dim, x_dim))
+    dims_order = (y_dim, x_dim)
     elev = get_dem(bounds.bounds, resolution).transpose(*dims_order)
     if ds_crs != elev.rio.crs:
         elev = elev.rio.reproject(ds_crs)
