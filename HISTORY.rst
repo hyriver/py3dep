@@ -2,6 +2,15 @@
 History
 =======
 
+0.16.1 (2024-XX-XX)
+-------------------
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Simplify the logic of adding elevation to a Dataset in the
+  ``add_elevation`` function to avoid touching CRS of the input
+  Dataset.
+
 0.16.0 (2024-01-03)
 -------------------
 
