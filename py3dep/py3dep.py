@@ -320,7 +320,9 @@ def add_elevation(
         elev = elev.rio.reproject(ds_crs)
     elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds_crs)
     ds["elevation"] = (dims_order, elev.rio.reproject_match(ds, resampling=1).values)
-    ds["elevation"] = ds["elevation"].rio.write_crs(ds.rio.crs, grid_mapping_name=ds.rio.grid_mapping)
+    ds["elevation"] = ds["elevation"].rio.write_crs(
+        ds.rio.crs, grid_mapping_name=ds.rio.grid_mapping
+    )
     if mask is not None:
         ds["elevation"] = ds["elevation"].where(mask)
     return ds
