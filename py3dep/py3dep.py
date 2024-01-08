@@ -314,13 +314,12 @@ def add_elevation(
     bounds = shapely_box(*ds_bounds).buffer(3 * resolution, join_style=2, cap_style=2)
     bounds = geoutils.geometry_reproject(bounds, crs_proj, 4326)
 
-    elev = get_dem(bounds.bounds, resolution)
+    dims_order = tuple(d for d in ds.dims if d in (y_dim, x_dim))
+    elev = get_dem(bounds.bounds, resolution).transpose(*dims_order)
     if ds_crs != elev.rio.crs:
         elev = elev.rio.reproject(ds_crs)
     elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds_crs)
-    elev = elev.rio.reproject_match(ds, resampling=1)
-    elev = geoutils.xd_write_crs(elev, ds_crs, ds.rio.grid_mapping)
-    ds["elevation"] = elev.rename({"x": x_dim, "y": y_dim})
+    ds["elevation"] = (dims_order, elev.rio.reproject_match(ds, resampling=1).values)
     if mask is not None:
         ds["elevation"] = ds["elevation"].where(mask)
     return ds
