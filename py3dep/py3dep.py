@@ -664,7 +664,8 @@ def check_3dep_availability(
     )
 
     avail = {
-        res: "Failed" if "error" in r else bool(r.get("count")) for res, r in zip(res_layers, resps)
+        res: "Failed" if r is not None and "error" in r else bool(r.get("count"))  # type: ignore
+        for res, r in zip(res_layers, resps)
     }
     failed = [res for res, r in avail.items() if r == "Failed"]
     if failed:
