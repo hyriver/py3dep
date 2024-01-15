@@ -168,6 +168,10 @@ extend-immutable-calls = [
 convention = "numpy"
 
 [tool.ruff.per-file-ignores]
+"py3dep/py3dep.py" = [
+    # specific type error ignored
+    "PGH003",
+]
 "tests/*.py" = [
     "D100",
     "D101",
@@ -179,14 +183,8 @@ convention = "numpy"
     "D107",
     # use of "assert"
     "S101",
-    # use of "exec"
-    "S102",
-    # possible hardcoded password
-    "S106",
-    # use of "eval"
-    "PGH001",
-    # Mutable class attributes
-    "RUF012",
+    # specific type error ignored
+    "PGH003",
 ]
 
 [tool.ruff.isort]
