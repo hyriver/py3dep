@@ -5,6 +5,12 @@ History
 0.16.1 (2024-01-15)
 -------------------
 
+Bug Fixes
+~~~~~~~~~
+- In the ``check_3dep_availability`` function when the web service is down
+  the function raises a ``TypeError`` instead of setting the value of the
+  failed resolution to ``Failed``. This is fixed now. (:issue_3dep:`66`).
+
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Simplify the logic of adding elevation to a Dataset in the
