@@ -77,7 +77,7 @@ def test_dem_vrt():
 
 
 def test_fill_depressions():
-    ds = py3dep.get_map("DEM", GEOM.bounds, 1e3)
+    ds = py3dep.get_dem(GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
     assert_close(ds.mean().item(), 296.9658)
 
