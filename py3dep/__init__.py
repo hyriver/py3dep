@@ -2,11 +2,11 @@
 from importlib.metadata import PackageNotFoundError, version
 
 from py3dep.exceptions import (
-    DependencyError,
     InputTypeError,
     InputValueError,
     MissingColumnError,
     MissingCRSError,
+    NoOutletError,
 )
 from py3dep.print_versions import show_versions
 from py3dep.py3dep import (
@@ -46,7 +46,7 @@ __all__ = [
     # Exceptions
     "MissingColumnError",
     "MissingCRSError",
-    "DependencyError",
+    "NoOutletError",
     "InputTypeError",
     "InputValueError",
     # Constants

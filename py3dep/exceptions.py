@@ -50,18 +50,11 @@ class MissingColumnError(Exception):
         return self.message
 
 
-class DependencyError(ImportError):
-    """Exception raised when pyflwdir is not installed."""
+class NoOutletError(Exception):
+    """Exception raised when no outlet is found in a DEM."""
 
     def __init__(self) -> None:
-        self.message = "\n".join(
-            (
-                "Depression filling requires ``pyflwdir`` which can be installed by:",
-                "pip install pyflwdir",
-                "or",
-                "conda install -c conda-forge pyflwdir",
-            )
-        )
+        self.message = "No outlet was foundm, please provide an outlet point or adjust ``elv_max``."
         super().__init__(self.message)
 
     def __str__(self) -> str:

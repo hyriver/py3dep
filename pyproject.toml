@@ -47,8 +47,8 @@ dependencies = [
   "xarray>=2023.01",
 ]
 [project.optional-dependencies]
-dem = [
-  "pyflwdir>=0.5.6",
+speedup = [
+  "numba",
 ]
 test = [
   "pytest-cov",
