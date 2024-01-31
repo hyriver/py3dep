@@ -154,6 +154,8 @@ ignore = [
     "E501",
     "PLR2004",
     "PLR0913",
+    # conflict with ruff-formatter
+    "ISC001",
 ]
 line-length = 100
 
