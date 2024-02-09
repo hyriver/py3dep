@@ -2,6 +2,22 @@
 History
 =======
 
+0.16.2 (2024-XX-XX)
+-------------------
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Refactor ``fill_depressions`` function by porting the code from ``pyflwdir``
+  and improve its performance and also now, it directly support ``xarray.DataArray``.
+  Now, ``pyflwdir`` is not an optional dependency anymore. You can install ``numba``
+  to improve the performance of the function. 
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- The AirMap service has been deprecated and removed from the package. The
+  ``elevation_bycoords`` function now only supports the the National Map and
+  the 3DEP services.
+
 0.16.1 (2024-01-15)
 -------------------
 
