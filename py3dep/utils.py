@@ -25,7 +25,7 @@ try:
     from numba import config as numba_config
     from numba import njit, prange
 
-    numba_config.THREADING_LAYER = "workqueue"  # pyright: ignore[reportGeneralTypeIssues]
+    numba_config.THREADING_LAYER = "workqueue"  # pyright: ignore[reportAttributeAccessIssue]
     has_numba = True
 except ImportError:
     has_numba = False

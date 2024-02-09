@@ -6,13 +6,12 @@ import contextlib
 import itertools
 from typing import TYPE_CHECKING, Any, Literal, Sequence, Union, cast, overload
 
-import cytoolz.curried as tlz
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyproj
 import rasterio
-import rioxarray._io as rxr
+import rioxarray as rxr
 import xarray as xr
 from rasterio import RasterioIOError
 from shapely import LineString, MultiLineString, MultiPolygon, Polygon, ops
@@ -207,9 +206,9 @@ def static_3dep_dem(
         raise InputValueError("resolution", list(url))
 
     dem = rxr.open_rasterio(url[resolution])
+    dem = cast("xr.DataArray", dem)
     if "band" in dem.dims:
         dem = dem.squeeze("band")
-    dem = cast("xr.DataArray", dem)
     poly = geoutils.geo2polygon(geometry, crs, dem.rio.crs)
     dem = dem.rio.clip_box(*poly.bounds)
     if isinstance(geometry, (Polygon, MultiPolygon)):
@@ -262,7 +261,7 @@ def get_dem(
 
 def add_elevation(
     ds: xr.DataArray | xr.Dataset,
-    resolution: float | None = None,
+    resolution: int | None = None,
     x_dim: str = "x",
     y_dim: str = "y",
     mask: xr.DataArray | None = None,
@@ -310,12 +309,14 @@ def add_elevation(
         crs_proj = 5070
     ds_bounds = ds_proj.rio.bounds()
     if resolution is None:
-        resolution = abs(ds_proj.rio.resolution()[0])
+        resolution = int(ds_proj.rio.resolution()[0])
     bounds = shapely_box(*ds_bounds).buffer(3 * resolution, join_style=2, cap_style=2)
     bounds = geoutils.geometry_reproject(bounds, crs_proj, 4326)
 
     dims_order = (y_dim, x_dim)
-    elev = get_dem(bounds.bounds, resolution).transpose(*dims_order)
+    elev = (
+        get_dem(bounds.bounds, resolution).rename({"x": x_dim, "y": y_dim}).transpose(*dims_order)
+    )
     if ds_crs != elev.rio.crs:
         elev = elev.rio.reproject(ds_crs)
     elev = geoutils.xarray_geomask(elev, ds.rio.bounds(), ds_crs)
@@ -325,6 +326,7 @@ def add_elevation(
     )
     if mask is not None:
         ds["elevation"] = ds["elevation"].where(mask)
+    ds = cast("xr.Dataset", ds)
     return ds
 
 
@@ -420,8 +422,7 @@ class ElevationByCoords:
     coords : list of tuple
         List of coordinates.
     source : str, optional
-        Elevation source, defaults to ``tep``. Valid sources are: ``tnm``, ``tep``,
-        and ``airmap``.
+        Elevation source, defaults to ``tep``. Valid sources are: ``tnm``, and ``tep``.
     """
 
     def __init__(
@@ -433,7 +434,7 @@ class ElevationByCoords:
         self.coords = geoutils.coords_list(coords)
         self.crs = ogc_utils.validate_crs(crs)
         self.coords_gs = gpd.GeoSeries(gpd.points_from_xy(*zip(*self.coords)), crs=self.crs)
-        valid_sources = ("tnm", "airmap", "tep")
+        valid_sources = ("tnm", "tep")
         self.source = source
         if self.source not in valid_sources:
             raise InputValueError("source", valid_sources)
@@ -443,31 +444,7 @@ class ElevationByCoords:
         """Return list of elevations in meters."""
         if self.source == "tep":
             return self.tep()
-        if self.source == "tnm":
-            return self.tnm()
-        return self.airmap()
-
-    def airmap(self) -> list[float]:
-        """Return list of elevations in meters."""
-        pts = self.coords_gs.to_crs(4326)
-        coords_chunks = tlz.partition_all(100, zip(pts.x, pts.y))
-        headers = {"Content-Type": "application/json", "charset": "utf-8"}
-        urls, kwds = zip(
-            *(
-                (
-                    ServiceURL().restful.airmap,
-                    {
-                        "params": {"points": ",".join(f"{lat},{lon}" for lon, lat in chunk)},
-                        "headers": headers,
-                    },
-                )
-                for chunk in coords_chunks
-            )
-        )
-        urls = cast("tuple[str, ...]", urls)
-        kwds = cast("tuple[dict[str, Any], ...]", kwds)
-        elevations = tlz.pluck("data", ar.retrieve_json(urls, kwds))
-        return list(tlz.concat(elevations))
+        return self.tnm()
 
     def tnm(self) -> list[float]:
         """Return list of elevations in meters."""
@@ -495,13 +472,17 @@ class ElevationByCoords:
 
 
 @overload
-def elevation_bycoords(coords: tuple[float, float], crs: CRSTYPE = ..., source: str = ...) -> float:
+def elevation_bycoords(
+    coords: tuple[float, float], crs: CRSTYPE = ..., source: Literal["tep", "tnm"] = ...
+) -> float:
     ...
 
 
 @overload
 def elevation_bycoords(
-    coords: list[tuple[float, float]], crs: CRSTYPE = ..., source: str = ...
+    coords: list[tuple[float, float]],
+    crs: CRSTYPE = ...,
+    source: Literal["tep", "tnm"] = ...,
 ) -> list[float]:
     ...
 
@@ -509,7 +490,7 @@ def elevation_bycoords(
 def elevation_bycoords(
     coords: tuple[float, float] | list[tuple[float, float]],
     crs: CRSTYPE = 4326,
-    source: Literal["tep", "tnm", "airmap"] = "tep",
+    source: Literal["tep", "tnm"] = "tep",
 ) -> float | list[float]:
     """Get elevation for a list of coordinates.
 
@@ -521,12 +502,12 @@ def elevation_bycoords(
         Spatial reference (CRS) of coords, defaults to ``EPSG:4326``.
     source : str, optional
         Data source to be used, default to ``tep``. Supported sources are
-        ``airmap`` (30 m resolution), ``tnm`` (using The National Map's Bulk Point
+        ``tnm`` (using The National Map's Bulk Point
         Query Service with 10 m resolution) and ``tep`` (using 3DEP's static DEM VRTs
         at 10 m resolution). The ``tnm`` and ``tep`` sources are more accurate since they
         use the 1/3 arc-second DEM layer from 3DEP service but it is limited to the US.
         Note that ``tnm`` is bit unstable. It's recommended to use ``tep`` unless 10-m
-        resolution accuracy is not necessary which in that case ``airmap`` is more appropriate.
+        resolution accuracy is not necessary.
 
     Returns
     -------
@@ -603,7 +584,7 @@ def elevation_profile(
 
 def check_3dep_availability(
     bbox: tuple[float, float, float, float], crs: CRSTYPE = 4326
-) -> dict[str, bool]:
+) -> dict[str, bool | str]:
     """Query 3DEP's resolution availability within a bounding box.
 
     This function checks availability of 3DEP's at the following resolutions:
@@ -743,9 +724,9 @@ def query_3dep_sources(
             return geoutils.json2geodf(client.get_features(oids))
         return None
 
-    return (
-        gpd.GeoDataFrame(
-            pd.concat({res: _check(lyr) for res, lyr in layers.items()}).reset_index(
+    return (  # pyright: ignore[reportReturnType]
+        gpd.GeoDataFrame(  # pyright: ignore[reportCallIssue]
+            pd.concat({res: _check(lyr) for res, lyr in layers.items()}).reset_index(  # pyright: ignore[reportCallIssue,reportArgumentType]
                 level=1, drop=True
             ),
             crs=4326,

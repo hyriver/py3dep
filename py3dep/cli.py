@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar, cast
+from typing import TYPE_CHECKING, Literal, TypeVar, cast
 
 import click
 import geopandas as gpd
@@ -24,7 +24,7 @@ def get_target_df(tdf: DFType, req_cols: list[str]) -> DFType:
     missing = [c for c in req_cols if c not in tdf]
     if missing:
         raise MissingColumnError(missing)
-    return tdf[req_cols]  # pyright: ignore[reportGeneralTypeIssues]
+    return tdf[req_cols]  # pyright: ignore[reportReturnType]
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -54,13 +54,13 @@ def cli() -> None:
     "-q",
     "--query_source",
     default="tep",
-    type=click.Choice(["airmap", "tnm", "tep"], case_sensitive=False),
-    help="Source of the elevation data: AirMap, The National Map, or 3DEP.",
+    type=click.Choice(["tnm", "tep"], case_sensitive=False),
+    help="Source of the elevation data: The National Map (tnm) or 3DEP (tep).",
 )
 @save_arg
 def coords(
     fpath: Path,
-    query_source: str = "tep",
+    query_source: Literal["tep", "tnm"] = "tep",
     save_dir: str | Path = "topo_3dep",
 ) -> None:
     """Retrieve topographic data for a list of coordinates.
