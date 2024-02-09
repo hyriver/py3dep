@@ -76,6 +76,7 @@ def test_dem_vrt():
     assert_close(ds.mean().item(), expected)
 
 
+@pytest.mark.speedup()
 def test_fill_depressions():
     ds = py3dep.get_dem(GEOM.bounds, 1e3)
     ds = py3dep.fill_depressions(ds)
@@ -84,7 +85,7 @@ def test_fill_depressions():
 
 @pytest.mark.parametrize(
     ("source", "expected"),
-    [("airmap", 363), ("tnm", 356.093), ("tep", 356.139)],
+    [("tnm", 356.093), ("tep", 356.139)],
 )
 def test_bycoords(source, expected):
     coords = [(-7766049.664788851, 5691929.739021257)]
@@ -169,7 +170,7 @@ class TestCLI:
         )
         coord_csv = "coords.csv"
         df.to_csv(coord_csv)
-        ret = runner.invoke(cli, ["coords", coord_csv, "-s", "geo_coords", "-q", "airmap"])
+        ret = runner.invoke(cli, ["coords", coord_csv, "-s", "geo_coords", "-q", "tep"])
         Path(coord_csv).unlink()
         assert ret.exit_code == 0
         assert "Found coordinates of 3 points" in ret.output
