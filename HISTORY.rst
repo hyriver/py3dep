@@ -5,6 +5,11 @@ History
 0.16.2 (2024-XX-XX)
 -------------------
 
+Bug Fixes
+~~~~~~~~~
+- In ``add_elvation`` function, fix a bug where the function fails to add
+  elevation to a ``xarray.Dataset`` with x and y dims not being ``x`` and ``y``.
+
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Refactor ``fill_depressions`` function by porting the code from ``pyflwdir``
