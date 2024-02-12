@@ -25,7 +25,7 @@ try:
     from numba import config as numba_config
     from numba import njit, prange
 
-    numba_config.THREADING_LAYER = "workqueue"  # pyright: ignore[reportAttributeAccessIssue]
+    numba_config.THREADING_LAYER = "workqueue"
     has_numba = True
 except ImportError:
     has_numba = False
@@ -181,8 +181,8 @@ def fill_depressions(
         or at user provided outlet cells ``idxs_pit``.
 
         Depressions elsewhere are filled based on its lowest pour point elevation.
-        If the pour point depth is larger than the maximum pour point depth `max_depth` a pit
-        is set at the depression local minimum elevation.
+        If the pour point depth is larger than the maximum pour point depth ``max_depth``
+        a pit is set at the depression local minimum elevation.
 
         Wang, L., & Liu, H. (2006). https://doi.org/10.1080/13658810500433453
 
