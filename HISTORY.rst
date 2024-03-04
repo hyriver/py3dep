@@ -2,6 +2,14 @@
 History
 =======
 
+0.16.3 (2024-XX-XX)
+-------------------
+
+Bug Fixes
+~~~~~~~~~
+- In ``check_3dep_availability`` function, fix a bug where the function fails to
+  return a valid response when the web service is down.
+
 0.16.2 (2024-02-12)
 -------------------
 
@@ -15,7 +23,7 @@ Internal Changes
 - Refactor ``fill_depressions`` function by porting the code from ``pyflwdir``
   and improve its performance and also now, it directly support ``xarray.DataArray``.
   Now, ``pyflwdir`` is not an optional dependency anymore. You can install ``numba``
-  to improve the performance of the function. 
+  to improve the performance of the function.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
