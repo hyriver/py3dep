@@ -643,11 +643,14 @@ def check_3dep_availability(
         max_workers=len(urls),
         raise_status=False,
     )
+    resps = cast("list[dict[str, Any]]", resps)
 
-    avail = {
-        res: "Failed" if r is not None and "error" in r else bool(r.get("count"))  # type: ignore
-        for res, r in zip(res_layers, resps)
-    }
+    def _check(r: dict[str, Any] | None) -> bool | str:
+        if r is None or "error" in r:
+            return "Failed"
+        return bool(r.get("count"))
+
+    avail = {res: _check(r) for res, r in zip(res_layers, resps)}
     failed = [res for res, r in avail.items() if r == "Failed"]
     if failed:
         [
