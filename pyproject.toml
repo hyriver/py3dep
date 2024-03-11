@@ -197,6 +197,7 @@ known-first-party = [
   "hydrosignatures",
   "pygeohydro",
   "pydaymet",
+  "pygridmet",
   "pynldas2",
 ]
 
