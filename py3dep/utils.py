@@ -1,4 +1,5 @@
 """Utilities for Py3DEP."""
+
 from __future__ import annotations
 
 import functools
@@ -284,13 +285,11 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
 
 
 @overload
-def rename_layers(ds: xr.DataArray, valid_layers: list[str]) -> xr.DataArray:
-    ...
+def rename_layers(ds: xr.DataArray, valid_layers: list[str]) -> xr.DataArray: ...
 
 
 @overload
-def rename_layers(ds: xr.Dataset, valid_layers: list[str]) -> xr.Dataset:
-    ...
+def rename_layers(ds: xr.Dataset, valid_layers: list[str]) -> xr.Dataset: ...
 
 
 def rename_layers(

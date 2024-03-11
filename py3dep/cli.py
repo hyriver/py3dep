@@ -1,4 +1,5 @@
 """Command-line interface for Py3DEP."""
+
 from __future__ import annotations
 
 from pathlib import Path

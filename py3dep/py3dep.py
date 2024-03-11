@@ -1,4 +1,5 @@
 """Get data from 3DEP database."""
+
 # pyright: reportGeneralTypeIssues=false
 from __future__ import annotations
 
@@ -70,8 +71,7 @@ def get_map(
     resolution: int,
     geo_crs: CRSTYPE = ...,
     crs: CRSTYPE = ...,
-) -> xr.DataArray:
-    ...
+) -> xr.DataArray: ...
 
 
 @overload
@@ -81,8 +81,7 @@ def get_map(
     resolution: int,
     geo_crs: CRSTYPE = ...,
     crs: CRSTYPE = ...,
-) -> xr.Dataset:
-    ...
+) -> xr.Dataset: ...
 
 
 def get_map(
@@ -474,8 +473,7 @@ class ElevationByCoords:
 @overload
 def elevation_bycoords(
     coords: tuple[float, float], crs: CRSTYPE = ..., source: Literal["tep", "tnm"] = ...
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
@@ -483,8 +481,7 @@ def elevation_bycoords(
     coords: list[tuple[float, float]],
     crs: CRSTYPE = ...,
     source: Literal["tep", "tnm"] = ...,
-) -> list[float]:
-    ...
+) -> list[float]: ...
 
 
 def elevation_bycoords(

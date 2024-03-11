@@ -1,4 +1,7 @@
 """Top-level package for Py3DEP."""
+
+from __future__ import annotations
+
 from importlib.metadata import PackageNotFoundError, version
 
 from py3dep.exceptions import (
