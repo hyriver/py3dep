@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import shutil
 import subprocess
@@ -34,7 +36,7 @@ SMALL = 1e-3
 has_gdal = subprocess.getstatusoutput("gdalinfo --version")[0] == 0
 
 
-def assert_close(a: float, b: float, rtol: float = 1e-3) -> bool:
+def assert_close(a: float, b: float, rtol: float = 1e-3) -> None:
     assert np.isclose(a, b, rtol=rtol).all()
 
 
