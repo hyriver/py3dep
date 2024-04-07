@@ -138,6 +138,8 @@ lint.select = [
     "TCH",
     # Ruff-specific rules
     "RUF",
+    # compatibility with numpy 2.0
+    "NPY201",
 ]
 
 exclude = [
@@ -153,6 +155,9 @@ lint.ignore = [
     "PLR0913",
     # conflict with ruff-formatter
     "ISC001",
+    # shell command
+    "S605",
+    "S607",
 ]
 lint.extend-safe-fixes = [
   # absolute imports
