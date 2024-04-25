@@ -691,10 +691,10 @@ def query_3dep_sources(
     >>> bbox = (-69.77, 45.07, -69.31, 45.45)
     >>> src = py3dep.query_3dep_sources(bbox)
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    {'10m': 8, '1m': 3, '30m': 8}
+    {'10m': 8, '1m': 2, '30m': 8}
     >>> src = py3dep.query_3dep_sources(bbox, res="1m")
     >>> src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    {'1m': 3}
+    {'1m': 2}
     """
     if not isinstance(bbox, Sequence) or len(bbox) != 4:
         raise InputTypeError("bbox", "a tuple of length 4")

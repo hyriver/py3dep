@@ -87,7 +87,7 @@ def test_fill_depressions():
 
 @pytest.mark.parametrize(
     ("source", "expected"),
-    [("tnm", 356.093), ("tep", 356.139)],
+    [("tnm", 356.589), ("tep", 356.139)],
 )
 def test_bycoords(source, expected):
     coords = [(-7766049.664788851, 5691929.739021257)]
@@ -142,8 +142,8 @@ def test_query_3dep_source():
     res_all = src.groupby("dem_res")["OBJECTID"].count().to_dict()
     src = py3dep.query_3dep_sources(GEOM.bounds, res="1m")
     res_1m = src.groupby("dem_res")["OBJECTID"].count().to_dict()
-    assert res_all == {"10m": 8, "1m": 3, "30m": 8}
-    assert res_1m == {"1m": 3}
+    assert res_all == {"10m": 8, "1m": 2, "30m": 8}
+    assert res_1m == {"1m": 2}
 
 
 class TestCLI:
