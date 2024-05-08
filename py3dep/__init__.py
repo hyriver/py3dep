@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version
 
+from py3dep import exceptions
 from py3dep.exceptions import (
     InputTypeError,
     InputValueError,
@@ -52,6 +53,6 @@ __all__ = [
     "NoOutletError",
     "InputTypeError",
     "InputValueError",
-    # Constants
+    "exceptions",
     "__version__",
 ]
