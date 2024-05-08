@@ -50,9 +50,9 @@ def test_profile():
 
 def test_getmap():
     layers = ["DEM", LYR]
-    ds = py3dep.get_map(layers, GEOM.bounds, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
+    ds = py3dep.get_map(layers, GEOM.bounds, 1000, geo_crs=DEF_CRS, crs=ALT_CRS)
     dem_30 = py3dep.get_map(layers[0], GEOM, 30, geo_crs=DEF_CRS, crs=ALT_CRS)
-    dem_1e3 = py3dep.get_map(layers[0], GEOM, 1e3, geo_crs=DEF_CRS, crs=ALT_CRS)
+    dem_1e3 = py3dep.get_map(layers[0], GEOM, 1000, geo_crs=DEF_CRS, crs=ALT_CRS)
     fpath = Path("dem_30.tif")
     dem_30.rio.to_raster(fpath)
     dem_30 = rxr.open_rasterio(fpath)
@@ -80,7 +80,7 @@ def test_dem_vrt():
 
 @pytest.mark.speedup()
 def test_fill_depressions():
-    ds = py3dep.get_dem(GEOM.bounds, 1e3)
+    ds = py3dep.get_dem(GEOM.bounds, 1000)
     ds = py3dep.fill_depressions(ds)
     assert_close(ds.mean().item(), 296.9658)
 
@@ -96,7 +96,7 @@ def test_bycoords(source, expected):
 
 
 def test_deg2mpm():
-    slope = py3dep.get_map(LYR, GEOM, 1e3)
+    slope = py3dep.get_map(LYR, GEOM, 1000)
     slope = py3dep.deg2mpm(slope)
     assert_close(slope.mean().item(), 0.0505)
 
@@ -107,7 +107,7 @@ def test_grid():
     )
     geom = utils.match_crs(GEOM, DEF_CRS, crs)
     xmin, ymin, xmax, ymax = geom.bounds
-    res = 1e3
+    res = 1000
     gx = np.arange(xmin, xmax, res)
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
