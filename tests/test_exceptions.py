@@ -21,10 +21,10 @@ def test_wrong_bbox():
 def test_wrong_layer():
     geom = GEOM.bounds
     with pytest.raises(InputValueError, match="DEM"):
-        _ = py3dep.get_map("None", geom, 1e3)
+        _ = py3dep.get_map("None", geom, 1000)
 
 
 def test_wrong_crs():
     geom = GEOM.bounds
     with pytest.raises(InputValueError, match="crs"):
-        _ = py3dep.get_map("DEM", geom, 1e3, DEF_CRS, "ESRI:102003")
+        _ = py3dep.get_map("DEM", geom, 1000, DEF_CRS, "ESRI:102003")
