@@ -216,7 +216,7 @@ filterwarnings = [
 ]
 testpaths = [
   "tests",
-  "src/py3dep",
+  "py3dep",
 ]
 markers = [
   "speedup: Tests that require numba>=0.57",
