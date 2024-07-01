@@ -1,8 +1,9 @@
 [build-system]
-build-backend = "setuptools.build_meta"
+build-backend = "hatchling.build"
+
 requires = [
-  "setuptools>=60",
-  "setuptools-scm>=8",
+  "hatch-vcs",
+  "hatchling",
 ]
 
 [project]
@@ -62,26 +63,13 @@ urls.Homepage = "https://docs.hyriver.io/readme/py3dep.html"
 urls.Issues = "https://github.com/hyriver/py3dep/issues"
 scripts.py3dep = "py3dep.cli:cli"
 
-[tool.setuptools]
-include-package-data = true
-license-files = [
-  "LICENSE",
-]
-platforms = [
-  "any",
-]
-zip-safe = false
+[tool.hatch.version]
+source = "vcs"
 
-[tool.setuptools.package-data]
-py3dep = [
-  "py.typed",
+[tool.hatch.build.targets.wheel]
+packages = [
+  "src/py3dep",
 ]
-
-[tool.setuptools.packages]
-find = { namespaces = false }
-
-[tool.setuptools_scm]
-fallback_version = "999"
 
 [tool.ruff]
 target-version = "py38"
@@ -228,7 +216,7 @@ filterwarnings = [
 ]
 testpaths = [
   "tests",
-  "py3dep",
+  "src/py3dep",
 ]
 markers = [
   "speedup: Tests that require numba>=0.57",
@@ -249,7 +237,7 @@ omit = [
 ]
 parallel = true
 source = [
-  'py3dep',
+  'src/py3dep',
 ]
 
 [tool.pyright]
@@ -260,7 +248,7 @@ exclude = [
   "tests/",
 ]
 include = [
-  "py3dep",
+  "src/py3dep",
 ]
 reportMissingTypeStubs = false
 reportUnknownArgumentType = false
