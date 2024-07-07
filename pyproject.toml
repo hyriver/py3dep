@@ -41,8 +41,8 @@ dependencies = [
   "cytoolz",
   "geopandas>=0.10",
   "numpy>=1.17",
-  "pygeoogc<0.18,>=0.17.1",
-  "pygeoutils<0.18,>=0.17.1",
+  "pygeoogc<0.18,>=0.17",
+  "pygeoutils<0.18,>=0.17",
   "rasterio>=1.2",
   "rioxarray>=0.11",
   "scipy",
@@ -217,6 +217,9 @@ filterwarnings = [
 ]
 testpaths = [
   "tests",
+]
+markers = [
+  "speedup: Tests that require numba>=0.57",
 ]
 
 [tool.coverage.report]
