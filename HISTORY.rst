@@ -2,7 +2,7 @@
 History
 =======
 
-0.16.4 (2024-XX-XX)
+0.17.0 (2024-05-07)
 -------------------
 
 Internal Changes
@@ -15,6 +15,7 @@ Internal Changes
   for the package structure. This is to make the package more
   maintainable and to avoid any potential conflicts with other
   packages.
+- Add artifact attestations to the release workflow.
 
 0.16.3 (2024-04-24)
 -------------------
