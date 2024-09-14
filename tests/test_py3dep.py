@@ -78,7 +78,7 @@ def test_dem_vrt():
     assert_close(ds.mean().item(), expected)
 
 
-@pytest.mark.speedup()
+@pytest.mark.speedup
 def test_fill_depressions():
     ds = py3dep.get_dem(GEOM.bounds, 1000)
     ds = py3dep.fill_depressions(ds)

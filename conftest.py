@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 
-@pytest.fixture()
+@pytest.fixture
 def runner():
     """Return a CliRunner."""
     return CliRunner()
