@@ -109,3 +109,4 @@ ENV/
 data/
 tags*
 cache
+junit.xml
