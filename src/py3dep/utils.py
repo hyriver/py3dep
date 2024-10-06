@@ -5,7 +5,7 @@ from __future__ import annotations
 import functools
 import heapq
 import warnings
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar, Union, overload
 
 import numpy as np
 import xarray as xr
@@ -258,27 +258,13 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
         is set to ``m/m``.
     """
     with xr.set_options(keep_attrs=True):
-        if hasattr(slope, "_FillValue"):
-            nodata = slope.attrs["_FillValue"]
-        elif hasattr(slope, "nodatavals"):
-            _nodata = slope.attrs["nodatavals"]
-            nodata = _nodata[0] if isinstance(_nodata, Sequence) else _nodata
-        else:
-            nodata = np.nan
-        slope = slope.where(slope != nodata, drop=False)
-
-        def to_mpm(da: xr.DataArray) -> xr.DataArray:
-            """Convert slope from degrees to meter/meter."""
-            return xr.apply_ufunc(
-                lambda x: np.tan(np.deg2rad(x)),
-                da,
-                vectorize=True,
-            )
-
-        slope = to_mpm(slope).compute()
-        slope.attrs["nodatavals"] = (np.nan,)
-        if hasattr(slope, "_FillValue"):
-            slope.attrs["_FillValue"] = np.nan
+        nodata = slope.rio.nodata
+        nodata = np.nan if nodata is None else nodata
+        if not np.isnan(nodata):
+            slope = slope.where(slope != nodata, drop=False)
+        slope = xr.where(slope == 90, np.nan, slope)
+        slope = np.tan(np.deg2rad(slope))
+        slope = slope.rio.write_nodata(np.nan)
         slope.name = "slope"
         slope.attrs["units"] = "m/m"
     return slope
