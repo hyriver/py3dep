@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import contextlib
 import itertools
-from typing import TYPE_CHECKING, Any, Literal, Sequence, Union, cast, overload
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, Literal, Union, cast, overload
 
 import geopandas as gpd
 import numpy as np
@@ -27,8 +28,9 @@ from py3dep.exceptions import (
     MissingCRSError,
     ServiceUnavailableError,
 )
-from pygeoogc import WMS, ArcGISRESTful, ServiceURL, ZeroMatchedError
+from pygeoogc import WMS, ArcGISRESTful, ServiceURL
 from pygeoogc import utils as ogc_utils
+from pygeoogc.exceptions import ZeroMatchedError
 
 if TYPE_CHECKING:
     from pathlib import Path

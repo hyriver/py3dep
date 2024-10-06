@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import async_retriever as ar
-import pygeoogc as ogc
+import async_retriever.exceptions as ar
+import pygeoogc.exceptions as ogc
 
 
 class InputTypeError(ar.InputTypeError):
