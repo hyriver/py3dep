@@ -98,7 +98,7 @@ def test_bycoords(source, expected):
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1000)
     slope = py3dep.deg2mpm(slope)
-    assert_close(slope.mean().item(), 0.0505)
+    assert_close(slope.mean().item(), 57.29)
 
 
 def test_grid():

@@ -4,7 +4,7 @@ import pytest
 from shapely import Polygon
 
 import py3dep
-from py3dep import InputTypeError, InputValueError
+from py3dep.exceptions import InputTypeError, InputValueError
 
 DEF_CRS = 4326
 GEOM = Polygon(
