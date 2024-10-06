@@ -2,12 +2,22 @@
 History
 =======
 
+0.18.0 (2024-10-05)
+-------------------
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+- Drop support for Python 3.8 since its end-of-life date is October 2024.
+- Remove all exceptions from the main module and raise them from the
+  ``exceptions`` module. This is to declutter the public API and make
+  it easier to maintain.
+
 0.17.1 (2024-09-14)
 -------------------
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
-- Drop support for Python 3.8 since its end-of-life date is October 2024.
+- A release without change to match the version of other HyRiver packages.
 
 0.17.0 (2024-05-07)
 -------------------
