@@ -388,8 +388,8 @@ def elevation_bygrid(
         increases computation time so chose this value with caution.
     depression_filling : bool, optional
         Fill depressions before sampling using
-        `pyflwdir <https://deltares.github.io/pyflwdir>`__ package,
-        defaults to ``False``.
+        `Wang and Liu (2006) <https://doi.org/10.1080/13658810500433453>`__
+        method, defaults to ``False``.
 
     Returns
     -------
