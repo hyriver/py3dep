@@ -179,11 +179,6 @@ lint.extend-safe-fixes = [
   # absolute imports
   "TID252",
 ]
-lint.flake8-bugbear.extend-immutable-calls = [
-  "chr",
-  "typer.Argument",
-  "typer.Option",
-]
 lint.isort.known-first-party = [
   "async_retriever",
   "pygeoogc",
