@@ -1,6 +1,5 @@
 """Get data from 3DEP database."""
 
-# pyright: reportGeneralTypeIssues=false
 from __future__ import annotations
 
 import contextlib
@@ -53,16 +52,16 @@ LAYERS = [
     "Contour Smoothed 25",
 ]
 __all__ = [
-    "get_map",
-    "elevation_bygrid",
-    "elevation_bycoords",
-    "elevation_profile",
+    "add_elevation",
     "check_3dep_availability",
-    "query_3dep_sources",
-    "static_3dep_dem",
+    "elevation_bycoords",
+    "elevation_bygrid",
+    "elevation_profile",
     "get_dem",
     "get_dem_vrt",
-    "add_elevation",
+    "get_map",
+    "query_3dep_sources",
+    "static_3dep_dem",
 ]
 
 
@@ -125,9 +124,9 @@ def get_map(
         The spatial reference system of the input geometry, defaults to ``EPSG:4326``.
     crs : str, int, or pyproj.CRS, optional
         The spatial reference system to be used for requesting the data, defaults to
-        ``EPSG:4326``. Valid values are ``EPSG:4326``, ``EPSG:3576``, ``EPSG:3571``,
-        ``EPSG:3575``, ``EPSG:3857``, ``EPSG:3572``, ``CRS:84``, ``EPSG:3573``,
-        and ``EPSG:3574``.
+        ``epsg:4326``. Valid values are '``"crs:84"``, ``"epsg:4326"``, ``"epsg:3857"``,
+        ``"epsg:3338"``, ``"epsg:3571"``, ``"epsg:3572"``, ``"epsg:3573"``, ``"epsg:3574"``,
+        ``"epsg:3575"``, ``"epsg:3576"``, and ``"epsg:5070"``'.
 
     Returns
     -------
@@ -147,7 +146,6 @@ def get_map(
     wms_url = ServiceURL().wms.nm_3dep
 
     valid_crs = ogc_utils.valid_wms_crs(wms_url)
-
     if len(valid_crs) == 0:
         raise ServiceUnavailableError(wms_url)
 

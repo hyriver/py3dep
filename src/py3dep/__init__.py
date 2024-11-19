@@ -26,19 +26,19 @@ except PackageNotFoundError:
     __version__ = "999"
 
 __all__ = [
-    "fill_depressions",
-    "get_map",
+    "__version__",
+    "add_elevation",
     "check_3dep_availability",
-    "query_3dep_sources",
     "deg2mpm",
     "elevation_bycoords",
     "elevation_bygrid",
     "elevation_profile",
-    "static_3dep_dem",
+    "exceptions",
+    "fill_depressions",
     "get_dem",
     "get_dem_vrt",
-    "add_elevation",
+    "get_map",
+    "query_3dep_sources",
     "show_versions",
-    "exceptions",
-    "__version__",
+    "static_3dep_dem",
 ]
