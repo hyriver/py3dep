@@ -263,7 +263,7 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
         if not np.isnan(nodata):
             slope = slope.where(slope != nodata, drop=False)
         slope = xr.where(slope == 90, np.nan, slope)
-        slope = np.tan(np.deg2rad(slope))
+        slope = np.tan(np.deg2rad(slope))  # pyright: ignore[reportAssignmentType]
         slope = slope.rio.write_nodata(np.nan)
         slope.name = "slope"
         slope.attrs["units"] = "m/m"
