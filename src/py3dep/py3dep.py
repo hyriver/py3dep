@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
     CRSTYPE = Union[int, str, pyproj.CRS]
 
-MAX_PIXELS = 8000000
+MAX_PIXELS = 8_000_000
 LAYERS = [
     "DEM",
     "Hillshade Gray",
@@ -90,7 +90,7 @@ def get_map(
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
     geo_crs: CRSTYPE = 4326,
-    crs: CRSTYPE = 4326,
+    crs: CRSTYPE = 5070,
 ) -> xr.Dataset | xr.DataArray:
     """Access dynamic layer of `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__.
 
@@ -121,12 +121,14 @@ def get_map(
         The target resolution in meters. The width and height of the output are computed in
         pixels based on the geometry bounds and the given resolution.
     geo_crs : str, int, or pyproj.CRS, optional
-        The spatial reference system of the input geometry, defaults to ``EPSG:4326``.
+        The spatial reference system of the input geometry, defaults to 4326.
     crs : str, int, or pyproj.CRS, optional
-        The spatial reference system to be used for requesting the data, defaults to
-        ``epsg:4326``. Valid values are '``"crs:84"``, ``"epsg:4326"``, ``"epsg:3857"``,
-        ``"epsg:3338"``, ``"epsg:3571"``, ``"epsg:3572"``, ``"epsg:3573"``, ``"epsg:3574"``,
-        ``"epsg:3575"``, ``"epsg:3576"``, and ``"epsg:5070"``'.
+        The spatial reference system to be used for requesting the data,
+        defaults to 5070. Valid values are 4326, 3857, 3338, 3571, 3572,
+        3573, 3574, 3575, 3576, and 5070. Note that at the moment due to
+        an issue on the server-side (USGS's 3DEP web service), when passing
+        4326, the server returns invalid data. So it's recommended to use
+        5070 for the time being.
 
     Returns
     -------
@@ -144,24 +146,21 @@ def get_map(
     _layers = [f"3DEPElevation:{lyr}" for lyr in _layers]
 
     wms_url = ServiceURL().wms.nm_3dep
-
-    valid_crs = ogc_utils.valid_wms_crs(wms_url)
-    if len(valid_crs) == 0:
-        raise ServiceUnavailableError(wms_url)
-
-    if ogc_utils.validate_crs(crs).lower() not in valid_crs:
-        raise InputValueError("crs", valid_crs)
-
-    _geometry = geoutils.geo2polygon(geometry, geo_crs, crs)
-    wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=crs, validation=False)
-    r_dict = wms.getmap_bybox(_geometry.bounds, resolution, box_crs=crs, max_px=MAX_PIXELS)
+    req_crs = 5070
+    geom_5070 = geoutils.geo2polygon(geometry, geo_crs, req_crs)
+    bbox = geom_5070.buffer(20 * resolution).bounds
+    wms = WMS(wms_url, layers=_layers, outformat="image/tiff", crs=req_crs, validation=False)
+    r_dict = wms.getmap_bybox(bbox, resolution, box_crs=req_crs, max_px=MAX_PIXELS)
 
     try:
-        ds = geoutils.gtiff2xarray(r_dict, _geometry, crs)
+        ds = geoutils.gtiff2xarray(r_dict)
     except RasterioIOError as ex:
         raise ServiceUnavailableError(wms_url) from ex
     valid_layers = wms.get_validlayers()
-    return utils.rename_layers(ds, list(valid_layers))
+    ds = utils.rename_layers(ds, list(valid_layers))
+    if pyproj.CRS(crs) != pyproj.CRS(req_crs):
+        ds = ds.rio.reproject(crs)
+    return geoutils.xarray_geomask(ds, geometry, geo_crs)
 
 
 def static_3dep_dem(
@@ -246,10 +245,13 @@ def get_dem(
     Returns
     -------
     xarray.DataArray
-        DEM at the specified resolution in meters and 4326 CRS.
+        DEM at the specified resolution in meters and 5070 CRS.
     """
     if np.isclose(resolution, (10, 30, 60)).any():
-        dem = static_3dep_dem(geometry, crs, resolution)
+        _geometry = geoutils.geo2polygon(geometry, crs, 5070)
+        buff = _geometry.buffer(20 * resolution).bounds
+        dem = static_3dep_dem(buff, 5070, resolution)
+        dem = geoutils.xarray_geomask(dem.rio.reproject(5070), geometry, crs)
     else:
         dem = get_map("DEM", geometry, resolution, crs)
     dem = dem.astype("f4")
