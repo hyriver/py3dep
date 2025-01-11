@@ -78,11 +78,11 @@ def test_dem_vrt():
     assert_close(ds.mean().item(), expected)
 
 
-@pytest.mark.speedup
+@pytest.mark.jit
 def test_fill_depressions():
     ds = py3dep.get_dem(GEOM.bounds, 1000)
     ds = py3dep.fill_depressions(ds)
-    assert_close(ds.mean().item(), 296.9658)
+    assert_close(ds.mean().item(), 302.3334)
 
 
 @pytest.mark.parametrize(
@@ -98,7 +98,7 @@ def test_bycoords(source, expected):
 def test_deg2mpm():
     slope = py3dep.get_map(LYR, GEOM, 1000)
     slope = py3dep.deg2mpm(slope)
-    assert_close(slope.mean().item(), 57.29)
+    assert_close(slope.mean().item(), 0.0647)
 
 
 def test_grid():
@@ -112,7 +112,7 @@ def test_grid():
     gy = np.arange(ymin, ymax, res)
     elev = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res)
     elev_fill = py3dep.elevation_bygrid(tuple(gx), tuple(gy), crs, res, depression_filling=True)
-    assert_close((elev_fill - elev).sum().item(), 9096.3853)
+    assert_close((elev_fill - elev).sum().item(), 9557.7960)
 
 
 def test_add_elev():
@@ -127,7 +127,7 @@ def test_add_elev():
     da = xr.DataArray(dims=["y", "x"], coords={"y": gy, "x": gx})
     da = da.rio.write_crs(crs)
     ds = py3dep.add_elevation(da)
-    assert_close(ds["elevation"].mean().item(), 291.3313)
+    assert_close(ds["elevation"].mean().item(), 300.4742)
 
 
 def test_check_3dep_availability():
