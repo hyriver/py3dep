@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import heapq
+import os
 import warnings
 from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar, Union, overload
 
@@ -50,12 +51,12 @@ except ImportError:
 
 FloatArray = NDArray[np.float32]
 BoolArray = NDArray[np.bool_]
-IntArray = NDArray[np.uint32]
+IntArray = NDArray[np.uint64]
 DataArray = TypeVar("DataArray", FloatArray, xr.DataArray)
 
 
 @njit(
-    "boolean[:, ::1](f4[:, ::1], boolean[:, ::1], boolean[:, ::1], optional(uint32[::1]), optional(f4))",
+    "boolean[:, ::1](f4[:, ::1], boolean[:, ::1], boolean[:, ::1], optional(uint64[::1]), optional(f4))",
     nogil=True,
     parallel=True,
 )
@@ -92,7 +93,7 @@ def _get_queued(
 
 
 @njit(
-    "f4[:, ::1](f4[:, ::1], unicode_type, optional(uint32[::1]), f4, f4, optional(f4), i4)",
+    "f4[:, ::1](f4[:, ::1], unicode_type, optional(uint64[::1]), f4, f4, optional(f4), i4)",
     nogil=True,
 )
 def _fill_depressions(
@@ -119,9 +120,9 @@ def _fill_depressions(
     # queue contains (elevation, row, col)
     # boundary is included to favor non-boundary cells over boundary
     # cells with same elevation
-    q = [(np.float32(0), np.uint32(0), np.uint32(0)) for _ in range(0)]
+    q = [(np.float32(0), np.uint64(0), np.uint64(0)) for _ in range(0)]
     for r, c in zip(*np.where(queued)):
-        heapq.heappush(q, (np.float32(elevtn[r, c]), np.uint32(r), np.uint32(c)))
+        heapq.heappush(q, (np.float32(elevtn[r, c]), np.uint64(r), np.uint64(c)))
     heapq.heapify(q)
 
     # restrict queue to global edge minimum (single outlet)
@@ -138,7 +139,10 @@ def _fill_depressions(
         for dr, dc in zip(drs, dcs):
             r = r0 + dr
             c = c0 + dc
-            if not (0 <= r < nrow and 0 <= c < ncol) or done[r, c]:
+            if not (0 <= r < nrow and 0 <= c < ncol):
+                continue
+            r, c = np.uint64(r), np.uint64(c)
+            if done[r, c]:
                 continue
             z1 = elevtn[r, c]
             # local depression if dz > 0
@@ -146,14 +150,14 @@ def _fill_depressions(
             # if positive max_depth: don't fill when dz > max_depth
             if max_depth >= 0 and dz >= max_depth:
                 if not queued[r, c]:
-                    heapq.heappush(q, (np.float32(z1), np.uint32(r), np.uint32(c)))
+                    heapq.heappush(q, (np.float32(z1), r, c))
                     queued[r, c] = True
                 continue
             if dz > 0:
                 delv[r, c] += dz
             # add to queue if not already in queue
             if ~queued[r, c]:
-                heapq.heappush(q, (np.float32(delv[r, c]), np.uint32(r), np.uint32(c)))
+                heapq.heappush(q, (np.float32(delv[r, c]), r, c))
                 queued[r, c] = True
             done[r, c] = True
     return delv
@@ -214,9 +218,11 @@ def fill_depressions(
     elevtn_out: numpy.ndarray
         Depression filled elevation with type float32.
     """
-    if not has_numba:
+    if not has_numba or os.getenv("NUMBA_DISABLE_JIT") == "1":
         warnings.warn(
-            "Numba not installed. Using very slow pure python version.", UserWarning, stacklevel=2
+            "Numba not installed or is disabled. Using very slow pure python version.",
+            UserWarning,
+            stacklevel=2,
         )
     if not isinstance(elevtn, (np.ndarray, xr.DataArray)):
         raise InputTypeError("elevtn", "2D numpy.ndarray or xarray.DataArray")
@@ -230,7 +236,7 @@ def fill_depressions(
         if not isinstance(elevtn, np.ndarray) and idxs_pit.ndim != 1:
             raise InputTypeError("idxs_pit", "1D numpy.ndarray")
     _elevtn = np.asarray(elevtn, dtype=np.float32)
-    _idxs_pit = None if idxs_pit is None else np.asarray(idxs_pit, dtype=np.uint32)
+    _idxs_pit = None if idxs_pit is None else np.asarray(idxs_pit, dtype=np.uint64)
     _nodata = np.float32(nodata)
     _max_depth = np.float32(max_depth)
     _elv_max = None if elv_max is None else np.float32(elv_max)
