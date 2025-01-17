@@ -17,7 +17,7 @@ from py3dep.exceptions import InputTypeError, InputValueError, NoOutletError
 if TYPE_CHECKING:
     import pyproj
 
-    CRSTYPE = Union[int, str, pyproj.CRS]
+    CRSType = Union[int, str, pyproj.CRS]
 
 
 __all__ = ["deg2mpm", "fill_depressions"]

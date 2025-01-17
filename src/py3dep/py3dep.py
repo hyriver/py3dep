@@ -34,7 +34,7 @@ from pygeoogc.exceptions import ZeroMatchedError
 if TYPE_CHECKING:
     from pathlib import Path
 
-    CRSTYPE = Union[int, str, pyproj.CRS]
+    CRSType = Union[int, str, pyproj.CRS]
 
 MAX_PIXELS = 8_000_000
 LAYERS = [
@@ -70,8 +70,8 @@ def get_map(
     layers: str,
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
-    geo_crs: CRSTYPE = ...,
-    crs: CRSTYPE = ...,
+    geo_crs: CRSType = ...,
+    crs: CRSType = ...,
 ) -> xr.DataArray: ...
 
 
@@ -80,8 +80,8 @@ def get_map(
     layers: list[str],
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
-    geo_crs: CRSTYPE = ...,
-    crs: CRSTYPE = ...,
+    geo_crs: CRSType = ...,
+    crs: CRSType = ...,
 ) -> xr.Dataset: ...
 
 
@@ -89,8 +89,8 @@ def get_map(
     layers: str | list[str],
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
-    geo_crs: CRSTYPE = 4326,
-    crs: CRSTYPE = 5070,
+    geo_crs: CRSType = 4326,
+    crs: CRSType = 5070,
 ) -> xr.Dataset | xr.DataArray:
     """Access dynamic layer of `3DEP <https://www.usgs.gov/core-science-systems/ngp/3dep>`__.
 
@@ -165,7 +165,7 @@ def get_map(
 
 def static_3dep_dem(
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
-    crs: CRSTYPE,
+    crs: CRSType,
     resolution: int = 10,
 ) -> xr.DataArray:
     """Get DEM data at specific resolution from 3DEP.
@@ -221,7 +221,7 @@ def static_3dep_dem(
 def get_dem(
     geometry: Polygon | MultiPolygon | tuple[float, float, float, float],
     resolution: int,
-    crs: CRSTYPE = 4326,
+    crs: CRSType = 4326,
 ) -> xr.DataArray:
     """Get DEM data at any resolution from 3DEP.
 
@@ -336,7 +336,7 @@ def get_dem_vrt(
     resolution: int,
     vrt_path: Path | str,
     tiff_dir: Path | str = "cache",
-    crs: CRSTYPE = 4326,
+    crs: CRSType = 4326,
 ) -> None:
     """Get DEM data at any resolution from 3DEP and save it as a VRT file.
 
@@ -365,7 +365,7 @@ def get_dem_vrt(
 def elevation_bygrid(
     xcoords: Sequence[float],
     ycoords: Sequence[float],
-    crs: CRSTYPE,
+    crs: CRSType,
     resolution: int,
     depression_filling: bool = False,
 ) -> xr.DataArray:
@@ -429,7 +429,7 @@ class ElevationByCoords:
     def __init__(
         self,
         coords: list[tuple[float, float]] | tuple[float, float],
-        crs: CRSTYPE = 4326,
+        crs: CRSType = 4326,
         source: str = "tep",
     ) -> None:
         self.coords = geoutils.coords_list(coords)
@@ -474,21 +474,21 @@ class ElevationByCoords:
 
 @overload
 def elevation_bycoords(
-    coords: tuple[float, float], crs: CRSTYPE = ..., source: Literal["tep", "tnm"] = ...
+    coords: tuple[float, float], crs: CRSType = ..., source: Literal["tep", "tnm"] = ...
 ) -> float: ...
 
 
 @overload
 def elevation_bycoords(
     coords: list[tuple[float, float]],
-    crs: CRSTYPE = ...,
+    crs: CRSType = ...,
     source: Literal["tep", "tnm"] = ...,
 ) -> list[float]: ...
 
 
 def elevation_bycoords(
     coords: tuple[float, float] | list[tuple[float, float]],
-    crs: CRSTYPE = 4326,
+    crs: CRSType = 4326,
     source: Literal["tep", "tnm"] = "tep",
 ) -> float | list[float]:
     """Get elevation for a list of coordinates.
@@ -523,7 +523,7 @@ def elevation_bycoords(
 def elevation_profile(
     lines: LineString | MultiLineString,
     spacing: float,
-    crs: CRSTYPE = 4326,
+    crs: CRSType = 4326,
 ) -> xr.DataArray:
     """Get the elevation profile along a line at a given uniform spacing.
 
@@ -582,7 +582,7 @@ def elevation_profile(
 
 
 def check_3dep_availability(
-    bbox: tuple[float, float, float, float], crs: CRSTYPE = 4326
+    bbox: tuple[float, float, float, float], crs: CRSType = 4326
 ) -> dict[str, bool | str]:
     """Query 3DEP's resolution availability within a bounding box.
 
@@ -661,7 +661,7 @@ def check_3dep_availability(
 
 def query_3dep_sources(
     bbox: tuple[float, float, float, float],
-    crs: CRSTYPE = 4326,
+    crs: CRSType = 4326,
     res: str | list[str] | None = None,
 ) -> gpd.GeoDataFrame:
     """Query 3DEP's data sources within a bounding box.
