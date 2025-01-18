@@ -478,7 +478,7 @@ class ElevationByCoords:
             {"params": {"units": "Meters", "x": f"{x:.6f}", "y": f"{y:.6f}"}}
             for x, y in zip(pts.x, pts.y)
         ]
-        resp = ar.retrieve_json([ServiceURL().restful.nm_pqs] * len(kwds), kwds, max_workers=5)
+        resp = ar.retrieve_json([ServiceURL().restful.nm_pqs] * len(kwds), kwds)
         resp = cast("list[dict[str, Any]]", resp)
         return [float(r["value"]) for r in resp]
 
@@ -663,7 +663,6 @@ def check_3dep_availability(
     resps = ar.retrieve_json(
         urls,
         [{"params": payload}] * len(urls),
-        max_workers=len(urls),
         raise_status=False,
     )
     resps = cast("list[dict[str, Any]]", resps)
