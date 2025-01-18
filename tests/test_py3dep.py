@@ -55,7 +55,7 @@ def test_getmap():
     dem_1e3 = py3dep.get_map(layers[0], GEOM, 1000, geo_crs=DEF_CRS, crs=ALT_CRS)
     fpath = Path("dem_30.tif")
     dem_30.rio.to_raster(fpath)
-    dem_30 = rxr.open_rasterio(fpath)
+    dem_30 = rxr.open_rasterio(fpath).squeeze(drop=True)
     assert sorted(ds.keys()) == ["elevation", "slope_degrees"]
     assert_close(dem_30.mean().item(), dem_1e3.mean().item(), 0.5)
     dem_30.close()
