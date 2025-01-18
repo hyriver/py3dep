@@ -6,7 +6,7 @@ import functools
 import heapq
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, Callable, Literal, TypeVar
 
 import numpy as np
 import xarray as xr
@@ -15,9 +15,9 @@ from numpy.typing import NDArray
 from py3dep.exceptions import InputTypeError, InputValueError, NoOutletError
 
 if TYPE_CHECKING:
-    import pyproj
+    from pyproj import CRS
 
-    CRSType = Union[int, str, pyproj.CRS]
+    CRSType = int | str | CRS
 
 
 __all__ = ["deg2mpm", "fill_depressions"]
@@ -274,25 +274,3 @@ def deg2mpm(slope: xr.DataArray) -> xr.DataArray:
         slope.name = "slope"
         slope.attrs["units"] = "m/m"
     return slope
-
-
-@overload
-def rename_layers(ds: xr.DataArray, valid_layers: list[str]) -> xr.DataArray: ...
-
-
-@overload
-def rename_layers(ds: xr.Dataset, valid_layers: list[str]) -> xr.Dataset: ...
-
-
-def rename_layers(
-    ds: xr.DataArray | xr.Dataset, valid_layers: list[str]
-) -> xr.DataArray | xr.Dataset:
-    """Rename layers in a dataset."""
-    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
-    rename.update({"3DEPElevation:None": "elevation"})
-
-    if isinstance(ds, xr.DataArray):
-        ds.name = rename[str(ds.name)]
-    else:
-        ds = ds.rename({n: rename[str(n)] for n in ds})
-    return ds

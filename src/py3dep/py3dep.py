@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 import itertools
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, Union, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, cast, overload
 
 import geopandas as gpd
 import numpy as np
@@ -19,8 +19,9 @@ from shapely import LineString, MultiLineString, MultiPolygon, Polygon, ops
 from shapely import box as shapely_box
 
 import async_retriever as ar
+import pygeoogc.utils as ogc_utils
 import pygeoutils as geoutils
-from py3dep import utils
+from py3dep import geoops
 from py3dep.exceptions import (
     InputTypeError,
     InputValueError,
@@ -28,13 +29,14 @@ from py3dep.exceptions import (
     ServiceUnavailableError,
 )
 from pygeoogc import WMS, ArcGISRESTful, ServiceURL
-from pygeoogc import utils as ogc_utils
 from pygeoogc.exceptions import ZeroMatchedError
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    CRSType = Union[int, str, pyproj.CRS]
+    from pyproj import CRS
+
+    CRSType = int | str | CRS
 
 MAX_PIXELS = 8_000_000
 LAYERS = [
@@ -63,6 +65,28 @@ __all__ = [
     "query_3dep_sources",
     "static_3dep_dem",
 ]
+
+
+@overload
+def _rename_layers(ds: xr.DataArray, valid_layers: list[str]) -> xr.DataArray: ...
+
+
+@overload
+def _rename_layers(ds: xr.Dataset, valid_layers: list[str]) -> xr.Dataset: ...
+
+
+def _rename_layers(
+    ds: xr.DataArray | xr.Dataset, valid_layers: list[str]
+) -> xr.DataArray | xr.Dataset:
+    """Rename layers in a dataset."""
+    rename = {lyr: lyr.split(":")[-1].replace(" ", "_").lower() for lyr in valid_layers}
+    rename.update({"3DEPElevation:None": "elevation"})
+
+    if isinstance(ds, xr.DataArray):
+        ds.name = rename[str(ds.name)]
+    else:
+        ds = ds.rename({n: rename[str(n)] for n in ds})
+    return ds
 
 
 @overload
@@ -157,7 +181,7 @@ def get_map(
     except RasterioIOError as ex:
         raise ServiceUnavailableError(wms_url) from ex
     valid_layers = wms.get_validlayers()
-    ds = utils.rename_layers(ds, list(valid_layers))
+    ds = _rename_layers(ds, list(valid_layers))
     if pyproj.CRS(crs) != pyproj.CRS(req_crs):
         ds = ds.rio.reproject(crs)
     return geoutils.xarray_geomask(ds, geometry, geo_crs)
@@ -408,7 +432,7 @@ def elevation_bygrid(
     dem = dem.rio.reproject(pts_crs)
 
     if depression_filling:
-        dem = utils.fill_depressions(dem)
+        dem = geoops.fill_depressions(dem)
 
     return dem.interp(x=list(xcoords), y=list(ycoords))
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, version
 
 from py3dep import exceptions
+from py3dep.geoops import deg2mpm, fill_depressions
 from py3dep.print_versions import show_versions
 from py3dep.py3dep import (
     add_elevation,
@@ -18,7 +19,6 @@ from py3dep.py3dep import (
     query_3dep_sources,
     static_3dep_dem,
 )
-from py3dep.utils import deg2mpm, fill_depressions
 
 try:
     __version__ = version("py3dep")
