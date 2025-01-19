@@ -44,9 +44,9 @@ dependencies = [
   "pygeoogc>=0.19,<0.20",
   "pygeoutils>=0.19,<0.20",
   "rasterio>=1.2",
-  "rioxarray>=0.11",
+  "rioxarray>=0.15",
   "shapely>=2",
-  "xarray>=2023.1",
+  "xarray>=2024.7",
 ]
 optional-dependencies.jit = [
   "numba>=0.60",
@@ -237,6 +237,9 @@ exclude_lines = [
   "if TYPE_CHECKING:",
 ]
 ignore_errors = true
+omit = [
+  "**/__init__.py",
+]
 
 [tool.coverage.paths]
 source = [ "src", "*/site-packages" ]
@@ -246,9 +249,6 @@ branch = true
 parallel = true
 source_pkgs = [
   "py3dep",
-]
-omit = [
-  "**/__init__.py",
 ]
 
 [tool.pyright]
