@@ -199,6 +199,7 @@ lint.isort.known-first-party = [
   "pydaymet",
   "pygridmet",
   "pynldas2",
+  "tiny_retriever",
 ]
 lint.isort.required-imports = [ "from __future__ import annotations" ]
 
